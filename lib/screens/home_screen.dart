@@ -7,6 +7,7 @@ import 'workout/rm_calculator_screen.dart';
 import 'workout/ai_coaching_screen.dart';
 import 'workout/template_screen.dart';
 import 'workout/workout_log_screen.dart';
+import 'workout/statistics_dashboard_screen.dart';
 import 'achievements_screen.dart';
 import 'goals_screen.dart';
 import '../models/workout_log.dart' as workout_models;
@@ -273,36 +274,69 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           
           const SizedBox(height: 12),
           
-          // 統計カード（3つを横並びでコンパクトに）
-          Row(
-            children: [
-              Expanded(
-                child: _buildMiniStatCard(
-                  title: '7日間',
-                  value: '42.78',
-                  unit: 't',
-                  theme: theme,
+          // 統計カード（タップで統計ダッシュボードへ）
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const StatisticsDashboardScreen(),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildMiniStatCard(
-                  title: '合計負荷量',
-                  value: '137.38',
-                  unit: 't',
-                  theme: theme,
+              );
+            },
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildMiniStatCard(
+                    title: '7日間',
+                    value: '42.78',
+                    unit: 't',
+                    theme: theme,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildMiniStatCard(
-                  title: '総負荷量',
-                  value: '3116.27',
-                  unit: 't',
-                  theme: theme,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildMiniStatCard(
+                    title: '合計負荷量',
+                    value: '137.38',
+                    unit: 't',
+                    theme: theme,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildMiniStatCard(
+                    title: '総負荷量',
+                    value: '3116.27',
+                    unit: 't',
+                    theme: theme,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // 統計ダッシュボードへのヒントテキスト
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 12,
+                  color: Colors.grey[600],
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'タップして詳細統計を表示',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -659,6 +693,38 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          
+          // 統計ダッシュボードへのボタン
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const StatisticsDashboardScreen(),
+                  ),
+                );
+              },
+              icon: Icon(Icons.bar_chart, size: 20, color: theme.colorScheme.primary),
+              label: Text(
+                '統計ダッシュボード',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                side: BorderSide(color: theme.colorScheme.primary, width: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
           ),
         ],
       ),
