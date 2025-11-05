@@ -65,8 +65,7 @@ dependencies:
   
   # SNS Share & Image Generation (Task 27)
   screenshot: ^3.0.0  # Widget to image conversion
-  share_plus: ^10.1.3  # SNS sharing functionality
-  path_provider: ^2.1.5  # File system access
+  share_plus: ^10.1.3  # SNS sharing functionality (Web compatible)
 
 dev_dependencies:
   flutter_test:

@@ -1,9 +1,8 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:screenshot/screenshot.dart';
 
@@ -31,14 +30,19 @@ class ShareService {
         throw Exception('画像の生成に失敗しました');
       }
 
-      // 一時ファイルに保存
-      final tempDir = await getTemporaryDirectory();
-      final file = File('${tempDir.path}/workout_share_${DateTime.now().millisecondsSinceEpoch}.png');
-      await file.writeAsBytes(imageBytes);
+      // Web版ではメモリから直接XFileを作成
+      final fileName = 'workout_share_${DateTime.now().millisecondsSinceEpoch}.png';
+      
+      // XFileをメモリから作成（Web対応）
+      final xFile = XFile.fromData(
+        imageBytes,
+        name: fileName,
+        mimeType: 'image/png',
+      );
 
       // シェア
       await Share.shareXFiles(
-        [XFile(file.path)],
+        [xFile],
         text: text,
         subject: subject,
       );
@@ -68,14 +72,19 @@ class ShareService {
 
       final Uint8List pngBytes = byteData.buffer.asUint8List();
 
-      // 一時ファイルに保存
-      final tempDir = await getTemporaryDirectory();
-      final file = File('${tempDir.path}/workout_share_${DateTime.now().millisecondsSinceEpoch}.png');
-      await file.writeAsBytes(pngBytes);
+      // Web版ではメモリから直接XFileを作成
+      final fileName = 'workout_share_${DateTime.now().millisecondsSinceEpoch}.png';
+      
+      // XFileをメモリから作成（Web対応）
+      final xFile = XFile.fromData(
+        pngBytes,
+        name: fileName,
+        mimeType: 'image/png',
+      );
 
       // シェア
       await Share.shareXFiles(
-        [XFile(file.path)],
+        [xFile],
         text: text,
         subject: subject,
       );
