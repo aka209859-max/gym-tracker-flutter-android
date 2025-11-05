@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import '../../services/share_service.dart';
+import '../../widgets/statistics_share_card.dart';
 
 /// Task 11: トレーニング統計ダッシュボード
 class StatisticsDashboardScreen extends StatefulWidget {
@@ -13,6 +15,7 @@ class StatisticsDashboardScreen extends StatefulWidget {
 
 class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> {
   bool _isLoading = true;
+  final ShareService _shareService = ShareService();
   
   // 統計データ
   int _weeklyWorkoutDays = 0;
@@ -176,6 +179,33 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> {
     }
   }
 
+  // Task 27: 統計データをシェア
+  Future<void> _shareStatistics() async {
+    try {
+      // 統計データを画像化してシェア
+      final shareCard = StatisticsShareCard(
+        weeklyWorkoutDays: _weeklyWorkoutDays,
+        weeklyTotalSets: _weeklyTotalSets,
+        weeklyTotalMinutes: _weeklyTotalMinutes,
+        monthlyWorkoutDays: _monthlyWorkoutDays,
+        monthlyTotalSets: _monthlyTotalSets,
+        currentStreak: _currentStreak,
+        muscleGroupCount: _muscleGroupCount,
+      );
+
+      await _shareService.shareWidget(
+        shareCard,
+        text: '今週は${_weeklyWorkoutDays}日トレーニング！連続${_currentStreak}日記録達成🔥 #GYMMATCH #筋トレ統計',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('シェアに失敗しました: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -193,6 +223,11 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> {
       appBar: AppBar(
         title: const Text('統計ダッシュボード'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: _shareStatistics,
+            tooltip: 'シェア',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadStatistics,

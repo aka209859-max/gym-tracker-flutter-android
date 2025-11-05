@@ -14,6 +14,8 @@ import '../models/workout_log.dart' as workout_models;
 import '../models/goal.dart';
 import '../services/achievement_service.dart';
 import '../services/goal_service.dart';
+import '../services/share_service.dart';
+import '../widgets/workout_share_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -45,6 +47,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   // Task 17: 目標システム
   final GoalService _goalService = GoalService();
   List<Goal> _activeGoals = [];
+  
+  // Task 27: SNSシェア
+  final ShareService _shareService = ShareService();
 
   @override
   void initState() {
@@ -1170,6 +1175,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 color: Colors.white,
                               ),
                             ),
+                          ),
+                          // シェアボタン
+                          IconButton(
+                            icon: const Icon(Icons.share, color: Colors.white),
+                            onPressed: () async {
+                              await _shareWorkout(exerciseName, sets);
+                            },
+                            tooltip: 'シェア',
                           ),
                           // 詳細・メモ表示ボタンを追加
                           IconButton(
@@ -2394,6 +2407,45 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
       // 履歴画面から戻ってきたら、データを再読み込み
       _loadWorkoutsForSelectedDay();
+    }
+  }
+  
+  // Task 27: トレーニング記録をシェア
+  Future<void> _shareWorkout(String exerciseName, List<Map<String, dynamic>> sets) async {
+    try {
+      if (_selectedDay == null || sets.isEmpty) return;
+      
+      // 部位情報を取得
+      final muscleGroup = sets.first['muscle_group'] as String? ?? '不明';
+      
+      // 総負荷量を計算
+      int totalVolume = 0;
+      for (var set in sets) {
+        final weight = (set['weight'] as num).toDouble();
+        final reps = set['reps'] as int;
+        totalVolume += (weight * reps).toInt();
+      }
+      
+      // シェア用カードを生成
+      final shareCard = WorkoutShareCard(
+        date: _selectedDay!,
+        muscleGroup: muscleGroup,
+        sets: sets,
+        totalVolume: totalVolume,
+        totalSets: sets.length,
+      );
+      
+      // シェア実行
+      await _shareService.shareWidget(
+        shareCard,
+        text: '${_selectedDay!.month}月${_selectedDay!.day}日の$exerciseName: ${sets.length}セット完了💪 #GYMMATCH #筋トレ記録',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('シェアに失敗しました: $e')),
+        );
+      }
     }
   }
   
