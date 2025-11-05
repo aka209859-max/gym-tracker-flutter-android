@@ -505,7 +505,7 @@ class _AICoachingScreenState extends State<AICoachingScreen> {
             'temperature': 0.7,
             'topK': 40,
             'topP': 0.95,
-            'maxOutputTokens': 1024,
+            'maxOutputTokens': 2048,  // 初心者向け詳細メニューに対応（1024→2048）
           }
         }),
       );
