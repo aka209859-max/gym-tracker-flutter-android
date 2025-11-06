@@ -11,7 +11,7 @@ import 'partner_merge_service.dart';
 /// 全国のジム・フィットネス施設を検索
 class GooglePlacesService {
   // プロキシサーバーのURL（サンドボックス公開URL）
-  static const String _proxyBaseUrl = 'https://8080-i1wzdi6c2urpgehncb6jg-dfc00ec5.sandbox.novita.ai/api/places';
+  static const String _proxyBaseUrl = 'https://8080-i1wzdi6c2urpgehncb6jg-02b9cc79.sandbox.novita.ai/api/places';
   
   // 検索キャッシュサービス
   final SearchCacheService _cacheService = SearchCacheService();
