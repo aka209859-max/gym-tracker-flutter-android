@@ -243,9 +243,17 @@ class _SimpleWorkoutDetailScreenState extends State<SimpleWorkoutDetailScreen> {
               children: [
                 Icon(Icons.fitness_center, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
-                Text(
-                  exerciseName,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Text(
+                    exerciseName,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                // 🗑️ 種目削除ボタン
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: () => _confirmDeleteExercise(exerciseName),
+                  tooltip: '種目を削除',
                 ),
               ],
             ),
@@ -391,6 +399,96 @@ class _SimpleWorkoutDetailScreenState extends State<SimpleWorkoutDetailScreen> {
           SnackBar(content: Text('メモの削除に失敗しました: $e')),
         );
       }
+    }
+  }
+
+  // 🗑️ 種目削除確認ダイアログ
+  void _confirmDeleteExercise(String exerciseName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('記録を削除'),
+        content: Text('「$exerciseName」の記録を削除しますか？\nこの種目だけが削除されます。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteExercise(exerciseName);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('削除'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🗑️ 種目削除（その種目だけを削除）
+  Future<void> _deleteExercise(String exerciseName) async {
+    try {
+      // 現在のワークアウトデータを取得
+      final docRef = FirebaseFirestore.instance
+          .collection('workout_logs')
+          .doc(widget.workoutId);
+      
+      final doc = await docRef.get();
+      if (!doc.exists) {
+        throw Exception('ワークアウトが見つかりません');
+      }
+      
+      final data = doc.data()!;
+      final exercises = data['exercises'] as Map<String, dynamic>? ?? {};
+      
+      // 指定された種目だけを削除
+      exercises.remove(exerciseName);
+      
+      // 🔥 重要: 種目が全て削除された場合は記録全体を削除
+      if (exercises.isEmpty) {
+        await docRef.delete();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('最後の種目が削除されたため、トレーニング記録全体を削除しました'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          Navigator.pop(context); // 詳細画面を閉じる
+        }
+      } else {
+        // まだ他の種目がある場合は、exercisesフィールドだけを更新
+        await docRef.update({'exercises': exercises});
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('「$exerciseName」を削除しました'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+          // 画面を再読み込み（削除後の状態を表示）
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SimpleWorkoutDetailScreen(
+                workoutId: widget.workoutId,
+                workoutData: {...data, 'exercises': exercises},
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('削除に失敗しました: $e')),
+        );
+      }
+      debugPrint('❌ 種目削除エラー: $e');
     }
   }
 
