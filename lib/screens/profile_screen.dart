@@ -228,16 +228,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: Icons.people,
           title: 'トレーニングパートナー',
           subtitle: 'マッチング機能',
-          badge: _currentPlan == SubscriptionType.pro ? null : 'Pro限定',
           onTap: () {
-            if (_currentPlan == SubscriptionType.pro) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const PartnerSearchScreen()),
-              );
-            } else {
-              _checkPremiumFeature(context, 'トレーニングパートナー');
-            }
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PartnerSearchScreen()),
+            );
           },
         ),
         const SizedBox(height: 12),
