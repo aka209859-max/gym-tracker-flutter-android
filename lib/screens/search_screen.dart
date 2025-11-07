@@ -855,15 +855,13 @@ class _SearchScreenState extends State<SearchScreen> {
         // 🏆 パートナー情報統合版API使用
         googleGyms = await _placesService.searchGymsByTextWithPartners(_searchQuery);
         
-        // 🔥 ローカルデータも検索（トレーニーの聖地など）
-        final provider = Provider.of<GymProvider>(context, listen: false);
-        localGyms = provider.searchGyms(_searchQuery);
+        // ✅ ローカルデータは使用しない（実データのみ表示）
+        localGyms = []; // ダミーデータを排除
         
         if (kDebugMode) {
           print('✅ Google Places検索: ${googleGyms.length}件');
           final partnerCount = googleGyms.where((g) => g.isPartner).length;
           print('   🏆 パートナージム: ${partnerCount}件');
-          print('✅ ローカルデータ検索: ${localGyms.length}件');
         }
       }
       // GPS検索（テキスト入力がない場合のみ）
@@ -886,11 +884,11 @@ class _SearchScreenState extends State<SearchScreen> {
 
       // 🔥 NOTE: googleGyms は既に Gym オブジェクト（変換不要）
 
-      // 🔥 ローカルジム + Google Places検索結果をマージ
-      final mergedGyms = [...localGyms, ...googleGyms];
+      // ✅ Google Places検索結果のみ使用（ローカルデータは排除）
+      final mergedGyms = googleGyms;
       
       if (kDebugMode) {
-        print('🎯 マージ結果: 合計 ${mergedGyms.length}件 (ローカル: ${localGyms.length}件, Google: ${googleGyms.length}件)');
+        print('🎯 検索結果: 合計 ${mergedGyms.length}件 (Google Places API)');
       }
 
       // 🏆 パートナージム優先表示：GPS検索時は距離に関係なくパートナージムを最上位に
