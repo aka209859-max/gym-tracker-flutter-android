@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/messaging_service.dart';
 
 /// チャット画面
@@ -155,7 +156,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildMessageBubble(Message message) {
-    final currentUserId = _messagingService._currentUserId;
+    // 現在のユーザーIDはFirebaseAuthから直接取得
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
     final isMyMessage = message.senderId == currentUserId;
 
     return Padding(

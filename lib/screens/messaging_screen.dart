@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/messaging_service.dart';
 import 'chat_screen.dart';
 
@@ -114,8 +115,8 @@ class _MessagingScreenState extends State<MessagingScreen> {
   }
 
   Widget _buildConversationCard(Conversation conversation) {
-    // 相手のユーザーIDを取得
-    final currentUserId = _messagingService._currentUserId;
+    // 相手のユーザーIDを取得（FirebaseAuthから直接取得）
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
     final otherUserId = conversation.participantIds
         .firstWhere((id) => id != currentUserId, orElse: () => '');
 

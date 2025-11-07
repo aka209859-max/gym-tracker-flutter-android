@@ -201,8 +201,8 @@ class _VisitHistoryScreenState extends State<VisitHistoryScreen> {
             longitude: 0.0,
             rating: 0.0,
             reviewCount: 0,
-            distance: 0.0,
-            crowdingLevel: CrowdingLevel.unknown,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
           );
 
           Navigator.push(
