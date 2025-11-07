@@ -57,21 +57,44 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <!-- Version timestamp for cache busting -->
+  <!-- 🔥 Service Worker強制削除 + キャッシュ完全無効化 -->
   <script>
-    // Add timestamp to force fresh loads - DEBUG LOGGING
-    window.APP_VERSION = 'v5.4-debug-logging-' + Date.now();
+    // STEP 1: Service Worker完全削除（既存の登録を全て削除）
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister();
+          console.log('🗑️ Service Worker削除完了:', registration.scope);
+        }
+      });
+      
+      // STEP 2: Service Worker登録を永久に阻止
+      navigator.serviceWorker.register = function() {
+        console.log('🚫 Service Worker登録をブロックしました');
+        return Promise.reject('Service Worker is disabled');
+      };
+    }
+    
+    // STEP 3: キャッシュストレージを完全クリア
+    if ('caches' in window) {
+      caches.keys().then(function(cacheNames) {
+        cacheNames.forEach(function(cacheName) {
+          caches.delete(cacheName);
+          console.log('🗑️ キャッシュ削除:', cacheName);
+        });
+      });
+    }
+    
+    // Version timestamp for debugging
+    window.APP_VERSION = 'v6.0-NOCACHE-' + Date.now();
     console.log('🚀 GYM MATCH ' + window.APP_VERSION);
-    console.log('💪 部位別トレーニングシステム実装（胸/脚/背中/肩/二頭/三頭）');
-    console.log('📱 iOS風スクロールピッカーで時間選択（iPhone時計風）');
-    console.log('📊 統計カードにミニグラフ表示');
-    console.log('🔥 Firestore連携: 保存データが履歴に反映');
-    console.log('📅 カレンダー連動: 日付クリックでその日の履歴表示');
-    console.log('⏱️ トレーニング時間: 全体のセッション時間として記録');
-    console.log('🏋️ セット入力画面に選択中の種目名を表示');
-    console.log('🔄 保存後自動でホーム画面に遷移');
-    console.log('✅ スマホでのローディング問題修正');
-    console.log('🐛 デバッグログ追加版');
+    console.log('🗑️ Service Worker完全無効化版');
+    console.log('✅ ダミーデータ完全排除');
+    console.log('✅ Google Places API統合');
+    console.log('✅ GPS + テキスト検索');
+    console.log('✅ パートナージム統合（Firestore連携）');
+    console.log('✅ 日付選択機能（2020年～現在）');
+    console.log('💪 部位別トレーニングシステム実装');
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
