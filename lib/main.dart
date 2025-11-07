@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/map_screen.dart';
@@ -13,6 +14,7 @@ import 'providers/gym_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/auth_provider.dart';
 import 'widgets/install_prompt.dart';
+import 'services/subscription_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,9 +56,41 @@ void main() async {
     print('   StackTrace: $stackTrace');
   }
   
+  // 🔥 マスターユーザー権限設定（CEO専用）
+  await _setMasterUserPrivileges();
+  
   print('🚀 アプリ起動開始 (Firebase: ${firebaseInitialized ? "有効" : "無効"})');
   
   runApp(const GymMatchApp());
+}
+
+/// マスターユーザー権限設定（CEO専用）
+/// 起動時に自動的にProプランを設定し、全機能をフルアクセス可能にする
+Future<void> _setMasterUserPrivileges() async {
+  print('👑 マスターユーザー権限設定開始...');
+  
+  try {
+    final subscriptionService = SubscriptionService();
+    
+    // Proプランに設定（全機能アクセス可能）
+    await subscriptionService.setPlan(SubscriptionType.pro);
+    
+    // マスターユーザーフラグ設定
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_master_user', true);
+    
+    print('✅ マスターユーザー権限設定完了');
+    print('   プラン: Proプラン（全機能フルアクセス）');
+    print('   🎯 AI成長予測: ✅');
+    print('   🎯 AI効果分析: ✅');
+    print('   🎯 AI週次レポート: ✅');
+    print('   🎯 トレーニングパートナー: ✅');
+    print('   🎯 メッセージング: ✅');
+    print('   🎯 優先サポート: ✅');
+    
+  } catch (e) {
+    print('❌ マスターユーザー権限設定失敗: $e');
+  }
 }
 
 class GymMatchApp extends StatelessWidget {
