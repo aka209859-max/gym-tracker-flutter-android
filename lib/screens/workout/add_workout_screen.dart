@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:intl/intl.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 // SetType enum
 enum SetType {
@@ -73,12 +75,81 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     '三頭': ['トライセプスエクステンション', 'スカルクラッシャー', 'ケーブルプッシュダウン', 'ディップス', 'キックバック'],
     '有酸素': ['ランニング', 'サイクリング', 'エアロバイク', 'ステッパー', '水泳'],
   };
+  
+  // 有酸素運動かどうかを判定
+  bool _isCardioExercise(String exerciseName) {
+    final cardioExercises = _muscleGroupExercises['有酸素'] ?? [];
+    return cardioExercises.contains(exerciseName);
+  }
 
   @override
   void initState() {
     super.initState();
+    _loadCustomExercises();
     _loadLastWorkoutData();
     _applyTemplateDataIfProvided();
+  }
+  
+  // カスタム種目をSharedPreferencesから読み込み
+  Future<void> _loadCustomExercises() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final customExercisesJson = prefs.getString('custom_exercises');
+      
+      if (customExercisesJson != null) {
+        final Map<String, dynamic> decoded = jsonDecode(customExercisesJson);
+        setState(() {
+          decoded.forEach((muscleGroup, exercises) {
+            if (_muscleGroupExercises.containsKey(muscleGroup)) {
+              // 既存のリストにカスタム種目を追加（重複を避ける）
+              final customList = List<String>.from(exercises);
+              for (var exercise in customList) {
+                if (!_muscleGroupExercises[muscleGroup]!.contains(exercise)) {
+                  _muscleGroupExercises[muscleGroup]!.add(exercise);
+                }
+              }
+            }
+          });
+        });
+        print('✅ カスタム種目をロード: ${decoded.keys.length}部位');
+      }
+    } catch (e) {
+      print('⚠️ カスタム種目のロードに失敗: $e');
+    }
+  }
+  
+  // カスタム種目をSharedPreferencesに保存
+  Future<void> _saveCustomExercises() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      // デフォルト種目を除外してカスタム種目のみを抽出
+      final Map<String, List<String>> customOnly = {};
+      
+      final defaultExercises = {
+        '胸': ['ベンチプレス', 'ダンベルプレス', 'インクラインプレス', 'ケーブルフライ', 'ディップス'],
+        '脚': ['スクワット', 'レッグプレス', 'レッグエクステンション', 'レッグカール', 'カーフレイズ'],
+        '背中': ['デッドリフト', 'ラットプルダウン', 'ベントオーバーロウ', 'シーテッドロウ', '懸垂'],
+        '肩': ['ショルダープレス', 'サイドレイズ', 'フロントレイズ', 'リアデルトフライ', 'アップライトロウ'],
+        '二頭': ['バーベルカール', 'ダンベルカール', 'ハンマーカール', 'プリチャーカール', 'ケーブルカール'],
+        '三頭': ['トライセプスエクステンション', 'スカルクラッシャー', 'ケーブルプッシュダウン', 'ディップス', 'キックバック'],
+        '有酸素': ['ランニング', 'サイクリング', 'エアロバイク', 'ステッパー', '水泳'],
+      };
+      
+      _muscleGroupExercises.forEach((muscleGroup, exercises) {
+        final defaults = defaultExercises[muscleGroup] ?? [];
+        final customs = exercises.where((ex) => !defaults.contains(ex)).toList();
+        if (customs.isNotEmpty) {
+          customOnly[muscleGroup] = customs;
+        }
+      });
+      
+      final encoded = jsonEncode(customOnly);
+      await prefs.setString('custom_exercises', encoded);
+      print('✅ カスタム種目を保存: ${customOnly.keys.length}部位');
+    } catch (e) {
+      print('⚠️ カスタム種目の保存に失敗: $e');
+    }
   }
   
   // 既存workout_idを保持
@@ -351,6 +422,58 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     }
   }
 
+  // カスタム種目かどうかを判定
+  bool _isCustomExercise(String exerciseName) {
+    final defaultExercises = {
+      '胸': ['ベンチプレス', 'ダンベルプレス', 'インクラインプレス', 'ケーブルフライ', 'ディップス'],
+      '脚': ['スクワット', 'レッグプレス', 'レッグエクステンション', 'レッグカール', 'カーフレイズ'],
+      '背中': ['デッドリフト', 'ラットプルダウン', 'ベントオーバーロウ', 'シーテッドロウ', '懸垂'],
+      '肩': ['ショルダープレス', 'サイドレイズ', 'フロントレイズ', 'リアデルトフライ', 'アップライトロウ'],
+      '二頭': ['バーベルカール', 'ダンベルカール', 'ハンマーカール', 'プリチャーカール', 'ケーブルカール'],
+      '三頭': ['トライセプスエクステンション', 'スカルクラッシャー', 'ケーブルプッシュダウン', 'ディップス', 'キックバック'],
+      '有酸素': ['ランニング', 'サイクリング', 'エアロバイク', 'ステッパー', '水泳'],
+    };
+    
+    final defaults = defaultExercises[_selectedMuscleGroup] ?? [];
+    return !defaults.contains(exerciseName);
+  }
+  
+  // カスタム種目削除確認
+  Future<void> _confirmDeleteCustomExercise(String exerciseName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('カスタム種目を削除'),
+        content: Text('「$exerciseName」を削除しますか？\nこの操作は取り消せません。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('キャンセル'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('削除'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirmed == true) {
+      setState(() {
+        _muscleGroupExercises[_selectedMuscleGroup]!.remove(exerciseName);
+      });
+      
+      await _saveCustomExercises();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('「$exerciseName」を削除しました')),
+        );
+      }
+    }
+  }
+  
   Future<void> _showAddCustomExerciseDialog() async {
     if (_selectedMuscleGroup == null) return;
     
@@ -385,6 +508,15 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         _muscleGroupExercises[_selectedMuscleGroup]!.add(result);
         _addSet(result);
       });
+      
+      // カスタム種目を永続化
+      await _saveCustomExercises();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('「$result」をカスタム種目として保存しました')),
+        );
+      }
     }
   }
 
@@ -503,20 +635,23 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         // 新規記録モード
         print('➕ 新規記録を作成');
         
+        // トレーニング開始時刻と終了時刻を設定
+        // デフォルト: 現在時刻から2時間のトレーニング
+        final now = DateTime.now();
         final startTime = DateTime(
           _selectedDate.year,
           _selectedDate.month,
           _selectedDate.day,
-          _startHour,
-          _startMinute,
+          now.hour >= 2 ? now.hour - 2 : 0,  // 2時間前（最小0時）
+          now.minute,
         );
         
         final endTime = DateTime(
           _selectedDate.year,
           _selectedDate.month,
           _selectedDate.day,
-          _endHour,
-          _endMinute,
+          now.hour,
+          now.minute,
         );
 
         final workoutDoc = await FirebaseFirestore.instance.collection('workout_logs').add({
@@ -699,12 +834,23 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
               
               ..._muscleGroupExercises[_selectedMuscleGroup]!.map((exercise) {
                 final hasExercise = _sets.any((s) => s.exerciseName == exercise);
+                final isCustomExercise = _isCustomExercise(exercise);
+                
                 return ListTile(
                   leading: Icon(
                     Icons.fitness_center,
                     color: hasExercise ? theme.colorScheme.primary : Colors.grey,
                   ),
-                  title: Text(exercise),
+                  title: Row(
+                    children: [
+                      Expanded(child: Text(exercise)),
+                      if (isCustomExercise)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 4),
+                          child: Icon(Icons.star, size: 14, color: Colors.amber),
+                        ),
+                    ],
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -713,6 +859,13 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                           icon: const Icon(Icons.copy),
                           onPressed: () => _copyExerciseSets(exercise),
                           tooltip: 'セットをコピー',
+                        ),
+                      if (isCustomExercise)
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, size: 18),
+                          color: Colors.red,
+                          onPressed: () => _confirmDeleteCustomExercise(exercise),
+                          tooltip: 'カスタム種目を削除',
                         ),
                       const Icon(Icons.chevron_right),
                     ],
@@ -944,13 +1097,13 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
               ),
               const SizedBox(width: 12),
               
-              // 重量入力（0も消せるように修正）
+              // 有酸素運動の場合は「時間（分）」、それ以外は「重量（kg）」
               Expanded(
                 child: TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: '重量 (kg)',
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: InputDecoration(
+                    labelText: _isCardioExercise(set.exerciseName) ? '時間 (分)' : '重量 (kg)',
+                    border: const OutlineInputBorder(),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   initialValue: set.weight == 0.0 ? '' : set.weight.toString(),
@@ -966,13 +1119,13 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
               ),
               const SizedBox(width: 8),
               
-              // 回数入力（0も消せるように修正）
+              // 有酸素運動の場合は「距離（km）」、それ以外は「回数」
               Expanded(
                 child: TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: '回数',
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: InputDecoration(
+                    labelText: _isCardioExercise(set.exerciseName) ? '距離 (km)' : '回数',
+                    border: const OutlineInputBorder(),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   keyboardType: TextInputType.number,
                   initialValue: set.reps == 0 ? '' : set.reps.toString(),

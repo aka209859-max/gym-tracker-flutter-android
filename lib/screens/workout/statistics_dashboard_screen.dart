@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import '../../services/share_service.dart';
-import '../../widgets/statistics_share_card.dart';
 
 /// Task 11: トレーニング統計ダッシュボード
 class StatisticsDashboardScreen extends StatefulWidget {
@@ -13,9 +11,8 @@ class StatisticsDashboardScreen extends StatefulWidget {
   State<StatisticsDashboardScreen> createState() => _StatisticsDashboardScreenState();
 }
 
-class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> {
+class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> with WidgetsBindingObserver {
   bool _isLoading = true;
-  final ShareService _shareService = ShareService();
   
   // 統計データ
   int _weeklyWorkoutDays = 0;
@@ -30,68 +27,154 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // 初回読み込み
     _loadStatistics();
+    
+    // 画面表示後に再度読み込み（最新データを確実に取得）
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        print('📊 統計ダッシュボード: 自動リフレッシュ実行');
+        _loadStatistics();
+      }
+    });
+  }
+  
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+  
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // アプリが再開されたときに統計を更新
+    if (state == AppLifecycleState.resumed) {
+      print('📊 アプリ再開: 統計を更新');
+      _loadStatistics();
+    }
   }
 
   Future<void> _loadStatistics() async {
+    print('📊 統計読み込み開始...');
     setState(() => _isLoading = true);
     
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
+      if (user == null) {
+        print('❌ ユーザーが未ログイン');
+        return;
+      }
 
+      print('👤 User ID: ${user.uid}');
       final now = DateTime.now();
-      final weekStart = now.subtract(Duration(days: now.weekday - 1));
+      // 週の開始日（月曜日の0:00:00）
+      final weekStart = DateTime(
+        now.year,
+        now.month,
+        now.day - (now.weekday - 1),
+      );
       final monthStart = DateTime(now.year, now.month, 1);
+
+      print('📅 週間統計期間: $weekStart 〜 $now');
+      print('📅 月間統計期間: $monthStart 〜 $now');
 
       // 週間統計
       await _loadWeeklyStats(user.uid, weekStart);
+      print('✅ 週間統計読み込み完了: $_weeklyWorkoutDays日, $_weeklyTotalSetsセット, $_weeklyTotalMinutes分');
       
       // 月間統計
       await _loadMonthlyStats(user.uid, monthStart);
+      print('✅ 月間統計読み込み完了: $_monthlyWorkoutDays日, $_monthlyTotalSetsセット');
       
       // ストリーク計算
       await _calculateStreak(user.uid);
+      print('✅ ストリーク計算完了: $_currentStreak日連続');
 
     } catch (e) {
+      print('❌ 統計読み込みエラー: $e');
       debugPrint('統計読み込みエラー: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+        print('✅ 統計読み込み完了（UI更新）');
       }
     }
   }
 
   Future<void> _loadWeeklyStats(String userId, DateTime weekStart) async {
+    print('📊 週間統計クエリ開始...');
+    print('   User ID: $userId');
+    print('   期間開始: $weekStart');
+    
+    // シンプルなクエリ（インデックス不要）
     final snapshot = await FirebaseFirestore.instance
         .collection('workout_logs')
         .where('user_id', isEqualTo: userId)
-        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(weekStart))
-        .get();
+        .get(const GetOptions(source: Source.server));
 
+    print('📊 全ドキュメント数: ${snapshot.docs.length}');
+    
+    // メモリ内でフィルタリング
+    final filteredDocs = snapshot.docs.where((doc) {
+      final data = doc.data();
+      final date = (data['date'] as Timestamp).toDate();
+      return date.isAfter(weekStart.subtract(const Duration(seconds: 1)));
+    }).toList();
+    
+    print('📊 週間フィルタ後: ${filteredDocs.length}件');
+    
     final workoutDates = <String>{};
     int totalSets = 0;
     int totalMinutes = 0;
     final muscleGroups = <String, int>{};
 
-    for (final doc in snapshot.docs) {
+    for (final doc in filteredDocs) {
       final data = doc.data();
+      print('   ドキュメントID: ${doc.id}');
+      print('   データ: ${data.keys.toList()}');
+      
       final date = (data['date'] as Timestamp).toDate();
+      print('   日付: $date');
       workoutDates.add(DateFormat('yyyy-MM-dd').format(date));
       
       final sets = data['sets'] as List<dynamic>? ?? [];
+      print('   セット数: ${sets.length}');
       totalSets += sets.length;
       
-      final startTime = (data['start_time'] as Timestamp?)?.toDate();
-      final endTime = (data['end_time'] as Timestamp?)?.toDate();
-      if (startTime != null && endTime != null) {
-        totalMinutes += endTime.difference(startTime).inMinutes;
+      final muscleGroup = data['muscle_group'] as String? ?? '不明';
+      print('   筋肉グループ: $muscleGroup');
+      
+      // 有酸素運動の時間のみを集計（筋トレは除外）
+      if (muscleGroup == '有酸素') {
+        // 有酸素運動の場合、weightフィールドが「時間（分）」を表す
+        print('   🏃 有酸素運動データ');
+        
+        // 各セットのweightフィールドから時間を取得
+        for (final set in sets) {
+          if (set is Map<String, dynamic>) {
+            final timeMinutes = (set['weight'] as num?)?.toDouble() ?? 0.0;
+            final distance = (set['reps'] as num?)?.toDouble() ?? 0.0;
+            print('      - 時間: ${timeMinutes}分, 距離: ${distance}km');
+            totalMinutes += timeMinutes.toInt();
+          }
+        }
+        
+        print('   ✅ 有酸素時間: 累計${totalMinutes}分');
+      } else {
+        print('   💪 筋トレのため有酸素時間集計から除外');
       }
       
-      final muscleGroup = data['muscle_group'] as String? ?? '不明';
       muscleGroups[muscleGroup] = (muscleGroups[muscleGroup] ?? 0) + 1;
     }
 
+    print('\n📊 === 週間統計最終結果 ===');
+    print('   トレーニング日数: ${workoutDates.length}日');
+    print('   総セット数: $totalSets');
+    print('   有酸素時間: $totalMinutes分');
+    print('   部位別: $muscleGroups');
+    print('=========================\n');
+    
     if (mounted) {
       setState(() {
         _weeklyWorkoutDays = workoutDates.length;
@@ -103,16 +186,30 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> {
   }
 
   Future<void> _loadMonthlyStats(String userId, DateTime monthStart) async {
+    print('📊 月間統計クエリ開始...');
+    print('   期間開始: $monthStart');
+    
+    // シンプルなクエリ（インデックス不要）
     final snapshot = await FirebaseFirestore.instance
         .collection('workout_logs')
         .where('user_id', isEqualTo: userId)
-        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
-        .get();
+        .get(const GetOptions(source: Source.server));
+
+    print('📊 全ドキュメント数: ${snapshot.docs.length}');
+    
+    // メモリ内でフィルタリング
+    final filteredDocs = snapshot.docs.where((doc) {
+      final data = doc.data();
+      final date = (data['date'] as Timestamp).toDate();
+      return date.isAfter(monthStart.subtract(const Duration(seconds: 1)));
+    }).toList();
+    
+    print('📊 月間フィルタ後: ${filteredDocs.length}件');
 
     final workoutDates = <String>{};
     int totalSets = 0;
 
-    for (final doc in snapshot.docs) {
+    for (final doc in filteredDocs) {
       final data = doc.data();
       final date = (data['date'] as Timestamp).toDate();
       workoutDates.add(DateFormat('yyyy-MM-dd').format(date));
@@ -133,7 +230,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> {
     final snapshot = await FirebaseFirestore.instance
         .collection('workout_logs')
         .where('user_id', isEqualTo: userId)
-        .get();
+        .get(const GetOptions(source: Source.server));
 
     if (snapshot.docs.isEmpty) {
       setState(() => _currentStreak = 0);
@@ -179,33 +276,6 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> {
     }
   }
 
-  // Task 27: 統計データをシェア
-  Future<void> _shareStatistics() async {
-    try {
-      // 統計データを画像化してシェア
-      final shareCard = StatisticsShareCard(
-        weeklyWorkoutDays: _weeklyWorkoutDays,
-        weeklyTotalSets: _weeklyTotalSets,
-        weeklyTotalMinutes: _weeklyTotalMinutes,
-        monthlyWorkoutDays: _monthlyWorkoutDays,
-        monthlyTotalSets: _monthlyTotalSets,
-        currentStreak: _currentStreak,
-        muscleGroupCount: _muscleGroupCount,
-      );
-
-      await _shareService.shareWidget(
-        shareCard,
-        text: '今週は${_weeklyWorkoutDays}日トレーニング！連続${_currentStreak}日記録達成🔥 #GYMMATCH #筋トレ統計',
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('シェアに失敗しました: $e')),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -223,11 +293,6 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> {
       appBar: AppBar(
         title: const Text('統計ダッシュボード'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: _shareStatistics,
-            tooltip: 'シェア',
-          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadStatistics,
@@ -309,8 +374,8 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> {
               children: [
                 Expanded(
                   child: _buildStatItem(
-                    icon: Icons.timer,
-                    label: 'トレーニング時間',
+                    icon: Icons.directions_run,
+                    label: '有酸素時間',
                     value: '$_weeklyTotalMinutes分',
                     color: Colors.orange,
                   ),

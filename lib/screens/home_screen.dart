@@ -247,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final querySnapshot = await FirebaseFirestore.instance
           .collection('workout_logs')
           .where('user_id', isEqualTo: user.uid)
-          .get();
+          .get(const GetOptions(source: Source.server));
 
       print('📊 全記録件数: ${querySnapshot.docs.length}');
 
@@ -1345,9 +1345,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 print('🔔 削除確認ダイアログ表示: $exerciseName (ID: $workoutId)');
                 return await _showDeleteConfirmDialog(exerciseName);
               },
-              onDismissed: (direction) {
+              onDismissed: (direction) async {
                 print('👆 スワイプ削除実行: $exerciseName (ID: $workoutId)');
-                _deleteWorkout(workoutId);
+                // ❌ _deleteWorkout(workoutId); // これはワークアウト全体を削除してしまう
+                // ✅ 特定の種目だけを削除する
+                await _deleteExerciseFromWorkout(workoutId, exerciseName);
               },
               child: Container(
                 margin: const EdgeInsets.only(bottom: 2),
@@ -1394,25 +1396,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               ),
                             ),
                           ),
-                          // シェアボタン
+                          // 編集ボタン（トレーニング記録画面に遷移）
                           IconButton(
-                            icon: const Icon(Icons.share, color: Colors.white, size: 18),
+                            icon: const Icon(Icons.edit, color: Colors.white, size: 18),
                             padding: const EdgeInsets.all(4),
                             constraints: const BoxConstraints(),
                             onPressed: () async {
-                              await _shareWorkout(exerciseName, sets);
+                              if (mounted) {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const WorkoutLogScreen(),
+                                  ),
+                                );
+                                _loadWorkoutsForSelectedDay();
+                              }
                             },
-                            tooltip: 'シェア',
-                          ),
-                          // 詳細・メモ表示ボタンを追加
-                          IconButton(
-                            icon: const Icon(Icons.note_alt, color: Colors.white, size: 18),
-                            padding: const EdgeInsets.all(4),
-                            constraints: const BoxConstraints(),
-                            onPressed: () async {
-                              await _openWorkoutDetail(workoutId);
-                            },
-                            tooltip: '詳細とメモを見る',
+                            tooltip: 'トレーニング記録を編集',
                           ),
                         ],
                       ),
@@ -1847,10 +1847,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               final exerciseName = set['exercise_name'] as String?;
                               final weight = set['weight'] as num?;
                               final reps = set['reps'] as int?;
+                              
+                              // 有酸素運動の場合は「時間(分) × 距離(km)」表示
+                              final isCardio = muscleGroup == '有酸素';
+                              final displayText = isCardio
+                                  ? '• $exerciseName: ${weight}分 × ${reps}km'
+                                  : '• $exerciseName: ${weight}kg × ${reps}回';
+                              
                               return Padding(
                                 padding: const EdgeInsets.only(left: 8, bottom: 4),
                                 child: Text(
-                                  '• $exerciseName: ${weight}kg × ${reps}回',
+                                  displayText,
                                   style: const TextStyle(fontSize: 13),
                                 ),
                               );
@@ -2221,6 +2228,172 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+  
+  /// 特定の種目だけを削除（スワイプ削除用）
+  Future<void> _deleteExerciseFromWorkout(String? workoutId, String exerciseName) async {
+    if (workoutId == null) {
+      print('❌ 削除失敗: workoutId is null');
+      return;
+    }
+    
+    try {
+      print('🗑️ 種目削除開始: Workout ID = $workoutId, Exercise = $exerciseName');
+      
+      final docRef = FirebaseFirestore.instance.collection('workout_logs').doc(workoutId);
+      final docSnapshot = await docRef.get();
+      
+      if (!docSnapshot.exists) {
+        print('❌ ドキュメントが見つかりません: $workoutId');
+        return;
+      }
+      
+      final data = docSnapshot.data()!;
+      
+      // データ構造によって処理を分岐
+      if (data['sets'] != null) {
+        // sets配列形式の場合
+        final sets = data['sets'] as List<dynamic>;
+        print('🔍 Before delete - total sets: ${sets.length}');
+        
+        // 指定された種目のセットだけをフィルタリング（削除）
+        print('🎯 削除対象: "$exerciseName" (length=${exerciseName.length})');
+        final remainingSets = sets.where((set) {
+          if (set is Map<String, dynamic>) {
+            final setExerciseName = set['exercise_name'] as String? ?? '';
+            final isMatch = setExerciseName == exerciseName;
+            print('   セット比較: "$setExerciseName" vs "$exerciseName" → Match=$isMatch');
+            return setExerciseName != exerciseName;
+          }
+          return true;
+        }).toList();
+        
+        print('🔍 After filter - total sets: ${remainingSets.length}');
+        
+        if (remainingSets.isEmpty) {
+          // 全てのセットが削除された場合はワークアウト全体を削除
+          print('⚠️ All sets deleted - deleting entire workout');
+          await docRef.delete();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('最後の種目が削除されたため、トレーニング記録全体を削除しました'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        } else {
+          // 残りのセットで更新
+          print('✅ Updating Firestore with ${remainingSets.length} sets');
+          print('📤 Firestore更新開始: workout_logs/$workoutId');
+          
+          try {
+            // Firestoreを更新
+            await docRef.update({'sets': remainingSets});
+            print('✅ Firestore更新完了');
+            
+            // 更新を確認（ベリフィケーション）
+            final verifyDoc = await docRef.get();
+            if (verifyDoc.exists) {
+              final verifyData = verifyDoc.data()!;
+              final verifySets = verifyData['sets'] as List<dynamic>;
+              print('✅ 更新確認: ${verifySets.length}セット（期待値: ${remainingSets.length}）');
+              
+              if (verifySets.length != remainingSets.length) {
+                print('⚠️ 警告: セット数が一致しません！');
+                throw Exception('Firestore更新の検証に失敗しました');
+              }
+            }
+            
+            final remainingExerciseNames = remainingSets
+                .where((s) => s is Map)
+                .map((s) => s['exercise_name'])
+                .toSet()
+                .length;
+            
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('「$exerciseName」を削除しました（残り${remainingExerciseNames}種目）'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          } catch (updateError) {
+            print('❌ Firestore更新エラー: $updateError');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('削除に失敗しました: $updateError'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+            rethrow;
+          }
+        }
+      } else if (data['exercises'] != null) {
+        // exercises Map形式の場合
+        final exercises = Map<String, dynamic>.from(data['exercises'] as Map);
+        print('🔍 Before delete - exercises: ${exercises.keys.toList()}');
+        
+        exercises.remove(exerciseName);
+        print('🔍 After delete - exercises: ${exercises.keys.toList()}');
+        
+        if (exercises.isEmpty) {
+          print('⚠️ All exercises deleted - deleting entire workout');
+          await docRef.delete();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('最後の種目が削除されたため、トレーニング記録全体を削除しました'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        } else {
+          print('✅ Updating Firestore with ${exercises.length} exercises');
+          await docRef.update({'exercises': exercises});
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('「$exerciseName」を削除しました（残り${exercises.length}種目）'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        }
+      }
+      
+      // データを再読み込み（強制リフレッシュ）
+      print('🔄 データ再読み込み開始...');
+      
+      // setState を使って強制的にUIを更新
+      if (mounted) {
+        setState(() {
+          _selectedDayWorkouts.clear();
+        });
+      }
+      
+      // Firestoreから最新データを再取得
+      await _loadWorkoutsForSelectedDay();
+      print('✅ データ再読み込み完了');
+      
+      // 追加で画面を強制更新
+      if (mounted) {
+        setState(() {});
+      }
+      
+    } catch (e, stackTrace) {
+      print('❌ 種目削除エラー: $e');
+      print('Stack Trace: $stackTrace');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('削除に失敗しました: $e')),
+        );
+      }
+    }
   }
   
   /// 記録を削除
@@ -2667,58 +2840,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
   
   /// ワークアウト履歴画面を開く
-  Future<void> _openWorkoutDetail(String? workoutId) async {
-    if (mounted) {
-      // WorkoutLogScreenに遷移（トレーニング履歴画面）
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const WorkoutLogScreen(),
-        ),
-      );
-      // 履歴画面から戻ってきたら、データを再読み込み
-      _loadWorkoutsForSelectedDay();
-    }
-  }
-  
-  // Task 27: トレーニング記録をシェア
-  Future<void> _shareWorkout(String exerciseName, List<Map<String, dynamic>> sets) async {
-    try {
-      if (_selectedDay == null || sets.isEmpty) return;
-      
-      // 部位情報を取得
-      final muscleGroup = sets.first['muscle_group'] as String? ?? '不明';
-      
-      // 総負荷量を計算
-      int totalVolume = 0;
-      for (var set in sets) {
-        final weight = (set['weight'] as num).toDouble();
-        final reps = set['reps'] as int;
-        totalVolume += (weight * reps).toInt();
-      }
-      
-      // シェア用カードを生成
-      final shareCard = WorkoutShareCard(
-        date: _selectedDay!,
-        muscleGroup: muscleGroup,
-        sets: sets,
-        totalVolume: totalVolume,
-        totalSets: sets.length,
-      );
-      
-      // シェア実行
-      await _shareService.shareWidget(
-        shareCard,
-        text: '${_selectedDay!.month}月${_selectedDay!.day}日の$exerciseName: ${sets.length}セット完了💪 #GYMMATCH #筋トレ記録',
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('シェアに失敗しました: $e')),
-        );
-      }
-    }
-  }
   
   /// 目標アイコンを取得
   IconData _getGoalIcon(String iconName) {

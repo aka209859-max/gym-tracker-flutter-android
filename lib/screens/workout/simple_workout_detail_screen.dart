@@ -25,6 +25,12 @@ class _SimpleWorkoutDetailScreenState extends State<SimpleWorkoutDetailScreen> {
   WorkoutNote? _workoutNote;
   bool _isLoadingNote = true;
 
+  /// 有酸素運動かどうかを判定
+  bool get _isCardio {
+    final muscleGroup = widget.workoutData['muscle_group'] as String? ?? '';
+    return muscleGroup == '有酸素';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -264,6 +270,14 @@ class _SimpleWorkoutDetailScreenState extends State<SimpleWorkoutDetailScreen> {
               final weight = (set['weight'] as num?)?.toDouble() ?? 0.0;
               final reps = set['reps'] as int? ?? 0;
               
+              // 有酸素運動の場合は「時間・距離」表示
+              final String displayText;
+              if (_isCardio) {
+                displayText = '${weight}分 × ${reps}km';
+              } else {
+                displayText = '${weight}kg × ${reps}回';
+              }
+              
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
@@ -287,7 +301,7 @@ class _SimpleWorkoutDetailScreenState extends State<SimpleWorkoutDetailScreen> {
                     ),
                     const SizedBox(width: 16),
                     Text(
-                      '${weight}kg × ${reps}回',
+                      displayText,
                       style: const TextStyle(fontSize: 16),
                     ),
                   ],
@@ -404,10 +418,25 @@ class _SimpleWorkoutDetailScreenState extends State<SimpleWorkoutDetailScreen> {
 
   // 🗑️ 種目削除確認ダイアログ
   void _confirmDeleteExercise(String exerciseName) async {
-    // 🔍 デバッグ: 現在のデータ構造を確認
+    // 🔍 デバッグ: 現在のデータ構造を完全に確認
     final data = widget.workoutData;
     final sets = data['sets'] as List<dynamic>? ?? [];
     final exercises = data['exercises'];
+    
+    // 🔍 各セットの詳細情報を収集
+    final setDetails = <String>[];
+    for (int i = 0; i < sets.length; i++) {
+      final set = sets[i];
+      if (set is Map<String, dynamic>) {
+        final name = set['exercise_name'];
+        final nameType = name.runtimeType;
+        final nameLength = name?.toString().length ?? 0;
+        final match = name == exerciseName;
+        setDetails.add('Set${i+1}: "$name" (${nameType}, len=$nameLength, match=$match)');
+      } else {
+        setDetails.add('Set${i+1}: NOT A MAP (${set.runtimeType})');
+      }
+    }
     
     // 現在の種目数を計算
     final currentExerciseNames = sets
@@ -415,6 +444,9 @@ class _SimpleWorkoutDetailScreenState extends State<SimpleWorkoutDetailScreen> {
         .map((s) => s['exercise_name'])
         .toSet()
         .toList();
+    
+    // 削除ターゲットの情報
+    final targetInfo = '削除対象: "$exerciseName" (${exerciseName.runtimeType}, len=${exerciseName.length})';
     
     final afterDeleteSets = sets.where((set) {
       if (set is Map<String, dynamic>) {
@@ -430,42 +462,64 @@ class _SimpleWorkoutDetailScreenState extends State<SimpleWorkoutDetailScreen> {
         .toSet()
         .toList();
     
+    // 🔍 完全なデバッグダイアログ
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('種目を削除'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('「$exerciseName」を削除しますか？'),
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 8),
-            Text('🔍 デバッグ情報:', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-            const SizedBox(height: 4),
-            Text('現在の種目: ${currentExerciseNames.join(", ")}', style: const TextStyle(fontSize: 12)),
-            Text('削除後の種目: ${afterDeleteExerciseNames.join(", ")}', style: const TextStyle(fontSize: 12)),
-            Text('現在のセット数: ${sets.length}', style: const TextStyle(fontSize: 12)),
-            Text('削除後のセット数: ${afterDeleteSets.length}', style: const TextStyle(fontSize: 12)),
-            if (exercises != null)
-              Text('⚠️ exercises フィールド検出: ${exercises.runtimeType}', 
-                style: const TextStyle(fontSize: 12, color: Colors.orange)),
-          ],
+        title: const Text('🔍 削除デバッグ'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('「$exerciseName」を削除しますか？'),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 8),
+              Text('🎯 $targetInfo', style: const TextStyle(fontSize: 11, fontFamily: 'monospace')),
+              const SizedBox(height: 8),
+              Text('📊 現在の種目: ${currentExerciseNames.join(", ")}', style: const TextStyle(fontSize: 11)),
+              Text('📊 削除後の種目: ${afterDeleteExerciseNames.join(", ")}', style: const TextStyle(fontSize: 11)),
+              Text('📊 現在のセット数: ${sets.length}', style: const TextStyle(fontSize: 11)),
+              Text('📊 削除後のセット数: ${afterDeleteSets.length}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: afterDeleteSets.isEmpty ? Colors.red : Colors.green)),
+              const SizedBox(height: 8),
+              const Divider(),
+              const SizedBox(height: 8),
+              Text('🔍 セット詳細:', style: TextStyle(fontSize: 11, color: Colors.grey[700], fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              ...setDetails.map((detail) => Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Text(detail, style: const TextStyle(fontSize: 10, fontFamily: 'monospace')),
+              )),
+              if (exercises != null) ...[
+                const SizedBox(height: 8),
+                const Divider(),
+                Text('⚠️ exercises フィールド検出: ${exercises.runtimeType}', 
+                  style: const TextStyle(fontSize: 11, color: Colors.orange)),
+              ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('キャンセル'),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _deleteExercise(exerciseName);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('削除'),
-          ),
+          if (afterDeleteSets.isNotEmpty)
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _deleteExercise(exerciseName);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('削除'),
+            ),
+          if (afterDeleteSets.isEmpty)
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('⚠️ 全削除防止'),
+            ),
         ],
       ),
     );
@@ -487,122 +541,27 @@ class _SimpleWorkoutDetailScreenState extends State<SimpleWorkoutDetailScreen> {
       final data = doc.data()!;
       
       // 🔍 デバッグ: データ構造を確認
-      if (kDebugMode) {
-        debugPrint('🔍 Firestore data keys: ${data.keys.toList()}');
-        debugPrint('🔍 Data structure: ${data.runtimeType}');
-      }
+      print('🔍 Firestore data keys: ${data.keys.toList()}');
+      print('🔍 Data structure check:');
+      print('   - has sets: ${data.containsKey('sets')}');
+      print('   - has exercises: ${data.containsKey('exercises')}');
       
-      // 🔧 sets配列から該当種目のセットだけを削除
-      final sets = data['sets'] as List<dynamic>? ?? [];
+      // 🔧 データ構造を判定して処理を分岐
+      bool hasSetsArray = data.containsKey('sets') && data['sets'] is List;
+      bool hasExercisesMap = data.containsKey('exercises') && data['exercises'] is Map;
       
-      if (kDebugMode) {
-        debugPrint('🔍 Before delete - total sets: ${sets.length}');
-        final exerciseNames = sets
-            .where((s) => s is Map)
-            .map((s) => s['exercise_name'])
-            .toSet()
-            .toList();
-        debugPrint('🔍 Before delete - exercises: $exerciseNames');
-        debugPrint('🔍 Deleting exercise: $exerciseName');
-      }
+      print('🔍 Data format: ${hasSetsArray ? "sets array" : ""} ${hasExercisesMap ? "exercises map" : ""}');
       
-      // 指定された種目のセットだけをフィルタリング（削除）
-      final remainingSets = sets.where((set) {
-        if (set is Map<String, dynamic>) {
-          final setExerciseName = set['exercise_name'] as String? ?? '';
-          final shouldKeep = setExerciseName != exerciseName;
-          
-          // 各セットの判定をログ出力（Releaseビルドでも表示）
-          print('🔍 Set: $setExerciseName, Delete target: $exerciseName, Keep: $shouldKeep');
-          
-          return shouldKeep;
-        }
-        return true;
-      }).toList();
-      
-      // 削除後の状態を常に表示（Releaseビルドでも）
-      print('🔍 After filter - total sets: ${remainingSets.length}');
-      final remainingExerciseNames = remainingSets
-          .where((s) => s is Map)
-          .map((s) => s['exercise_name'])
-          .toSet()
-          .toList();
-      print('🔍 After filter - exercises: $remainingExerciseNames');
-      
-      if (kDebugMode) {
-        debugPrint('🔍 After delete - total sets: ${remainingSets.length}');
-        debugPrint('🔍 After delete - exercises: $remainingExerciseNames');
-      }
-      
-      // 🔥 重要: 全セットが削除された場合は記録全体を削除
-      if (remainingSets.isEmpty) {
-        print('⚠️ remainingSets is empty - deleting entire workout');
+      if (hasSetsArray) {
+        // ✅ 通常形式: sets配列から削除
+        print('📋 Processing: sets array format');
+        await _deleteFromSetsArray(docRef, data, exerciseName);
+      } else if (hasExercisesMap) {
+        // ✅ テンプレート形式: exercises Mapから削除  
+        print('📋 Processing: exercises map format');
+        await _deleteFromExercisesMap(docRef, data, exerciseName);
       } else {
-        print('✅ remainingSets has ${remainingSets.length} sets - updating Firestore');
-      }
-      
-      if (remainingSets.isEmpty) {
-        await docRef.delete();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('最後の種目が削除されたため、トレーニング記録全体を削除しました'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-          Navigator.pop(context); // 詳細画面を閉じる
-        }
-      } else {
-        // まだ他のセットがある場合は、setsフィールドだけを更新
-        await docRef.update({'sets': remainingSets});
-        
-        // 残った種目数を計算
-        final remainingExerciseNames = remainingSets
-            .where((s) => s is Map)
-            .map((s) => s['exercise_name'])
-            .toSet()
-            .length;
-        
-        if (kDebugMode) {
-          debugPrint('✅ Firestore updated - remaining sets: ${remainingSets.length}');
-          debugPrint('✅ Remaining exercises: $remainingExerciseNames');
-        }
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('「$exerciseName」を削除しました（残り${remainingExerciseNames}種目）'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          
-          // Firestoreから最新データを再取得して画面を更新
-          final updatedDoc = await docRef.get();
-          if (updatedDoc.exists) {
-            final updatedData = updatedDoc.data()!;
-            
-            if (kDebugMode) {
-              final updatedSets = updatedData['sets'] as List<dynamic>? ?? [];
-              final updatedExercises = updatedSets
-                  .where((s) => s is Map)
-                  .map((s) => s['exercise_name'])
-                  .toSet()
-                  .toList();
-              debugPrint('🔄 Reloading with updated data: $updatedExercises');
-            }
-            
-            // 画面を再読み込み（Firestoreから取得した最新データを使用）
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SimpleWorkoutDetailScreen(
-                  workoutId: widget.workoutId,
-                  workoutData: updatedData,
-                ),
-              ),
-            );
-          }
-        }
+        throw Exception('Unknown data structure: no sets array or exercises map found');
       }
     } catch (e) {
       if (mounted) {
@@ -610,9 +569,141 @@ class _SimpleWorkoutDetailScreenState extends State<SimpleWorkoutDetailScreen> {
           SnackBar(content: Text('削除に失敗しました: $e')),
         );
       }
-      debugPrint('❌ 種目削除エラー: $e');
+      print('❌ 種目削除エラー: $e');
     }
   }
+  
+  // 🔧 sets配列形式からの削除
+  Future<void> _deleteFromSetsArray(
+    DocumentReference docRef,
+    Map<String, dynamic> data,
+    String exerciseName,
+  ) async {
+    final sets = data['sets'] as List<dynamic>? ?? [];
+    
+    print('🔍 Before delete - total sets: ${sets.length}');
+    
+    // 指定された種目のセットだけをフィルタリング（削除）
+    print('🎯 Target exercise to DELETE: "$exerciseName" (len=${exerciseName.length}, bytes=${exerciseName.codeUnits})');
+    
+    final remainingSets = sets.where((set) {
+      if (set is Map<String, dynamic>) {
+        final setExerciseName = set['exercise_name'] as String? ?? '';
+        final isMatch = setExerciseName == exerciseName;
+        final shouldKeep = !isMatch;
+        print('   Set: "$setExerciseName" (len=${setExerciseName.length}, bytes=${setExerciseName.codeUnits})');
+        print('        → Match: $isMatch, Keep: $shouldKeep');
+        return shouldKeep;
+      }
+      return true;
+    }).toList();
+    
+    print('🔍 After filter - total sets: ${remainingSets.length}');
+    
+    if (remainingSets.isEmpty) {
+      print('⚠️ All sets deleted - deleting entire workout');
+      await docRef.delete();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('最後の種目が削除されたため、トレーニング記録全体を削除しました'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } else {
+      print('✅ Updating Firestore with ${remainingSets.length} sets');
+      await docRef.update({'sets': remainingSets});
+      
+      final remainingExerciseNames = remainingSets
+          .where((s) => s is Map)
+          .map((s) => s['exercise_name'])
+          .toSet()
+          .length;
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('「$exerciseName」を削除しました（残り${remainingExerciseNames}種目）'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // 画面を再読み込み
+        final updatedDoc = await docRef.get();
+        if (updatedDoc.exists) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SimpleWorkoutDetailScreen(
+                workoutId: widget.workoutId,
+                workoutData: updatedDoc.data()! as Map<String, dynamic>,
+              ),
+            ),
+          );
+        }
+      }
+    }
+  }
+  
+  // 🔧 exercises Map形式からの削除
+  Future<void> _deleteFromExercisesMap(
+    DocumentReference docRef,
+    Map<String, dynamic> data,
+    String exerciseName,
+  ) async {
+    final exercises = Map<String, dynamic>.from(data['exercises'] as Map);
+    
+    print('🔍 Before delete - exercises: ${exercises.keys.toList()}');
+    
+    // 指定された種目を削除
+    exercises.remove(exerciseName);
+    
+    print('🔍 After delete - exercises: ${exercises.keys.toList()}');
+    
+    if (exercises.isEmpty) {
+      print('⚠️ All exercises deleted - deleting entire workout');
+      await docRef.delete();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('最後の種目が削除されたため、トレーニング記録全体を削除しました'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } else {
+      print('✅ Updating Firestore with ${exercises.length} exercises');
+      await docRef.update({'exercises': exercises});
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('「$exerciseName」を削除しました（残り${exercises.length}種目）'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // 画面を再読み込み
+        final updatedDoc = await docRef.get();
+        if (updatedDoc.exists) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SimpleWorkoutDetailScreen(
+                workoutId: widget.workoutId,
+                workoutData: updatedDoc.data()! as Map<String, dynamic>,
+              ),
+            ),
+          );
+        }
+      }
+    }
+  }
+  
+
 
   // 削除確認
   void _confirmDelete(BuildContext context) {

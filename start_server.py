@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Simple CORS-enabled HTTP server for Flutter web app"""
+
 import http.server
 import socketserver
 
@@ -9,8 +11,8 @@ class CORSRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Content-Security-Policy', 'frame-ancestors *')
         super().end_headers()
 
-PORT = 5060
-
-with socketserver.TCPServer(("0.0.0.0", PORT), CORSRequestHandler) as httpd:
-    print(f"🚀 Flutter CORS server started on port {PORT}")
-    httpd.serve_forever()
+if __name__ == '__main__':
+    PORT = 5060
+    with socketserver.TCPServer(('0.0.0.0', PORT), CORSRequestHandler) as httpd:
+        print(f'✅ Server running on port {PORT}')
+        httpd.serve_forever()
