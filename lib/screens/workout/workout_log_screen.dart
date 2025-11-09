@@ -11,6 +11,8 @@ import 'body_part_tracking_screen.dart';
 import 'workout_memo_list_screen.dart';
 import 'trainer_workout_card.dart';
 import '../../services/trainer_workout_service.dart';
+import '../../services/workout_share_service.dart';
+import '../../widgets/workout_share_image.dart';
 
 /// トレーニング記録一覧画面
 class WorkoutLogScreen extends StatefulWidget {
@@ -211,6 +213,97 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
     );
   }
 
+  /// シェア処理
+  Future<void> _handleShare(User user) async {
+    try {
+      // 今日の自己記録を取得
+      final today = DateTime.now();
+      final todayStart = DateTime(today.year, today.month, today.day);
+      final todayEnd = todayStart.add(const Duration(days: 1));
+
+      final snapshot = await FirebaseFirestore.instance
+          .collection('workout_logs')
+          .where('userId', isEqualTo: user.uid)
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart))
+          .where('date', isLessThan: Timestamp.fromDate(todayEnd))
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('今日のトレーニング記録がありません'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // 種目ごとにグループ化
+      final exerciseMap = <String, List<Map<String, dynamic>>>{};
+      
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final exercises = data['exercises'] as List<dynamic>?;
+        
+        if (exercises != null) {
+          for (final exercise in exercises) {
+            final exerciseData = exercise as Map<String, dynamic>;
+            final name = exerciseData['name'] as String? ?? '不明な種目';
+            
+            if (!exerciseMap.containsKey(name)) {
+              exerciseMap[name] = [];
+            }
+            
+            exerciseMap[name]!.add({
+              'weight': exerciseData['weight'],
+              'reps': exerciseData['reps'],
+              'sets': exerciseData['sets'] ?? 1,
+            });
+          }
+        }
+      }
+
+      // WorkoutExerciseGroupリストに変換
+      final exerciseGroups = exerciseMap.entries.map((entry) {
+        return WorkoutExerciseGroup(
+          name: entry.key,
+          sets: entry.value,
+        );
+      }).toList();
+
+      if (exerciseGroups.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('シェアできる種目がありません'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // シェア実行
+      final shareService = WorkoutShareService();
+      await shareService.shareWorkout(
+        context: context,
+        date: today,
+        exercises: exerciseGroups,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('シェアに失敗しました: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   /// メインコンテンツ表示
   Widget _buildMainContent(User user) {
 
@@ -218,6 +311,11 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
       appBar: AppBar(
         title: const Text('トレーニング記録'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () => _handleShare(user),
+            tooltip: 'トレーニングをシェア',
+          ),
           IconButton(
             icon: const Icon(Icons.calendar_today),
             onPressed: () {
