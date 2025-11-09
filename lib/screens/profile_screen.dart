@@ -4,6 +4,7 @@ import 'favorites_screen.dart';
 import 'subscription_screen.dart';
 import 'body_measurement_screen.dart';
 import 'visit_history_screen.dart';
+import 'personal_training/pt_password_screen.dart';
 import '../services/favorites_service.dart';
 import '../services/subscription_service.dart';
 
@@ -144,40 +145,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildMenuList(BuildContext context) {
     return Column(
       children: [
-        // PO管理者専用ログイン
+        // パーソナルトレーニング
         Card(
           elevation: 2,
-          color: Colors.blue[50],
+          color: Colors.orange[50],
           child: ListTile(
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.blue[700],
+                color: Colors.orange[700],
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.admin_panel_settings, color: Colors.white),
+              child: const Icon(Icons.fitness_center, color: Colors.white),
             ),
             title: const Text(
-              '👑 PO管理者専用ログイン',
+              '💪 パーソナルトレーニング',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: const Text(
-              '会員管理・セッション管理・分析機能',
+              '予約状況・トレーニング記録・予約申込',
               style: TextStyle(fontSize: 12),
             ),
-            trailing: const Icon(Icons.open_in_new),
-            onTap: () async {
-              // PO管理Webアプリへの外部リンク
-              final poAdminUrl = Uri.parse('https://3000-i1wzdi6c2urpgehncb6jg-5634da27.sandbox.novita.ai');
-              if (await canLaunchUrl(poAdminUrl)) {
-                await launchUrl(poAdminUrl, mode: LaunchMode.externalApplication);
-              } else {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('PO管理ページを開けませんでした')),
-                  );
-                }
-              }
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PTPasswordScreen()),
+              );
             },
           ),
         ),

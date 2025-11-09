@@ -9,8 +9,6 @@ import 'weekly_reports_screen.dart';
 import 'personal_records_screen.dart';
 import 'body_part_tracking_screen.dart';
 import 'workout_memo_list_screen.dart';
-import 'trainer_workout_card.dart';
-import '../../services/trainer_workout_service.dart';
 
 /// トレーニング記録一覧画面
 class WorkoutLogScreen extends StatefulWidget {
@@ -231,88 +229,37 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
           // Layer 2-5 クイックアクセスバー
           _buildQuickAccessBar(context),
           
-          // メインコンテンツ（自己記録 + トレーナー記録の統合表示）
+          // メインコンテンツ
           Expanded(
-            child: _buildCombinedWorkoutList(user),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddWorkoutScreen(),
-            ),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
+            child: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('workout_logs')
+            .where('user_id', isEqualTo: user.uid)
+            .snapshots(), // リアルタイム更新（自動反映）
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-  /// 自己記録とトレーナー記録を統合して表示
-  Widget _buildCombinedWorkoutList(User user) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('workout_logs')
-          .where('user_id', isEqualTo: user.uid)
-          .snapshots(),
-      builder: (context, personalSnapshot) {
-        if (personalSnapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        // 自己記録を取得
-        final personalWorkouts = personalSnapshot.hasData
-            ? personalSnapshot.data!.docs
-            : <QueryDocumentSnapshot>[];
-
-        // トレーナー記録を取得（FutureBuilder使用）
-        return FutureBuilder<List<TrainerWorkoutRecord>>(
-          future: _fetchTrainerWorkouts(user.uid),
-          builder: (context, trainerSnapshot) {
-            // 統合リストを作成
-            final combinedList = <_WorkoutItem>[];
-
-            // 自己記録カードを追加
-            for (final doc in personalWorkouts) {
-              final data = doc.data() as Map<String, dynamic>;
-              final date = (data['date'] as Timestamp?)?.toDate() ?? DateTime(2000);
-              combinedList.add(_WorkoutItem(
-                date: date,
-                widget: _SimpleWorkoutCard(
-                  workoutId: doc.id,
-                  workoutData: data,
-                ),
-              ));
-            }
-
-            // トレーナー記録カードを追加
-            if (trainerSnapshot.hasData) {
-              for (final record in trainerSnapshot.data!) {
-                combinedList.add(_WorkoutItem(
-                  date: record.date,
-                  widget: TrainerWorkoutCard(record: record),
-                ));
-              }
-            }
-
-            // 日付順にソート
-            combinedList.sort((a, b) => b.date.compareTo(a.date));
-
-            // リストが空の場合
-            if (combinedList.isEmpty) {
-              return Center(
+          if (snapshot.hasError) {
+            // より詳細なエラー表示
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.fitness_center,
-                        size: 64, color: Colors.grey[400]),
+                    const Icon(Icons.error_outline, size: 64, color: Colors.orange),
                     const SizedBox(height: 16),
+                    const Text(
+                      'データの読み込みに失敗しました',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
                     Text(
-                      'まだトレーニング記録がありません',
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                      'デモモードでは初回アクセス時にデータがありません',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
@@ -329,53 +276,84 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
                     ),
                   ],
                 ),
-              );
-            }
-
-            // 最新30件のみ表示
-            final displayList = combinedList.take(30).toList();
-
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: displayList.length,
-              itemBuilder: (context, index) {
-                return displayList[index].widget;
-              },
+              ),
             );
-          },
-        );
-      },
-    );
-  }
+          }
 
-  /// トレーナー記録を取得（メールアドレスで検索）
-  Future<List<TrainerWorkoutRecord>> _fetchTrainerWorkouts(String userId) async {
-    try {
-      final service = TrainerWorkoutService();
-      
-      // FirebaseAuthのユーザーメールアドレスを取得
-      final user = FirebaseAuth.instance.currentUser;
-      final email = user?.email ?? '';
-      
-      if (email.isEmpty) {
-        print('⚠️ メールアドレスが設定されていません（匿名ログインの可能性）');
-        return [];
-      }
-      
-      print('📧 トレーナー記録取得開始: $email');
-      
-      // メールアドレスでトレーナー記録を取得
-      final records = await service.getSharedWorkoutRecordsByEmail(
-        memberEmail: email,
-      );
-      
-      print('✅ トレーナー記録取得完了: ${records.length}件');
-      
-      return records;
-    } catch (e) {
-      print('❌ トレーナー記録取得エラー: $e');
-      return []; // エラー時は空リスト返却（自己記録は表示継続）
-    }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.fitness_center,
+                      size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'まだトレーニング記録がありません',
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddWorkoutScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('最初の記録を追加'),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // workout_logsデータを直接使用
+          final workoutDocs = snapshot.data!.docs;
+          
+          // メモリ内で日付ソート（Firestoreインデックス不要）
+          workoutDocs.sort((a, b) {
+            final dataA = a.data() as Map<String, dynamic>;
+            final dataB = b.data() as Map<String, dynamic>;
+            final dateA = (dataA['date'] as Timestamp?)?.toDate() ?? DateTime(2000);
+            final dateB = (dataB['date'] as Timestamp?)?.toDate() ?? DateTime(2000);
+            return dateB.compareTo(dateA);
+          });
+          
+          // 最新30件のみ表示
+          final displayDocs = workoutDocs.take(30).toList();
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: displayDocs.length,
+            itemBuilder: (context, index) {
+              final doc = displayDocs[index];
+              final data = doc.data() as Map<String, dynamic>;
+              return _SimpleWorkoutCard(
+                workoutId: doc.id,
+                workoutData: data,
+              );
+            },
+          );
+        },
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddWorkoutScreen(),
+            ),
+          );
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
   }
 
   /// Layer 2-5 クイックアクセスバー
@@ -506,14 +484,6 @@ class _QuickAccessCard extends StatelessWidget {
       ),
     );
   }
-}
-
-/// ソート用のワークアウトアイテム
-class _WorkoutItem {
-  final DateTime date;
-  final Widget widget;
-
-  _WorkoutItem({required this.date, required this.widget});
 }
 
 /// シンプルなトレーニングカード（workout_logsデータ用）
