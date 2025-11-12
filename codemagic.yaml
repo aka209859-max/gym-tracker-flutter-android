@@ -3,12 +3,12 @@ workflows:
     name: iOS Release
     max_build_duration: 120
     instance_type: mac_mini_m2
-    integrations:
-      app_store_connect: Codemagic iOS Signing
     environment:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.nexa.gymmatch
+        certificate: nexa_dist_cert
+        profile: nexa_appstore_profile
       vars:
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
@@ -16,10 +16,7 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Set up code signing with API Key
-        script: |
-          app-store-connect fetch-signing-files com.nexa.gymmatch --type IOS_APP_STORE --create
-      - name: Set up code signing settings on Xcode project
+      - name: Set up manual code signing
         script: |
           xcode-project use-profiles
       - name: Get Flutter packages
