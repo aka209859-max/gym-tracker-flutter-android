@@ -21,6 +21,7 @@ workflows:
           app-store-connect fetch-signing-files \
             --apple-id $APP_STORE_CONNECT_APPLE_ID \
             --password $APP_STORE_CONNECT_PASSWORD \
+            --team-id 7V5DA99X2M \
             --create \
             com.nexa.gymmatch
       - name: Set up code signing settings on Xcode project
