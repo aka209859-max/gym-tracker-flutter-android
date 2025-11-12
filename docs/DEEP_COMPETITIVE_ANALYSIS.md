@@ -600,5 +600,5 @@ FitSyncの革命:
 
 **Document Version**: 2.0 (Deep Analysis)  
 **Last Updated**: 2025-01-XX  
-**Owner**: NexaJP CEO  
+**Owner**: Enable CEO  
 **Status**: 市場独占可能性 = 100%

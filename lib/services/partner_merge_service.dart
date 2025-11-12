@@ -37,8 +37,7 @@ class PartnerMergeService {
       
       final snapshot = await _firestore
           .collection('gyms')
-          .where('isPartner', isEqualTo: true)
-          .get()
+          .get()  // 全ジムを取得してマッチング（パートナーフラグは後で確認）
           .timeout(
             const Duration(seconds: 10),
             onTimeout: () {
@@ -49,21 +48,26 @@ class PartnerMergeService {
             },
           );
       
-      final partnerGyms = snapshot.docs.map((doc) {
+      final allGyms = snapshot.docs.map((doc) {
         final data = doc.data();
         data['id'] = doc.id;
+        // gymIdがない場合はdoc.idを使用
+        if (!data.containsKey('gymId')) {
+          data['gymId'] = doc.id;
+        }
         return data;
       }).toList();
       
       // キャッシュを更新
-      _partnerGymsCache = partnerGyms;
+      _partnerGymsCache = allGyms;
       _cacheTime = DateTime.now();
       
       if (kDebugMode) {
-        print('✅ Found ${partnerGyms.length} partner gyms in Firestore');
+        final partnerCount = allGyms.where((g) => g['isPartner'] == true).length;
+        print('✅ Found ${allGyms.length} gyms in Firestore (${partnerCount} partners)');
       }
       
-      return partnerGyms;
+      return allGyms;
     } on TimeoutException catch (e) {
       if (kDebugMode) {
         print('⚠️ Firestore timeout: $e - GPS検索は継続します');
@@ -110,9 +114,12 @@ class PartnerMergeService {
         print('     Name Match: $nameMatch, Address Match: $addressMatch');
       }
       
-      // 名前が高い類似度 AND 住所が部分一致 → マッチ
-      // 閾値: 名前0.5以上（キーワード50%一致）、住所0.25以上（都道府県・市区町村レベル）
-      if (nameMatch >= 0.5 && addressMatch >= 0.25) {
+      // 🔧 緩和された閾値: より多くのジムをマッチング
+      // 名前0.4以上（キーワード40%一致） OR 住所0.2以上（都道府県レベル）
+      // AND 両方が0でない（完全に無関係ではない）
+      if ((nameMatch >= 0.4 && addressMatch >= 0.2) || 
+          (nameMatch >= 0.6 && addressMatch >= 0.1) ||
+          (nameMatch >= 0.3 && addressMatch >= 0.4)) {
         if (kDebugMode) {
           print('   ✅ MATCH FOUND!');
         }
@@ -334,10 +341,13 @@ class PartnerMergeService {
   
   /// GooglePlaceをGymオブジェクトに変換（パートナー情報をマージ）
   Gym _convertGooglePlaceToGym(GooglePlace place, Map<String, dynamic>? partnerData) {
-    final isPartner = partnerData != null;
+    // 🔧 CRITICAL FIX: Firestoreの実際のisPartnerフィールドの値を使用
+    // partnerDataが存在するだけでisPartner=trueにしない
+    final isPartner = partnerData?['isPartner'] as bool? ?? false;
     
     return Gym(
       id: partnerData?['id'] as String? ?? place.placeId,
+      gymId: partnerData?['gymId'] as String? ?? partnerData?['id'] as String?,
       name: partnerData?['name'] as String? ?? place.name,
       address: partnerData?['address'] as String? ?? place.address,
       latitude: (partnerData?['latitude'] as num?)?.toDouble() ?? place.latitude,
@@ -365,24 +375,25 @@ class PartnerMergeService {
           ? (partnerData!['lastCrowdUpdate'] as Timestamp?)?.toDate()
           : null,
       isPartner: isPartner,
-      partnerBenefit: partnerData?['partnerBenefit'] as String?,
-      partnerSince: partnerData?['partnerSince'] != null 
-          ? (partnerData!['partnerSince'] as Timestamp?)?.toDate()
+      // 🔧 CRITICAL FIX: パートナー関連フィールドはisPartner=trueの場合のみ設定
+      partnerBenefit: isPartner && partnerData != null ? partnerData['partnerBenefit'] as String? : null,
+      partnerSince: isPartner && partnerData != null && partnerData['partnerSince'] != null 
+          ? (partnerData['partnerSince'] as Timestamp?)?.toDate()
           : null,
-      campaignTitle: partnerData?['campaignTitle'] as String?,
-      campaignDescription: partnerData?['campaignDescription'] as String?,
-      campaignValidUntil: partnerData?['campaignValidUntil'] != null 
-          ? (partnerData!['campaignValidUntil'] as Timestamp?)?.toDate()
+      campaignTitle: isPartner && partnerData != null ? partnerData['campaignTitle'] as String? : null,
+      campaignDescription: isPartner && partnerData != null ? partnerData['campaignDescription'] as String? : null,
+      campaignValidUntil: isPartner && partnerData != null && partnerData['campaignValidUntil'] != null 
+          ? (partnerData['campaignValidUntil'] as Timestamp?)?.toDate()
           : null,
-      campaignCouponCode: partnerData?['campaignCouponCode'] as String?,
-      campaignBannerUrl: partnerData?['campaignBannerUrl'] as String?,
+      campaignCouponCode: isPartner && partnerData != null ? partnerData['campaignCouponCode'] as String? : null,
+      campaignBannerUrl: isPartner && partnerData != null ? partnerData['campaignBannerUrl'] as String? : null,
       photos: partnerData?['photos'] != null 
           ? List<String>.from(partnerData!['photos'] as List)
           : null,
-      acceptsVisitors: partnerData?['acceptsVisitors'] as bool? ?? false,
-      reservationEmail: partnerData?['reservationEmail'] as String?,
-      equipment: partnerData?['equipment'] != null 
-          ? (partnerData!['equipment'] as Map<String, dynamic>).map(
+      acceptsVisitors: isPartner && partnerData != null ? (partnerData['acceptsVisitors'] as bool? ?? false) : false,
+      reservationEmail: isPartner && partnerData != null ? partnerData['reservationEmail'] as String? : null,
+      equipment: isPartner && partnerData != null && partnerData['equipment'] != null 
+          ? (partnerData['equipment'] as Map<String, dynamic>).map(
               (key, value) => MapEntry(key, (value as num).toInt()),
             )
           : null,

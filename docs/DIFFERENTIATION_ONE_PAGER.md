@@ -223,4 +223,4 @@ Month 3: 競合参入障壁構築（データ量・ユーザー数で圧倒）
 
 **Document Version**: 1.0  
 **Last Updated**: 2025-01-XX  
-**Owner**: NexaJP CEO
+**Owner**: Enable CEO

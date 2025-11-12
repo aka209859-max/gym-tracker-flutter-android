@@ -5,8 +5,12 @@ import 'subscription_screen.dart';
 import 'body_measurement_screen.dart';
 import 'visit_history_screen.dart';
 import 'personal_training/pt_password_screen.dart';
+import 'messages/messages_screen.dart';
+import 'partner/partner_screen.dart';
+import 'settings/notification_settings_screen.dart';
 import '../services/favorites_service.dart';
 import '../services/subscription_service.dart';
+import '../services/chat_service.dart';
 
 /// プロフィール画面
 class ProfileScreen extends StatefulWidget {
@@ -19,14 +23,17 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final FavoritesService _favoritesService = FavoritesService();
   final SubscriptionService _subscriptionService = SubscriptionService();
+  final ChatService _chatService = ChatService();
   
   int _favoriteCount = 0;
+  int _unreadMessages = 0;
   SubscriptionType _currentPlan = SubscriptionType.free;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _subscribeToUnreadMessages();
   }
 
   Future<void> _loadUserData() async {
@@ -36,6 +43,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _favoriteCount = favoriteCount;
       _currentPlan = currentPlan;
+    });
+  }
+
+  /// 未読メッセージ数を監視
+  void _subscribeToUnreadMessages() {
+    _chatService.getTotalUnreadCount().listen((count) {
+      if (mounted) {
+        setState(() {
+          _unreadMessages = count;
+        });
+      }
     });
   }
 
@@ -85,12 +103,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 16),
             const Text(
-              'デモユーザー',
+              'トレーニングユーザー',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
-              'Firebase設定後に本番アカウント利用可能',
+              'GYM MATCHへようこそ',
               style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
@@ -221,9 +239,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: Icons.people,
           title: 'トレーニングパートナー',
           subtitle: 'マッチング機能',
-          badge: 'Coming Soon',
           onTap: () {
-            _showComingSoonDialog(context, 'トレーニングパートナー');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PartnerScreen()),
+            );
           },
         ),
         const SizedBox(height: 12),
@@ -231,10 +251,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           context,
           icon: Icons.message,
           title: 'メッセージ',
-          subtitle: '新着メッセージなし',
-          badge: 'Coming Soon',
+          subtitle: _unreadMessages > 0 ? '新着 $_unreadMessages 件' : '新着メッセージなし',
+          badge: _unreadMessages > 0 ? '$_unreadMessages' : null,
+          badgeColor: Colors.red,
           onTap: () {
-            _showComingSoonDialog(context, 'メッセージング');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MessagesScreen()),
+            );
           },
         ),
         const SizedBox(height: 12),
@@ -242,9 +266,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           context,
           icon: Icons.notifications,
           title: '通知設定',
-          subtitle: '通知度アラート',
+          subtitle: 'プッシュ通知・アラート',
           onTap: () {
-            _showComingSoonDialog(context, '通知設定');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const NotificationSettingsScreen()),
+            );
           },
         ),
       ],
@@ -257,6 +284,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String title,
     required String subtitle,
     String? badge,
+    Color? badgeColor,
     required VoidCallback onTap,
   }) {
     return Card(
@@ -273,9 +301,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: badge == '有料プラン'
-                      ? Colors.amber[100]
-                      : Colors.blue[100],
+                  color: badgeColor?.withValues(alpha: 0.2) ?? 
+                      (badge == '有料プラン' ? Colors.amber[100] : Colors.blue[100]),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -283,9 +310,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: badge == '有料プラン'
-                        ? Colors.amber[900]
-                        : Colors.blue[900],
+                    color: badgeColor ?? 
+                        (badge == '有料プラン' ? Colors.amber[900] : Colors.blue[900]),
                   ),
                 ),
               ),

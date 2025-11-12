@@ -6,7 +6,7 @@
 
 1. **希少性の原理（Scarcity）**: 「48時間限定・先着10施設」→ FOMO（Fear of Missing Out）を誘発
 2. **社会的証明（Social Proof）**: 「業界初」「競合より先行」→ 先行者利益の訴求
-3. **権威性（Authority）**: 株式会社NexaJP CEO → 信頼性の確立
+3. **権威性（Authority）**: 株式会社Enable CEO → 信頼性の確立
 4. **互恵性（Reciprocity）**: 無料掲載・先行者特典 → 返報性の法則
 5. **コミットメントと一貫性（Commitment & Consistency）**: 「48時間で掲載」→ 即座の行動を促す
 6. **好意（Liking）**: 個別化されたメッセージ → 相手を尊重している印象
@@ -33,7 +33,7 @@
 ◆本文◆
 {{name}}様
 
-株式会社NexaJP CEO の [Your Name] と申します。
+株式会社Enable CEO の [Your Name] と申します。
 
 {{name}}様の{{gym_name}}の取り組みを拝見し、
 日本初のサービス「FitSync」β版パートナーとして
@@ -60,7 +60,7 @@
 貴施設の成長を48時間でサポートします。
 
 ---
-株式会社NexaJP CEO
+株式会社Enable CEO
 {{your_name}}
 FitSync: https://fitsync.jp (β版)
 ```
@@ -99,7 +99,7 @@ FitSync: https://fitsync.jp (β版)
 ◆本文◆
 {{name}}様
 
-株式会社NexaJP CEO {{your_name}}です。
+株式会社Enable CEO {{your_name}}です。
 
 {{chain_name}}の{{area}}展開戦略を拝見し、
 業界初サービス「FitSync」先行パートナーとして
@@ -130,7 +130,7 @@ FitSyncは「入会前の潜在顧客」に全ジム横断でリーチ
 貴社の市場支配戦略、ご一緒できれば幸いです。
 
 ---
-{{your_name}} / NexaJP CEO
+{{your_name}} / Enable CEO
 ```
 
 ### **送信前チェックリスト**
@@ -168,7 +168,7 @@ FitSyncは「入会前の潜在顧客」に全ジム横断でリーチ
 ◆本文◆
 {{name}}様
 
-株式会社NexaJP CEO の [Your Name] です。
+株式会社Enable CEO の [Your Name] です。
 
 {{name}}様の専門的な投稿（特に{{specific_content}}）を拝見し、
 フィットネス業界の「未来を創る側」としてご協力いただけないかとご連絡しました。
@@ -198,7 +198,7 @@ FitSyncは「入会前の潜在顧客」に全ジム横断でリーチ
 業界を変える48時間、ご一緒しませんか？
 
 ---
-株式会社NexaJP CEO
+株式会社Enable CEO
 {{your_name}}
 ```
 
@@ -264,7 +264,7 @@ FitSyncは「入会前の潜在顧客」に全ジム横断でリーチ
 **実装方法**:
 ```
 ❌ 悪い例: 「[Your Name]と申します」
-✅ 良い例: 「株式会社NexaJP CEO [Your Name]」
+✅ 良い例: 「株式会社Enable CEO [Your Name]」
 ```
 
 **効果**: 返信率が**1.8倍**向上（HubSpot, 2020）
@@ -460,13 +460,13 @@ FitSyncは「入会前の潜在顧客」に全ジム横断でリーチ
 
 **Version A（権威性）**:
 ```
-株式会社NexaJP CEO
+株式会社Enable CEO
 {{your_name}}
 ```
 
 **Version B（一般）**:
 ```
-株式会社NexaJP
+株式会社Enable
 {{your_name}}
 ```
 
@@ -624,7 +624,7 @@ FitSyncは「入会前の潜在顧客」に全ジム横断でリーチ
 さらに、効果がなければいつでも掲載停止可能です。
 リスクゼロでお試しいただけます。
 
-株式会社NexaJPの法人情報:
+株式会社Enableの法人情報:
 https://www.example.com（企業サイトURL）
 
 ご不明点があれば、電話でご説明いたします。
@@ -682,5 +682,5 @@ https://www.example.com（企業サイトURL）
 
 **Document Version**: 3.0 (Psychology-Based Edition)  
 **Last Updated**: 2025-01-XX  
-**Owner**: NexaJP CEO  
+**Owner**: Enable CEO  
 **Status**: 実行準備完了 - 契約率15-25%を保証

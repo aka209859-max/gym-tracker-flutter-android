@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../services/subscription_service.dart';
 
 /// Layer 5: AIコーチング画面
 /// 
@@ -38,6 +39,9 @@ class _AICoachingScreenState extends State<AICoachingScreen> {
   // 履歴
   List<Map<String, dynamic>> _history = [];
   bool _isLoadingHistory = false;
+  
+  // サブスクリプションサービス
+  final SubscriptionService _subscriptionService = SubscriptionService();
 
   @override
   void initState() {
@@ -478,6 +482,15 @@ class _AICoachingScreenState extends State<AICoachingScreen> {
 
   /// AIメニュー生成
   Future<void> _generateMenu(List<String> bodyParts) async {
+    // AI使用可能チェック
+    final canUse = await _subscriptionService.canUseAIFeature();
+    if (!canUse) {
+      setState(() {
+        _errorMessage = 'AI機能の使用回数が上限に達しました。プランをアップグレードしてください。';
+      });
+      return;
+    }
+    
     setState(() {
       _isGenerating = true;
       _errorMessage = null;
@@ -513,6 +526,10 @@ class _AICoachingScreenState extends State<AICoachingScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final text = data['candidates'][0]['content']['parts'][0]['text'] as String;
+
+        // AI使用回数をインクリメント
+        await _subscriptionService.incrementAIUsage();
+        debugPrint('✅ AI使用回数: ${await _subscriptionService.getCurrentMonthAIUsage()}');
 
         setState(() {
           _generatedMenu = text;

@@ -24,7 +24,7 @@
 ◆本文◆
 {{name}}様
 
-株式会社NexaJP CEO の {{your_name}} と申します。
+株式会社Enable CEO の {{your_name}} と申します。
 
 {{name}}様の{{gym_name}}の取り組みを拝見し、
 日本初のサービス「FitSync」β版パートナーとして
@@ -57,7 +57,7 @@
 貴施設の成長を48時間でサポートします。
 
 ---
-株式会社NexaJP CEO
+株式会社Enable CEO
 {{your_name}}
 📱 FitSync体験: https://5060-i1wzdi6c2urpgehncb6jg-dfc00ec5.sandbox.novita.ai
 📋 パートナー申込: {{form_url}}
@@ -94,7 +94,7 @@
 ◆本文◆
 {{name}}様
 
-株式会社NexaJP CEO {{your_name}}です。
+株式会社Enable CEO {{your_name}}です。
 
 {{chain_name}}の{{area}}展開戦略を拝見し、
 業界初サービス「FitSync」先行パートナーとして
@@ -129,7 +129,7 @@ FitSyncは「入会前の潜在顧客」に全ジム横断でリーチ
 貴社の市場支配戦略、ご一緒できれば幸いです。
 
 ---
-株式会社NexaJP CEO
+株式会社Enable CEO
 {{your_name}}
 📱 FitSync体験: https://5060-i1wzdi6c2urpgehncb6jg-dfc00ec5.sandbox.novita.ai
 📋 パートナー申込: {{form_url}}
@@ -168,7 +168,7 @@ FitSyncは「入会前の潜在顧客」に全ジム横断でリーチ
 ◆本文◆
 {{name}}様
 
-株式会社NexaJP CEO の {{your_name}} です。
+株式会社Enable CEO の {{your_name}} です。
 
 {{name}}様の専門的な投稿（特に{{specific_content}}）を拝見し、
 フィットネス業界の「未来を創る側」としてご協力いただけないかとご連絡しました。
@@ -200,7 +200,7 @@ FitSyncは「入会前の潜在顧客」に全ジム横断でリーチ
 業界を変える48時間、ご一緒しませんか？
 
 ---
-株式会社NexaJP CEO
+株式会社Enable CEO
 {{your_name}}
 📱 FitSync体験: https://5060-i1wzdi6c2urpgehncb6jg-dfc00ec5.sandbox.novita.ai
 📋 パートナー申込: {{form_url}}
@@ -347,7 +347,7 @@ FitSyncは「入会前の潜在顧客」に全ジム横断でリーチ
 さらに、効果がなければいつでも掲載停止可能です。
 リスクゼロでお試しいただけます。
 
-株式会社NexaJPの法人情報も公開しております。
+株式会社Enableの法人情報も公開しております。
 ご不明点があれば、電話でもご説明いたします。
 
 {{your_name}}
@@ -488,5 +488,5 @@ https://5060-i1wzdi6c2urpgehncb6jg-dfc00ec5.sandbox.novita.ai
 
 **Document Version**: 4.0 (Final Copy-Paste Edition with PWA URL)  
 **Last Updated**: 2025-01-XX  
-**Owner**: NexaJP CEO  
+**Owner**: Enable CEO  
 **Status**: 即実行可能 - PWA URL + Googleフォーム準備完了

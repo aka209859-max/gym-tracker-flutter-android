@@ -108,7 +108,7 @@ keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk
 
 3. **開発者プロフィール設定**
    ```
-   開発者名: 株式会社NexaJP
+   開発者名: 株式会社Enable
    メールアドレス: [CEOのメールアドレス]
    ウェブサイト: [任意]
    ```
@@ -167,7 +167,7 @@ keytool -printcert -jarfile build/app/outputs/flutter-apk/app-release.apk
    - データに基づいた成長を実感したい方
    
    【開発元】
-   株式会社NexaJP - AI戦略とデータサイエンスを活用した革新的なフィットネスソリューション
+   株式会社Enable - AI戦略とデータサイエンスを活用した革新的なフィットネスソリューション
    ```
 
 4. **スクリーンショット（必須）**
@@ -225,7 +225,7 @@ GYM MATCH プライバシーポリシー
    - Firebaseを通じたデータ保管
 
 4. お問い合わせ
-   株式会社NexaJP
+   株式会社Enable
    [メールアドレス]
 ```
 
@@ -302,7 +302,7 @@ GYM MATCH プライバシーポリシー
 
 3. プログラムに登録
    ```
-   組織名: 株式会社NexaJP
+   組織名: 株式会社Enable
    法人番号: [必要な場合]
    D-U-N-S Number: [必要な場合]
    ```

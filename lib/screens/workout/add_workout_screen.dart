@@ -24,6 +24,7 @@ class WorkoutSet {
   bool isCompleted;
   bool hasAssist;
   SetType setType;
+  bool isBodyweightMode; // 自重モード (true: 自重, false: 荷重)
   
   WorkoutSet({
     required this.exerciseName,
@@ -32,6 +33,7 @@ class WorkoutSet {
     this.isCompleted = false,
     this.hasAssist = false,
     this.setType = SetType.normal,
+    this.isBodyweightMode = true, // デフォルトは自重モード
   });
 }
 
@@ -80,6 +82,12 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
   bool _isCardioExercise(String exerciseName) {
     final cardioExercises = _muscleGroupExercises['有酸素'] ?? [];
     return cardioExercises.contains(exerciseName);
+  }
+  
+  // 懸垂系種目かどうかを判定
+  bool _isPullUpExercise(String exerciseName) {
+    final pullUpVariations = ['懸垂', 'チンニング', 'プルアップ', 'チンアップ', 'ワイドグリッププルアップ'];
+    return pullUpVariations.any((variation) => exerciseName.contains(variation));
   }
 
   @override
@@ -191,6 +199,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                 weight: targetWeight,
                 reps: targetReps,
                 isCompleted: false,
+                isBodyweightMode: _isPullUpExercise(name),
               ));
             }
           }
@@ -204,6 +213,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
             weight: lastWeight ?? 0.0,
             reps: lastReps ?? 10,
             isCompleted: false,
+            isBodyweightMode: _isPullUpExercise(exerciseName),
           ));
           print('✅ $exerciseName に1セット追加（前回: ${lastWeight}kg × ${lastReps}reps）');
         }
@@ -265,11 +275,15 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         }
       }
       
+      // 懸垂の場合は自重モードをデフォルトに
+      final isPullUp = _isPullUpExercise(exerciseName);
+      
       _sets.add(WorkoutSet(
         exerciseName: exerciseName,
         weight: lastSet?.weight ?? _lastWorkoutData[exerciseName]?['weight']?.toDouble() ?? 0.0,
         reps: lastSet?.reps ?? _lastWorkoutData[exerciseName]?['reps'] ?? 10,
         setType: SetType.normal,
+        isBodyweightMode: lastSet?.isBodyweightMode ?? (isPullUp ? true : false),
       ));
     });
   }
@@ -354,8 +368,17 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     // 最初のセットから初期値を取得
     final firstSet = _sets.firstWhere(
       (set) => set.exerciseName == exerciseName,
-      orElse: () => WorkoutSet(exerciseName: exerciseName, weight: 0.0, reps: 10),
+      orElse: () => WorkoutSet(
+        exerciseName: exerciseName, 
+        weight: 0.0, 
+        reps: 10,
+        isBodyweightMode: _isPullUpExercise(exerciseName),
+      ),
     );
+    
+    // 懸垂で自重モードかどうかを判定
+    final isPullUpBodyweight = _isPullUpExercise(exerciseName) && firstSet.isBodyweightMode;
+    
     weightController.text = firstSet.weight.toString();
     repsController.text = firstSet.reps.toString();
 
@@ -366,15 +389,18 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: weightController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: '重量 (kg)',
-                border: OutlineInputBorder(),
+            // 懸垂の自重モードでは重量入力欄を非表示
+            if (!isPullUpBodyweight) ...[
+              TextField(
+                controller: weightController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: '重量 (kg)',
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
+            ],
             TextField(
               controller: repsController,
               keyboardType: TextInputType.number,
@@ -392,7 +418,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           ),
           TextButton(
             onPressed: () {
-              final weight = double.tryParse(weightController.text) ?? 0.0;
+              final weight = isPullUpBodyweight ? 0.0 : (double.tryParse(weightController.text) ?? 0.0);
               final reps = double.tryParse(repsController.text) ?? 10.0;
               Navigator.pop(context, {'weight': weight, 'reps': reps});
             },
@@ -403,6 +429,18 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     );
 
     if (result != null) {
+      // 懸垂で自重モードかどうかを再確認
+      final firstSet = _sets.firstWhere(
+        (set) => set.exerciseName == exerciseName,
+        orElse: () => WorkoutSet(
+          exerciseName: exerciseName, 
+          weight: 0.0, 
+          reps: 10,
+          isBodyweightMode: _isPullUpExercise(exerciseName),
+        ),
+      );
+      final isPullUpBodyweight = _isPullUpExercise(exerciseName) && firstSet.isBodyweightMode;
+      
       setState(() {
         // この種目の全セットに一括入力
         for (var set in _sets) {
@@ -415,7 +453,11 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('一括入力完了: ${result['weight']} kg × ${result['reps']!.toInt()} reps'),
+          content: Text(
+            isPullUpBodyweight 
+              ? '一括入力完了: 自重 × ${result['reps']!.toInt()} reps'
+              : '一括入力完了: ${result['weight']} kg × ${result['reps']!.toInt()} reps'
+          ),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -573,6 +615,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           exerciseName: set.exerciseName,
           weight: set.weight,
           reps: set.reps,
+          isBodyweightMode: set.isBodyweightMode,
         ));
       }
     });
@@ -616,6 +659,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
             'is_completed': set.isCompleted,
             'has_assist': set.hasAssist,
             'set_type': set.setType.toString().split('.').last,
+            'is_bodyweight_mode': set.isBodyweightMode,
           }).toList();
           
           existingSets.addAll(newSets);
@@ -667,6 +711,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
             'is_completed': set.isCompleted,
             'has_assist': set.hasAssist,
             'set_type': set.setType.toString().split('.').last,
+            'is_bodyweight_mode': set.isBodyweightMode,
           }).toList(),
           'created_at': FieldValue.serverTimestamp(),
         });
@@ -1097,31 +1142,134 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
               ),
               const SizedBox(width: 12),
               
-              // 有酸素運動の場合は「時間（分）」、それ以外は「重量（kg）」
-              Expanded(
-                child: TextFormField(
-                  decoration: InputDecoration(
-                    labelText: _isCardioExercise(set.exerciseName) ? '時間 (分)' : '重量 (kg)',
-                    border: const OutlineInputBorder(),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              // 懸垂の場合は自重/荷重モード切り替えを含む特別なUI
+              if (_isPullUpExercise(set.exerciseName))
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 自重/荷重切り替えボタン
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                setState(() {
+                                  set.isBodyweightMode = true;
+                                  set.weight = 0.0; // 自重モードは重量0
+                                });
+                              },
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: set.isBodyweightMode 
+                                    ? const Color(0xFF3F51B5) 
+                                    : Colors.white,
+                                foregroundColor: set.isBodyweightMode 
+                                    ? Colors.white 
+                                    : const Color(0xFF3F51B5),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                side: BorderSide(
+                                  color: const Color(0xFF3F51B5),
+                                  width: set.isBodyweightMode ? 2 : 1,
+                                ),
+                              ),
+                              child: const Text('自重', style: TextStyle(fontSize: 12)),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                setState(() {
+                                  set.isBodyweightMode = false;
+                                });
+                              },
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: !set.isBodyweightMode 
+                                    ? const Color(0xFF3F51B5) 
+                                    : Colors.white,
+                                foregroundColor: !set.isBodyweightMode 
+                                    ? Colors.white 
+                                    : const Color(0xFF3F51B5),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                side: BorderSide(
+                                  color: const Color(0xFF3F51B5),
+                                  width: !set.isBodyweightMode ? 2 : 1,
+                                ),
+                              ),
+                              child: const Text('荷重', style: TextStyle(fontSize: 12)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      // 荷重モードの場合のみ重量入力欄を表示
+                      if (!set.isBodyweightMode)
+                        TextFormField(
+                          key: ValueKey('weight_${globalIndex}_${set.weight}'),
+                          decoration: const InputDecoration(
+                            labelText: '荷重 (kg)',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          initialValue: set.weight == 0.0 ? '' : set.weight.toString(),
+                          onChanged: (value) {
+                            if (value.isEmpty) {
+                              set.weight = 0.0;
+                            } else {
+                              set.weight = double.tryParse(value) ?? 0.0;
+                            }
+                          },
+                        )
+                      else
+                        Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(4),
+                            color: Colors.grey[50],
+                          ),
+                          child: const Center(
+                            child: Text(
+                              '自重',
+                              style: TextStyle(
+                                color: Colors.black54,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  initialValue: set.weight == 0.0 ? '' : set.weight.toString(),
-                  onChanged: (value) {
-                    // 空文字列または無効な値の場合は0に
-                    if (value.isEmpty) {
-                      set.weight = 0.0;
-                    } else {
-                      set.weight = double.tryParse(value) ?? 0.0;
-                    }
-                  },
+                )
+              // 有酸素運動の場合は「時間（分）」、それ以外は「重量（kg）」
+              else
+                Expanded(
+                  child: TextFormField(
+                    key: ValueKey('weight_${globalIndex}_${set.weight}'),
+                    decoration: InputDecoration(
+                      labelText: _isCardioExercise(set.exerciseName) ? '時間 (分)' : '重量 (kg)',
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    initialValue: set.weight == 0.0 ? '' : set.weight.toString(),
+                    onChanged: (value) {
+                      // 空文字列または無効な値の場合は0に
+                      if (value.isEmpty) {
+                        set.weight = 0.0;
+                      } else {
+                        set.weight = double.tryParse(value) ?? 0.0;
+                      }
+                    },
+                  ),
                 ),
-              ),
               const SizedBox(width: 8),
               
               // 有酸素運動の場合は「距離（km）」、それ以外は「回数」
               Expanded(
                 child: TextFormField(
+                  key: ValueKey('reps_${globalIndex}_${set.reps}'),
                   decoration: InputDecoration(
                     labelText: _isCardioExercise(set.exerciseName) ? '距離 (km)' : '回数',
                     border: const OutlineInputBorder(),

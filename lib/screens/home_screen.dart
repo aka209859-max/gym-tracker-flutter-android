@@ -1430,7 +1430,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             final isCardio = muscleGroup == '有酸素';
             
             if (kDebugMode) {
-              print('🏋️ 種目: $exerciseName, muscle_group: $muscleGroup, isCardio: $isCardio');
+              print('種目: $exerciseName, muscle_group: $muscleGroup, isCardio: $isCardio');
             }
             
             // 合計セット数、合計レップ数を計算
@@ -1438,7 +1438,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             final totalReps = sets.fold<int>(0, (sum, set) => sum + (set['reps'] as int));
             
             // 記録のIDを取得（削除・編集用）
-            final workoutId = _selectedDayWorkouts.isNotEmpty ? _selectedDayWorkouts[0]['id'] : null;
+            // ✅ 修正: 各種目の最初のセットからworkout_idを取得（正しいワークアウトIDを使用）
+            final workoutId = sets.isNotEmpty ? sets[0]['workout_id'] as String? : null;
             
             return Dismissible(
               key: Key('${workoutId}_$exerciseName'),
@@ -1656,7 +1657,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    isCardio ? '${set['weight']} 分' : '${set['weight']} Kg',
+                                    isCardio 
+                                      ? '${set['weight']} 分' 
+                                      : (set['is_bodyweight_mode'] == true && set['weight'] == 0.0)
+                                        ? '自重'
+                                        : '${set['weight']} Kg',
                                     style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
@@ -2428,16 +2433,31 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               }
             }
             
-            final remainingExerciseNames = remainingSets
-                .where((s) => s is Map)
-                .map((s) => s['exercise_name'])
-                .toSet()
-                .length;
+            // その日の残り種目数を計算（全ワークアウトから）
+            await _loadWorkoutsForSelectedDay();
+            final totalRemainingExercises = _selectedDayWorkouts.fold<Set<String>>(
+              {},
+              (names, workout) {
+                if (workout['sets'] != null) {
+                  final sets = workout['sets'] as List<dynamic>;
+                  for (var set in sets) {
+                    if (set is Map<String, dynamic>) {
+                      final exerciseName = set['exercise_name'] as String?;
+                      if (exerciseName != null) names.add(exerciseName);
+                    }
+                  }
+                } else if (workout['exercises'] != null) {
+                  final exercises = workout['exercises'] as Map<String, dynamic>;
+                  names.addAll(exercises.keys);
+                }
+                return names;
+              },
+            ).length;
             
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('「$exerciseName」を削除しました（残り${remainingExerciseNames}種目）'),
+                  content: Text('「$exerciseName」を削除しました（残り${totalRemainingExercises}種目）'),
                   backgroundColor: Colors.green,
                 ),
               );
@@ -2478,10 +2498,31 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           print('✅ Updating Firestore with ${exercises.length} exercises');
           await docRef.update({'exercises': exercises});
           
+          // その日の残り種目数を計算（全ワークアウトから）
+          await _loadWorkoutsForSelectedDay();
+          final totalRemainingExercises = _selectedDayWorkouts.fold<Set<String>>(
+            {},
+            (names, workout) {
+              if (workout['sets'] != null) {
+                final sets = workout['sets'] as List<dynamic>;
+                for (var set in sets) {
+                  if (set is Map<String, dynamic>) {
+                    final exerciseName = set['exercise_name'] as String?;
+                    if (exerciseName != null) names.add(exerciseName);
+                  }
+                }
+              } else if (workout['exercises'] != null) {
+                final exercises = workout['exercises'] as Map<String, dynamic>;
+                names.addAll(exercises.keys);
+              }
+              return names;
+            },
+          ).length;
+          
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('「$exerciseName」を削除しました（残り${exercises.length}種目）'),
+                content: Text('「$exerciseName」を削除しました（残り${totalRemainingExercises}種目）'),
                 backgroundColor: Colors.green,
               ),
             );

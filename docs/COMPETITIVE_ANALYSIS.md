@@ -168,7 +168,7 @@ Google Maps:
 
 判断: 「JOYFITの方が空いてる、安い、評価高い → 決定！」（確信）
 
-→ 「勘」を「確信」に変える（NexaJPミッション達成）
+→ 「勘」を「確信」に変える（Enableミッション達成）
 ```
 
 ---
@@ -547,4 +547,4 @@ Q: FitSyncを選んだ理由は？（複数選択可）
 
 **Document Version**: 1.0  
 **Last Updated**: 2025-01-XX  
-**Owner**: NexaJP CEO
+**Owner**: Enable CEO

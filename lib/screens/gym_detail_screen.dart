@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/gym.dart';
+import '../models/gym_announcement.dart';
 import '../services/realtime_user_service.dart';
 import '../services/favorites_service.dart';
 import '../services/share_service.dart';
@@ -229,6 +233,9 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                   // 混雑度カード（2番目に表示）
                   _buildCrowdCard(),
                   const SizedBox(height: 16),
+                  // お知らせセクション（設備と混雑の間）
+                  _buildAnnouncementsSection(),
+                  const SizedBox(height: 16),
                   // 設備情報
                   _buildFacilitiesSection(),
                   const SizedBox(height: 24),
@@ -253,62 +260,9 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
   Widget _buildCrowdCard() {
     final gym = widget.gym;
     
-    // 混雑度データが未実装の場合は「データ収集中」を表示
+    // 混雑度データが未実装の場合は非表示（広告バナー削除）
     if (gym.currentCrowdLevel == 0 || gym.lastCrowdUpdate == null) {
-      return Card(
-        color: Colors.blue.withValues(alpha: 0.05),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.people, size: 32, color: Colors.blue),
-                  SizedBox(width: 12),
-                  Flexible(
-                    child: Text(
-                      'あなたの報告が、\nリアルな混雑度に',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'みんなの報告が集まるほど、\nより正確な混雑度データになります💪',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-              ),
-              const SizedBox(height: 16),
-              // 混雑状況報告ボタン（データ収集中でも表示）
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CrowdReportScreen(gym: widget.gym),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.send),
-                  label: const Text('混雑度を報告する（30秒）'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return const SizedBox.shrink();
     }
     
     final minutesAgo = gym.lastCrowdUpdate != null
@@ -368,41 +322,13 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  // リアルタイムユーザー数表示（デモモード対応）
+                  // リアルタイムユーザー数表示
                   StreamBuilder<int>(
                     stream: _userService.getUserCountStream(gym.id),
                     builder: (context, snapshot) {
-                      // エラー時はデモデータ表示
+                      // エラー時は非表示
                       if (snapshot.hasError) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.person,
-                                size: 18,
-                                color: Theme.of(context).colorScheme.onPrimaryContainer,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'デモモード（Firebase未設定）',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
+                        return const SizedBox.shrink();
                       }
                       
                       if (snapshot.connectionState == ConnectionState.waiting) {
@@ -614,8 +540,13 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
   Widget _buildFacilitiesSection() {
     final gym = widget.gym;
     
+    // パートナージムで設備情報がある場合のみ表示（isPartnerがfalseの場合は常に非表示）
+    if (!gym.isPartner) {
+      return const SizedBox.shrink();
+    }
+    
     // パートナージムで設備情報がある場合は表示
-    if (gym.isPartner && gym.equipment != null && gym.equipment!.isNotEmpty) {
+    if (gym.equipment != null && gym.equipment!.isNotEmpty) {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -683,41 +614,8 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
       );
     }
     
-    // デフォルト: 公式サイトで確認
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '設備・施設',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const Divider(),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.grey[600]),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      '設備情報は公式サイトでご確認ください',
-                      style: TextStyle(color: Colors.grey[700]),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    // パートナージムで設備情報がない場合は非表示
+    return const SizedBox.shrink();
   }
 
   Widget _buildActionButtons() {
@@ -803,12 +701,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () {
-                  // TODO: ルート案内機能
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('ルート案内機能は開発中です')),
-                  );
-                },
+                onPressed: _openGoogleMapsRoute,
                 icon: const Icon(Icons.directions),
                 label: const Text('ルート案内'),
               ),
@@ -1184,5 +1077,268 @@ GYM MATCH
         ),
       ),
     );
+  }
+
+  /// お知らせセクション
+  Widget _buildAnnouncementsSection() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('gym_announcements')
+          .snapshots(),
+      builder: (context, snapshot) {
+        // エラーまたはデータなしの場合は非表示
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        // データ取得成功
+        final announcements = snapshot.data!.docs
+            .map((doc) {
+              try {
+                return GymAnnouncement.fromFirestore(doc);
+              } catch (e) {
+                // パースエラーは無視して続行
+                return null;
+              }
+            })
+            .whereType<GymAnnouncement>()
+            .where((announcement) {
+              // このジムのお知らせのみ
+              // 優先順位: gymId > Document IDで全パターンチェック
+              final gymId = widget.gym.gymId;
+              final docId = widget.gym.id;
+              
+              // gymIdがあればそれを使用、なければDocument IDで照合
+              final matchesGymId = gymId != null && announcement.gymId == gymId;
+              final matchesDocId = announcement.gymId == docId;
+              
+              final matchesGym = matchesGymId || matchesDocId;
+              
+              // 表示可能（有効期限内 & アクティブ）
+              final isDisplayable = announcement.isDisplayable;
+              return matchesGym && isDisplayable;
+            })
+            .toList();
+
+        // メモリ内でソート（新しい順）
+        announcements.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+        // 最新5件のみ表示
+        final displayAnnouncements = announcements.take(5).toList();
+
+        // お知らせがない場合は非表示
+        if (displayAnnouncements.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.campaign, color: Colors.orange[700]),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'お知らせ',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ...displayAnnouncements.map((announcement) => 
+                  _buildAnnouncementCard(announcement)
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// お知らせカード
+  Widget _buildAnnouncementCard(GymAnnouncement announcement) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 画像（ある場合）
+          if (announcement.imageUrl != null)
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+              child: Image.network(
+                announcement.imageUrl!,
+                width: double.infinity,
+                height: 150,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 150,
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: Icon(Icons.image_not_supported, size: 48),
+                    ),
+                  );
+                },
+              ),
+            ),
+          // コンテンツ
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // タイプバッジ
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getAnnouncementTypeColor(announcement.type).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '${announcement.type.icon} ${announcement.type.displayName}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: _getAnnouncementTypeColor(announcement.type),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // タイトル
+                Text(
+                  announcement.title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                // 本文
+                Text(
+                  announcement.content,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                // クーポンコード（ある場合）
+                if (announcement.couponCode != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.1),
+                      border: Border.all(color: Colors.amber, style: BorderStyle.solid),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.local_offer, size: 16, color: Colors.amber[900]),
+                        const SizedBox(width: 4),
+                        Text(
+                          'クーポンコード: ${announcement.couponCode}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber[900],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                // 有効期限（ある場合）
+                if (announcement.validUntil != null) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(Icons.schedule, size: 14, color: Colors.grey[600]),
+                      const SizedBox(width: 4),
+                      Text(
+                        '有効期限: ${_formatDate(announcement.validUntil!)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// お知らせタイプの色
+  Color _getAnnouncementTypeColor(AnnouncementType type) {
+    switch (type) {
+      case AnnouncementType.campaign:
+        return Colors.pink;
+      case AnnouncementType.event:
+        return Colors.purple;
+      case AnnouncementType.maintenance:
+        return Colors.orange;
+      case AnnouncementType.newEquipment:
+        return Colors.green;
+      case AnnouncementType.hours:
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  /// 日付フォーマット
+  String _formatDate(DateTime date) {
+    return '${date.year}/${date.month}/${date.day}';
+  }
+
+  /// Googleマップでルート案内を開く
+  Future<void> _openGoogleMapsRoute() async {
+    final gym = widget.gym;
+    // Googleマップアプリで経路案内を開く（目的地を指定）
+    final url = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=${gym.latitude},${gym.longitude}&travelmode=driving'
+    );
+    
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(
+          url,
+          mode: LaunchMode.externalApplication, // 外部アプリで開く
+        );
+      } else {
+        throw Exception('Googleマップを開けませんでした');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('エラー: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

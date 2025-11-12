@@ -15,8 +15,12 @@ import 'providers/gym_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/auth_provider.dart';
 import 'widgets/install_prompt.dart';
+import 'widgets/trial_welcome_dialog.dart';
+import 'widgets/admob_banner.dart';
 import 'services/subscription_service.dart';
+import 'services/admob_service.dart';
 import 'services/revenue_cat_service.dart';
+import 'services/trial_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -79,6 +83,26 @@ void main() async {
       print('✅ RevenueCat初期化成功');
     } catch (revenueCatError) {
       print('❌ RevenueCat初期化エラー（ローカルモードで動作）: $revenueCatError');
+    }
+    
+    // 🎁 トライアル期限チェック
+    try {
+      print('🎁 トライアル期限チェック...');
+      final trialService = TrialService();
+      await trialService.checkTrialExpiration();
+      print('✅ トライアル状態確認完了');
+    } catch (trialError) {
+      print('❌ トライアルチェックエラー: $trialError');
+    }
+    
+    // 📱 AdMob初期化（無料プラン広告用）
+    try {
+      print('📱 AdMob初期化...');
+      final adMobService = AdMobService();
+      await adMobService.initialize();
+      print('✅ AdMob初期化完了');
+    } catch (adMobError) {
+      print('❌ AdMob初期化エラー（広告なしで動作）: $adMobError');
     }
   }
   
@@ -157,14 +181,22 @@ class _MainScreenState extends State<MainScreen> {
   bool _showInstallPrompt = true;
 
   final List<Widget> _screens = [
-    const MapScreen(),  // ジム検索（GPS + リスト表示）
     const HomeScreen(),  // トレーニング記録画面（筋トレMEMO風）
-    const ProfileScreen(),
+    const MapScreen(),  // ジム検索（GPS + リスト表示）
+    const ProfileScreen(),  // プロフィール
   ];
 
   @override
   void initState() {
     super.initState();
+    
+    // トライアル案内ダイアログを初回起動時に表示
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        TrialWelcomeDialog.showIfFirstLaunch(context);
+      }
+    });
+    
     // インストールプロンプトを3秒後に表示
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
@@ -193,7 +225,13 @@ class _MainScreenState extends State<MainScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // AdMobバナー広告（無料プランのみ）
+          const AdMobBanner(),
+          // ナビゲーションバー
+          NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
           setState(() {
@@ -202,19 +240,21 @@ class _MainScreenState extends State<MainScreen> {
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map),
-            label: 'ジムマップ',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.event_note_outlined),
             selectedIcon: Icon(Icons.event_note),
             label: '記録',
           ),
           NavigationDestination(
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map),
+            label: 'ジムマップ',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
             label: 'プロフィール',
+          ),
+        ],
           ),
         ],
       ),

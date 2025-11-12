@@ -69,6 +69,9 @@ dependencies:
   
   # iOS In-App Purchase & Subscription Management
   purchases_flutter: 8.5.0  # RevenueCat SDK for iOS/Android subscriptions
+  
+  # AdMob Integration (Free plan monetization)
+  google_mobile_ads: 5.3.1  # Google AdMob ads integration for monetization
 
 dev_dependencies:
   flutter_test:

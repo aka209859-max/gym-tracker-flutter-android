@@ -2,7 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// ジム施設のデータモデル
 class Gym {
-  final String id;
+  final String id;              // Firestore Document ID
+  final String? gymId;          // カスタムジムID (gym_announcementsとの紐付け用)
   final String name;
   final String address;
   final double latitude;
@@ -44,6 +45,7 @@ class Gym {
 
   Gym({
     required this.id,
+    this.gymId,
     required this.name,
     required this.address,
     required this.latitude,
@@ -79,6 +81,7 @@ class Gym {
     final data = doc.data() as Map<String, dynamic>;
     return Gym(
       id: doc.id,
+      gymId: data['gymId'] ?? data['gym_id'] ?? doc.id,  // gymId優先、なければdoc.id
       name: data['name'] ?? '',
       address: data['address'] ?? '',
       latitude: (data['latitude'] ?? 0).toDouble(),
@@ -115,6 +118,7 @@ class Gym {
   /// Firestore用にマップ形式に変換
   Map<String, dynamic> toMap() {
     return {
+      'gymId': gymId,
       'name': name,
       'address': address,
       'latitude': latitude,

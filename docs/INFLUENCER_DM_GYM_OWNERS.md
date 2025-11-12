@@ -23,7 +23,7 @@
 {{name}}様
 
 突然のご連絡失礼いたします。
-株式会社NexaJP CEO の [Your Name] と申します。
+株式会社Enable CEO の [Your Name] と申します。
 
 {{name}}様の{{gym_name}}の取り組みを拝見し、
 ぜひ弊社サービス「FitSync」の
@@ -49,7 +49,7 @@
 ご質問があればお気軽にお声がけください。
 
 ---
-株式会社NexaJP CEO
+株式会社Enable CEO
 {{your_name}}
 FitSync: https://fitsync.jp (β版)
 ```
@@ -83,7 +83,7 @@ FitSync: https://fitsync.jp (β版)
 ◆本文◆
 {{name}}様
 
-株式会社NexaJP CEO の [Your Name] です。
+株式会社Enable CEO の [Your Name] です。
 
 {{name}}様の専門的な投稿を拝見し、
 フィットネス業界の「未来を創る側」として
@@ -109,7 +109,7 @@ FitSync: https://fitsync.jp (β版)
 業界を変える48時間、ご一緒しませんか?
 
 ---
-株式会社NexaJP CEO
+株式会社Enable CEO
 {{your_name}}
 ```
 
@@ -142,7 +142,7 @@ FitSync: https://fitsync.jp (β版)
 ◆本文◆
 {{name}}様
 
-株式会社NexaJP CEO {{your_name}}です。
+株式会社Enable CEO {{your_name}}です。
 
 {{chain_name}}の{{area}}展開を拝見し、
 弊社「FitSync」の先行パートナーとして
@@ -167,7 +167,7 @@ FitSync: https://fitsync.jp (β版)
 戦略的パートナーシップ、ご検討ください。
 
 ---
-{{your_name}} / NexaJP CEO
+{{your_name}} / Enable CEO
 ```
 
 **使用タイミング**: 
@@ -381,4 +381,4 @@ FitSyncは「新規集客」だけでなく、
 
 **Document Version**: 1.0  
 **Last Updated**: 2025-01-XX  
-**Owner**: NexaJP CEO
+**Owner**: Enable CEO

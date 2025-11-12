@@ -80,6 +80,21 @@ class _TrainingEffectAnalysisScreenState
       });
       return;
     }
+    
+    // 🔢 AI使用回数チェック
+    final canUseAI = await subscriptionService.canUseAIFeature();
+    if (!canUseAI) {
+      if (mounted) {
+        final usageStatus = await subscriptionService.getAIUsageStatus();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(usageStatus), backgroundColor: Colors.orange),
+        );
+      }
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -98,6 +113,10 @@ class _TrainingEffectAnalysisScreenState
         age: _selectedAge,
       );
       print('✅ 効果分析完了: ${result['success']}');
+
+      // ✅ AI使用回数をインクリメント
+      await subscriptionService.incrementAIUsage();
+      print('✅ AI使用回数: ${await subscriptionService.getCurrentMonthAIUsage()}');
 
       if (mounted) {
         setState(() {

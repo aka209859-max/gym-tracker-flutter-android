@@ -434,5 +434,5 @@ enum PaymentSource {
 
 **Document Version**: 1.0  
 **Last Updated**: 2025-01-XX  
-**Owner**: NexaJP CEO  
+**Owner**: Enable CEO  
 **Status**: CEO判断待ち
