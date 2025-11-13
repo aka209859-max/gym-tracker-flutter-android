@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart';
+import 'services/offline_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/map_screen.dart';
 import 'screens/profile_screen.dart';
@@ -84,6 +86,14 @@ void main() async {
     print('✅ AdMob初期化成功');
   } catch (e) {
     print('❌ AdMob初期化エラー: $e');
+  }
+  
+  // 💾 オフラインサービス初期化（Hive）
+  try {
+    await OfflineService.initialize();
+    print('✅ オフラインサービス初期化成功');
+  } catch (e) {
+    print('❌ オフラインサービス初期化エラー: $e');
   }
   
   // 💰 RevenueCat初期化（iOS課金統合）
@@ -169,7 +179,20 @@ class GymMatchApp extends StatelessWidget {
             title: 'GYM MATCH - ジム検索アプリ',
             debugShowCheckedModeBanner: false,
             theme: themeProvider.currentTheme,
-            // locale: Web環境では指定しない（システムロケールを使用）
+            
+            // 🌐 多言語対応設定
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('ja', 'JP'), // 日本語
+              Locale('en', 'US'), // 英語
+            ],
+            // デフォルトはシステム言語、フォールバックは日本語
+            locale: const Locale('ja', 'JP'),
+            
             // β版テスト運用: パスワードゲート追加
             home: const PasswordGateScreen(
               child: MainScreen(),
