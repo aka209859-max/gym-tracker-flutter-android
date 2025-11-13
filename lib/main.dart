@@ -21,6 +21,8 @@ import 'services/subscription_service.dart';
 import 'services/admob_service.dart';
 import 'services/revenue_cat_service.dart';
 import 'services/trial_service.dart';
+import 'services/ad_service.dart';
+import 'services/interstitial_ad_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,6 +75,16 @@ void main() async {
   
   // 🔥 マスターユーザー権限設定（CEO専用）
   await _setMasterUserPrivileges();
+  
+  // 📱 AdMob初期化（広告表示）
+  try {
+    await AdService().initialize();
+    // インタースティシャル広告を先読み
+    InterstitialAdManager().loadAd();
+    print('✅ AdMob初期化成功');
+  } catch (e) {
+    print('❌ AdMob初期化エラー: $e');
+  }
   
   // 💰 RevenueCat初期化（iOS課金統合）
   if (firebaseInitialized) {
