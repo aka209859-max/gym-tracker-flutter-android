@@ -1,25 +1,27 @@
 workflows:
   ios-release:
-    name: iOS Release
-    max_build_duration: 120
+    name: "GYM MATCH iOS Release"
+    max_build_duration: 30
     instance_type: mac_mini_m2
+    
+    # 🔑 【最重要】コード署名のためのApp Store Connect APIキー連携
+    # Codemagic UI > Team > Integrations で設定したキー名を指定
+    integrations:
+      app_store_connect: app_store_api_key
+    
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.nexa.gymmatch
       vars:
-        XCODE_WORKSPACE: "Runner.xcworkspace"
-        XCODE_SCHEME: "Runner"
+        PROJECT_ROOT: $CM_BUILD_DIR
       flutter: stable
       xcode: latest
       cocoapods: default
+    
     scripts:
-      - name: Set up code signing settings on Xcode project
+      - name: Clean Flutter
         script: |
-          xcode-project use-profiles
-      - name: Get Flutter packages
-        script: |
-          flutter packages pub get
+          flutter clean
+          flutter pub get
+      
       - name: Clean CocoaPods cache and force fresh install
         script: |
           echo "🧹 Cleaning iOS Pod environment..."
@@ -28,59 +30,60 @@ workflows:
           pod install --repo-update
           cd ..
           echo "✅ Pod environment cleanup and update completed"
-      - name: Install pods
+      
+      - name: Install Pods
         script: |
-          find . -name "Podfile" -execdir pod install \;
-      # - name: Flutter analyze
-      #   script: |
-      #     flutter analyze
-      - name: Create export options plist
+          cd ios
+          pod install
+          cd ..
+      
+      # 🔑 【重要】App Store Connect 統合を使用して署名ファイルを取得
+      # これにより、ビルドVM上に一時的なキーチェーンとプロファイルが設定される
+      - name: Fetch signing files
         script: |
-          cat > $HOME/export_options.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>uploadBitcode</key>
-            <false/>
-            <key>compileBitcode</key>
-            <false/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>signingStyle</key>
-            <string>manual</string>
-            <key>teamID</key>
-            <string>7V5DA99X2M</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.nexa.gymmatch</key>
-              <string>GYM MATCH App Store Profile</string>
-            </dict>
-          </dict>
-          </plist>
-          EOF
-      - name: Flutter build ipa and automatically codesign using Codemagic cloud signing
+          app-store-connect fetch-signing-files $(xcode-project get-bundle-id --project ios/Runner.xcworkspace) \
+            --type IOS_APP_STORE \
+            --create
+      
+      # 🚀 【重要】FlutterによるIPAのビルド
+      # --release フラグが必須
+      # $PROJECT_BUILD_NUMBER はCodemagicが提供するビルド番号
+      - name: Flutter build ipa
         script: |
           flutter build ipa --release \
-            --build-name=1.0.0 \
-            --build-number=1 \
-            --export-options-plist=$HOME/export_options.plist
+            --build-name=1.0.$PROJECT_BUILD_NUMBER \
+            --build-number=$PROJECT_BUILD_NUMBER
+      
+      # ✅ 【検証】ベストプラクティス：IPAが実際に生成されたか検証
+      # これにより、アーティファクトが無いまま後続ステップに進むのを防ぐ
+      - name: Verify IPA exists
+        script: |
+          echo "Verifying IPA file presence..."
+          IPA_PATH=$(find "$PROJECT_ROOT/build/ios/ipa" -name "*.ipa" | head -n 1)
+          if [ -z "$IPA_PATH" ]; then
+            echo "::error:: IPA file was not generated in build/ios/ipa/"
+            exit 1
+          else
+            echo "✅ IPA found at: $IPA_PATH"
+          fi
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
       - flutter_drive.log
     publishing:
+      # 📧 Eメール通知 (アーティファクトが捕捉されるため、今度はリンクが送信される)
       email:
         recipients:
           - aka209859@gmail.com
         notify:
           success: true
           failure: true
-      # app_store_connect:
-      #   auth: integration
-      #   submit_to_testflight: true
-      #   beta_groups:
-      #     - Internal Testers
-      #   submit_to_app_store: false
+      
+      # 🚀 【最終目的】TestFlightへの自動アップロード
+      # integrations ブロックの 'app_store_connect' を使用
+      app_store_connect:
+        submit_to_testflight: true
+        # (オプション) 特定のベータグループに即時配布
+        # beta_groups:
+        #   - "Internal Testers"
+        #   - "External Testers"
