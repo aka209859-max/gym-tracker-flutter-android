@@ -50,6 +50,35 @@ class WorkoutImportService {
           print('📷 画像形式: $mimeType (サイズ: ${imageBytes.length} bytes)');
         }
 
+        // Gemini APIリクエスト
+        final response = await http.post(
+          Uri.parse('$_apiUrl?key=$_apiKey'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'contents': [
+              {
+                'parts': [
+                  {
+                    'text': _buildPrompt(),
+                  },
+                  {
+                    'inline_data': {
+                      'mime_type': mimeType,
+                      'data': base64Image,
+                    }
+                  }
+                ]
+              }
+            ],
+            'generationConfig': {
+              'temperature': 0.1,
+              'topK': 1,
+              'topP': 1,
+              'maxOutputTokens': 2048,
+            }
+          }),
+        );
+
       if (kDebugMode) {
         print('📡 APIレスポンス: ${response.statusCode}');
         print('📄 レスポンスボディ（最初の200文字）: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
