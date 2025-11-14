@@ -56,29 +56,48 @@ class WorkoutImportService {
         }),
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final text = data['candidates'][0]['content']['parts'][0]['text'];
-        
-        if (kDebugMode) {
-          print('✅ AI応答: $text');
-        }
+      if (kDebugMode) {
+        print('📡 APIレスポンス: ${response.statusCode}');
+        print('📄 レスポンスボディ（最初の200文字）: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
+      }
 
-        // JSONを抽出（```json ... ```の中身を取り出す）
-        final jsonMatch = RegExp(r'```json\s*([\s\S]*?)\s*```').firstMatch(text);
-        if (jsonMatch != null) {
-          final jsonString = jsonMatch.group(1)!;
-          final result = jsonDecode(jsonString) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        try {
+          final data = jsonDecode(response.body);
           
-          if (kDebugMode) {
-            print('✅ データ抽出成功: ${result['exercises']?.length ?? 0}種目');
+          // エラーレスポンスのチェック
+          if (data.containsKey('error')) {
+            throw Exception('Gemini API Error: ${data['error']['message']}');
           }
           
-          return result;
-        } else {
-          // JSONブロックがない場合、テキスト全体をパース試行
-          final result = jsonDecode(text) as Map<String, dynamic>;
-          return result;
+          final text = data['candidates'][0]['content']['parts'][0]['text'];
+          
+          if (kDebugMode) {
+            print('✅ AI応答: $text');
+          }
+
+          // JSONを抽出（```json ... ```の中身を取り出す）
+          final jsonMatch = RegExp(r'```json\s*([\s\S]*?)\s*```').firstMatch(text);
+          if (jsonMatch != null) {
+            final jsonString = jsonMatch.group(1)!;
+            final result = jsonDecode(jsonString) as Map<String, dynamic>;
+            
+            if (kDebugMode) {
+              print('✅ データ抽出成功: ${result['exercises']?.length ?? 0}種目');
+            }
+            
+            return result;
+          } else {
+            // JSONブロックがない場合、テキスト全体をパース試行
+            final result = jsonDecode(text) as Map<String, dynamic>;
+            return result;
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('❌ JSONパースエラー: $e');
+            print('📄 レスポンス全文: ${response.body}');
+          }
+          throw Exception('レスポンスの解析に失敗しました: $e');
         }
       } else {
         throw Exception('API Error: ${response.statusCode} - ${response.body}');
