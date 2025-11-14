@@ -76,8 +76,20 @@ workflows:
       # 📦 【IPAエクスポート】
       - name: Export IPA from archive
         script: |
+          set -e  # エラーで即座に停止
+          set -x  # コマンドをログ出力
+          
           ARCHIVE_PATH="$PROJECT_ROOT/build/ios/Runner.xcarchive"
           EXPORT_PATH="$PROJECT_ROOT/build/ios/ipa"
+          
+          # アーカイブの存在確認
+          if [ ! -d "$ARCHIVE_PATH" ]; then
+            echo "::error:: Archive not found at $ARCHIVE_PATH"
+            ls -la "$PROJECT_ROOT/build/ios/"
+            exit 1
+          fi
+          
+          echo "✅ Archive found at: $ARCHIVE_PATH"
           
           # ExportOptions.plistを作成
           cat > /tmp/ExportOptions.plist <<EOF
@@ -93,19 +105,49 @@ workflows:
               <true/>
               <key>compileBitcode</key>
               <false/>
+              <key>signingStyle</key>
+              <string>automatic</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.nexa.gymmatch</key>
+                  <string>match AppStore com.nexa.gymmatch</string>
+              </dict>
           </dict>
           </plist>
           EOF
           
+          echo "📄 ExportOptions.plist created:"
+          cat /tmp/ExportOptions.plist
+          
           # IPAをエクスポート
           mkdir -p "$EXPORT_PATH"
+          
+          echo "🚀 Starting xcodebuild -exportArchive..."
           xcodebuild -exportArchive \
             -archivePath "$ARCHIVE_PATH" \
             -exportPath "$EXPORT_PATH" \
             -exportOptionsPlist /tmp/ExportOptions.plist \
-            -allowProvisioningUpdates
+            -allowProvisioningUpdates \
+            2>&1 | tee /tmp/export.log
           
-          echo "✅ IPA exported to: $EXPORT_PATH"
+          EXPORT_EXIT_CODE=${PIPESTATUS[0]}
+          
+          if [ $EXPORT_EXIT_CODE -ne 0 ]; then
+            echo "::error:: xcodebuild -exportArchive failed with exit code $EXPORT_EXIT_CODE"
+            echo "Export log:"
+            cat /tmp/export.log
+            exit $EXPORT_EXIT_CODE
+          fi
+          
+          # IPA存在確認
+          IPA_FILE=$(find "$EXPORT_PATH" -name "*.ipa" | head -n 1)
+          if [ -z "$IPA_FILE" ]; then
+            echo "::error:: IPA file not found after export"
+            ls -la "$EXPORT_PATH"
+            exit 1
+          fi
+          
+          echo "✅ IPA exported successfully: $IPA_FILE"
       
       # ✅ 【検証】ベストプラクティス：IPAが実際に生成されたか検証
       # これにより、アーティファクトが無いまま後続ステップに進むのを防ぐ
