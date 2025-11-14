@@ -7,9 +7,8 @@ import 'dart:convert';
 /// 筋トレMEMOなどの他アプリのスクリーンショットから
 /// トレーニングデータを自動抽出
 class WorkoutImportService {
-  // Gemini API設定（写真取り込み専用：本番用APIキー）
-  // Key name: workout_photo_import_key
-  static const String _apiKey = 'AIzaSyDkNfRxLJIPYx1UFEIZqXvao7rgl2OVc6s';
+  // Gemini API設定（写真取り込み専用：無料枠モデル使用）
+  static const String _apiKey = 'AIzaSyA9XmQSHA1llGg7gihqjmOOIaLA856fkLc';
   static const String _apiUrl = 
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
@@ -51,58 +50,48 @@ class WorkoutImportService {
           print('📷 画像形式: $mimeType (サイズ: ${imageBytes.length} bytes)');
         }
 
-        // Gemini APIリクエスト
-        final response = await http.post(
-          Uri.parse('$_apiUrl?key=$_apiKey'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'contents': [
-              {
-                'parts': [
-                  {
-                    'text': _buildPrompt(),
-                  },
-                  {
-                    'inline_data': {
-                      'mime_type': mimeType,
-                      'data': base64Image,
-                    }
-                  }
-                ]
-              }
-            ],
-            'generationConfig': {
-              'temperature': 0.1,
-              'topK': 1,
-              'topP': 1,
-              'maxOutputTokens': 2048,
-            }
-          }),
-        );
+      if (kDebugMode) {
+        print('📡 APIレスポンス: ${response.statusCode}');
+        print('📄 レスポンスボディ（最初の200文字）: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
+      }
 
-        if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final text = data['candidates'][0]['content']['parts'][0]['text'];
-        
-        if (kDebugMode) {
-          print('✅ AI応答: $text');
-        }
-
-        // JSONを抽出（```json ... ```の中身を取り出す）
-        final jsonMatch = RegExp(r'```json\s*([\s\S]*?)\s*```').firstMatch(text);
-        if (jsonMatch != null) {
-          final jsonString = jsonMatch.group(1)!;
-          final result = jsonDecode(jsonString) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        try {
+          final data = jsonDecode(response.body);
           
-          if (kDebugMode) {
-            print('✅ データ抽出成功: ${result['exercises']?.length ?? 0}種目');
+          // エラーレスポンスのチェック
+          if (data.containsKey('error')) {
+            throw Exception('Gemini API Error: ${data['error']['message']}');
           }
           
-          return result;
-        } else {
-          // JSONブロックがない場合、テキスト全体をパース試行
-          final result = jsonDecode(text) as Map<String, dynamic>;
-          return result;
+          final text = data['candidates'][0]['content']['parts'][0]['text'];
+          
+          if (kDebugMode) {
+            print('✅ AI応答: $text');
+          }
+
+          // JSONを抽出（```json ... ```の中身を取り出す）
+          final jsonMatch = RegExp(r'```json\s*([\s\S]*?)\s*```').firstMatch(text);
+          if (jsonMatch != null) {
+            final jsonString = jsonMatch.group(1)!;
+            final result = jsonDecode(jsonString) as Map<String, dynamic>;
+            
+            if (kDebugMode) {
+              print('✅ データ抽出成功: ${result['exercises']?.length ?? 0}種目');
+            }
+            
+            return result;
+          } else {
+            // JSONブロックがない場合、テキスト全体をパース試行
+            final result = jsonDecode(text) as Map<String, dynamic>;
+            return result;
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('❌ JSONパースエラー: $e');
+            print('📄 レスポンス全文: ${response.body}');
+          }
+          throw Exception('レスポンスの解析に失敗しました: $e');
         }
       } else if (response.statusCode == 503 && attempt < maxRetries) {
         // 503エラー（サーバー過負荷）の場合はリトライ

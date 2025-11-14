@@ -119,61 +119,52 @@ class _WorkoutImportPreviewScreenState
     });
 
     try {
-      print('🔄 [IMPORT] データ取り込み開始...');
+      print('🔄 データ取り込み開始...');
       
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         throw Exception('ユーザーが認証されていません');
       }
-      print('✅ [IMPORT] ユーザー確認: ${user.uid}');
+      print('✅ ユーザー確認: ${user.uid}');
 
       // 日付をパース
       final dateString = widget.extractedData['date'] as String;
       final date = DateTime.parse(dateString);
-      print('✅ [IMPORT] 日付パース: $date');
+      print('✅ 日付パース: $date');
 
       // 種目データを変換（既存のworkout_logs形式に完全一致させる）
       final exercises = widget.extractedData['exercises'] as List<dynamic>;
-      print('✅ [IMPORT] 種目数: ${exercises.length}');
+      print('✅ 種目数: ${exercises.length}');
       
-      // すべての種目のセットを1つのリストに統合（既存形式: flat sets list）
-      final allSets = <Map<String, dynamic>>[];
+      final convertedExercises = <Map<String, dynamic>>[];
 
       for (int i = 0; i < exercises.length; i++) {
         final exercise = exercises[i] as Map<String, dynamic>;
         final exerciseName = exercise['name'] as String;
         final sets = exercise['sets'] as List<dynamic>;
         
-        print('📝 [IMPORT] 種目${i + 1}: $exerciseName (${sets.length}セット)');
+        print('📝 種目${i + 1}: ${exercise['name']} (${sets.length}セット)');
         
-        // 各セットをflat list形式で追加
-        for (final set in sets) {
-          final setData = set as Map<String, dynamic>;
-          allSets.add({
-            'exercise_name': exerciseName,
-            'weight': (setData['weight_kg'] as num).toDouble(),
-            'reps': setData['reps'],
-            'is_completed': true,
-            'has_assist': false,
-            'set_type': 'normal',
-            'is_bodyweight_mode': (setData['weight_kg'] as num) == 0,
-          });
-        }
+        convertedExercises.add({
+          'name': exercise['name'],
+          'bodyPart': _selectedBodyParts[i] ?? '胸',
+          'sets': sets.map((set) {
+            final setData = set as Map<String, dynamic>;
+            return {
+              'targetReps': setData['reps'],
+              'actualReps': setData['reps'],
+              'weight': (setData['weight_kg'] as num).toDouble(),
+              'completedAt': Timestamp.fromDate(date),
+            };
+          }).toList(),
+        });
       }
 
-      // 開始・終了時刻を日付から生成（デフォルト: 9:00-11:00）
-      final startTime = DateTime(date.year, date.month, date.day, 9, 0);
-      final endTime = DateTime(date.year, date.month, date.day, 11, 0);
+      print('🔄 Firestoreに保存中...');
       
-      // 部位を決定（最初の種目の部位を使用）
-      final muscleGroup = _selectedBodyParts[0] ?? '胸';
-      print('✅ [IMPORT] 部位: $muscleGroup, セット総数: ${allSets.length}');
-
-      print('🔄 [IMPORT] Firestoreに保存中...');
-      // Firestoreに登録（既存のworkout_logs形式に完全一致）
+      // Firestoreに登録
       final docRef = await FirebaseFirestore.instance.collection('workout_logs').add({
-        'user_id': user.uid,
-        'muscle_group': muscleGroup,
+        'userId': user.uid,
         'date': Timestamp.fromDate(date),
         'start_time': Timestamp.fromDate(startTime),
         'end_time': Timestamp.fromDate(endTime),
@@ -181,7 +172,7 @@ class _WorkoutImportPreviewScreenState
         'created_at': FieldValue.serverTimestamp(),
       });
       
-      print('✅ [IMPORT] Firestore保存完了: ${docRef.id}');
+      print('✅ Firestore保存完了: ${docRef.id}');
 
       if (mounted) {
         print('✅ [IMPORT] 成功メッセージ表示中...');
@@ -197,66 +188,15 @@ class _WorkoutImportPreviewScreenState
           ),
         );
 
-        print('🔙 [IMPORT] 画面遷移開始...');
+        print('🔙 画面を閉じます...');
         
-        // 短いディレイで成功メッセージを表示
-        await Future.delayed(const Duration(milliseconds: 300));
-        
-        if (!mounted) return;
-        
-        // すべてのダイアログ/プレビュー画面を閉じてルート画面に戻る
-        Navigator.of(context).popUntil((route) => route.isFirst);
-        print('✅ [IMPORT] ルート画面に戻りました');
-        
-        // NavigationProviderを使って記録タブに自動切り替え + 日付指定
-        if (mounted) {
-          await Future.delayed(const Duration(milliseconds: 200));
-          
-          final navigationProvider = Provider.of<NavigationProvider>(
-            context, 
-            listen: false,
-          );
-          
-          // 記録画面（index=0）に切り替え + 該当日を指定
-          navigationProvider.navigateToRecordWithDate(date);
-          print('✅ [IMPORT] 記録タブに切り替え: ${date.year}/${date.month}/${date.day}');
-          
-          // 成功通知
-          await Future.delayed(const Duration(milliseconds: 300));
-          if (!mounted) return;
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '✅ トレーニング記録を取り込みました',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '📅 ${date.month}/${date.day}の記録が表示されます',
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ],
-              ),
-              backgroundColor: Colors.green.shade700,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        }
-        
-        print('✅ [IMPORT] 取り込み処理完了！記録画面に遷移しました');
+        // 画面を閉じる（2回: プレビュー画面 + 画像選択画面）
+        Navigator.of(context).pop();
+        Navigator.of(context).pop();
       }
     } catch (e, stackTrace) {
-      print('❌❌❌ [IMPORT] データ取り込みエラー: $e');
-      print('📍 [IMPORT] スタックトレース:');
-      print(stackTrace.toString());
+      print('❌❌❌ データ取り込みエラー: $e');
+      print('スタックトレース: $stackTrace');
       
       if (mounted) {
         final errorMsg = e.toString().length > 100 
