@@ -10,7 +10,7 @@ class WorkoutImportService {
   // Gemini API設定（写真取り込み専用：無料枠モデル使用）
   static const String _apiKey = 'AIzaSyA9XmQSHA1llGg7gihqjmOOIaLA856fkLc';
   static const String _apiUrl = 
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
 
   /// 画像からトレーニングデータを抽出
   /// 
