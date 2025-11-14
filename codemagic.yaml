@@ -45,13 +45,11 @@ workflows:
           pod install
           cd ..
       
-      # 🔑 【重要】App Store Connect API を使用して署名ファイルを取得
-      # 環境変数から自動的にAPIキー情報を読み取る
-      - name: Fetch signing files
+      # 🔑 【重要】Xcodeの自動コード署名を使用
+      # App Store Connect APIを使って自動的に証明書とプロファイルを管理
+      - name: Set up code signing settings on Xcode project
         script: |
-          app-store-connect fetch-signing-files com.nexa.gymmatch \
-            --type IOS_APP_STORE \
-            --create
+          xcode-project use-profiles
       
       # 🚀 【重要】FlutterによるIPAのビルド
       # --release フラグが必須
