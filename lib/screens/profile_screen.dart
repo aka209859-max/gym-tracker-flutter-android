@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:image_picker/image_picker.dart';
 import 'favorites_screen.dart';
 import 'subscription_screen.dart';
 import 'body_measurement_screen.dart';
@@ -8,9 +9,11 @@ import 'personal_training/pt_password_screen.dart';
 import 'messages/messages_screen.dart';
 import 'partner/partner_screen.dart';
 import 'settings/notification_settings_screen.dart';
+import 'workout_import_preview_screen.dart';
 import '../services/favorites_service.dart';
 import '../services/subscription_service.dart';
 import '../services/chat_service.dart';
+import '../services/workout_import_service.dart';
 
 /// プロフィール画面
 class ProfileScreen extends StatefulWidget {
@@ -55,6 +58,79 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
       }
     });
+  }
+
+  /// 写真から取り込み機能
+  Future<void> _importFromPhoto() async {
+    try {
+      // 画像選択
+      final picker = ImagePicker();
+      final image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+
+      if (image == null) return;
+
+      // ローディング表示
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('画像を解析しています...'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // 画像を読み込み
+      final imageBytes = await image.readAsBytes();
+
+      // Gemini APIで解析
+      final extractedData = await WorkoutImportService.extractWorkoutFromImage(
+        imageBytes,
+      );
+
+      // ローディングを閉じる
+      if (mounted) {
+        Navigator.of(context).pop();
+
+        // プレビュー画面へ遷移
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WorkoutImportPreviewScreen(
+              extractedData: extractedData,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      // ローディングを閉じる
+      if (mounted) {
+        Navigator.of(context).pop();
+
+        // エラーメッセージ
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ 画像解析エラー: $e'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -163,6 +239,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildMenuList(BuildContext context) {
     return Column(
       children: [
+        // 📸 写真から取り込み（NEW!）
+        Card(
+          elevation: 2,
+          color: Colors.purple[50],
+          child: ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.purple[700],
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.photo_camera, color: Colors.white),
+            ),
+            title: const Text(
+              '📸 写真から取り込み',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: const Text(
+              '他アプリの記録画像を自動データ化',
+              style: TextStyle(fontSize: 12),
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: _importFromPhoto,
+          ),
+        ),
+        const SizedBox(height: 12),
         // パーソナルトレーニング
         Card(
           elevation: 2,
