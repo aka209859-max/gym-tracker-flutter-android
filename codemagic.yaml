@@ -5,6 +5,9 @@ workflows:
     instance_type: mac_mini_m2
     
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.nexa.gymmatch
       vars:
         PROJECT_ROOT: $CM_BUILD_DIR
         # 🔑 App Store Connect API credentials (set in Codemagic UI)
