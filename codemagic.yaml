@@ -4,14 +4,13 @@ workflows:
     max_build_duration: 30
     instance_type: mac_mini_m2
     
-    # 🔑 【最重要】コード署名のためのApp Store Connect APIキー連携
-    # Codemagic UI > Team > Integrations で設定したキー名を指定
-    integrations:
-      app_store_connect: app_store_api_key
-    
     environment:
       vars:
         PROJECT_ROOT: $CM_BUILD_DIR
+        # 🔑 App Store Connect API credentials (set in Codemagic UI)
+        APP_STORE_CONNECT_ISSUER_ID: 089530c4-f36e-4828-8198-eec5ae23ad19
+        APP_STORE_CONNECT_KEY_IDENTIFIER: DFXAU88R2R
+        # APP_STORE_CONNECT_PRIVATE_KEY: Set as secure variable in Codemagic UI
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -37,11 +36,11 @@ workflows:
           pod install
           cd ..
       
-      # 🔑 【重要】App Store Connect 統合を使用して署名ファイルを取得
-      # これにより、ビルドVM上に一時的なキーチェーンとプロファイルが設定される
+      # 🔑 【重要】App Store Connect API を使用して署名ファイルを取得
+      # 環境変数から自動的にAPIキー情報を読み取る
       - name: Fetch signing files
         script: |
-          app-store-connect fetch-signing-files $(xcode-project get-bundle-id --project ios/Runner.xcworkspace) \
+          app-store-connect fetch-signing-files com.nexa.gymmatch \
             --type IOS_APP_STORE \
             --create
       
