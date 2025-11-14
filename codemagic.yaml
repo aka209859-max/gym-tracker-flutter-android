@@ -65,15 +65,23 @@ workflows:
       - name: Verify IPA exists
         script: |
           echo "Verifying IPA file presence..."
-          IPA_PATH=$(find "$PROJECT_ROOT/build/ios/ipa" -name "*.ipa" | head -n 1)
+          # Flutter 3.xではIPAは複数の場所に生成される可能性がある
+          IPA_PATH=$(find "$PROJECT_ROOT/build/ios" -name "*.ipa" | head -n 1)
           if [ -z "$IPA_PATH" ]; then
-            echo "::error:: IPA file was not generated in build/ios/ipa/"
+            echo "::error:: IPA file was not generated"
+            echo "Checking build output structure:"
+            ls -R "$PROJECT_ROOT/build/ios/" || echo "build/ios directory not found"
             exit 1
           else
             echo "✅ IPA found at: $IPA_PATH"
+            # 標準的な場所にコピー（アーティファクト収集を確実にする）
+            mkdir -p "$PROJECT_ROOT/build/ios/ipa"
+            cp "$IPA_PATH" "$PROJECT_ROOT/build/ios/ipa/"
+            echo "✅ IPA copied to: $PROJECT_ROOT/build/ios/ipa/"
           fi
     artifacts:
       - build/ios/ipa/*.ipa
+      - build/ios/**/*.ipa
       - /tmp/xcodebuild_logs/*.log
       - flutter_drive.log
     publishing:
