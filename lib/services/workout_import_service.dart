@@ -8,7 +8,7 @@ import 'dart:convert';
 /// トレーニングデータを自動抽出
 class WorkoutImportService {
   // Gemini API設定
-  static const String _apiKey = 'AIzaSyBSNinevWKT-uMX2FNRtx0YFLyX9YmVEhk';
+  static const String _apiKey = 'AIzaSyCanbEj1olBLzNhnlmlJH13jA93cr4LHtI';
   static const String _apiUrl = 
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 
