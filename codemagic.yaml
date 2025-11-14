@@ -58,7 +58,7 @@ workflows:
           # 証明書を一時キーチェーンにインストールします
           keychain add-certificates \
             --certificate $CM_BUILD_DIR/distribution_cert.p12 \
-            --certificate-password $CERTIFICATE_PASSWORD
+            --certificate-password "$CERTIFICATE_PASSWORD"
       
       - name: Decode and install App Store Provisioning Profile
         script: |
