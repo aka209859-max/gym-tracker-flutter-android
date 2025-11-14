@@ -53,21 +53,47 @@ workflows:
       - name: Decode and install Distribution Certificate
         script: |
           # Base64エンコードされた証明書をデコードしてファイルに書き出します
-          echo $APP_STORE_CERTIFICATE | base64 --decode > $CM_BUILD_DIR/distribution_cert.p12
+          echo "$APP_STORE_CERTIFICATE" | base64 --decode > $CM_BUILD_DIR/distribution_cert.p12
+          
+          # デコード結果を検証
+          if [ ! -f "$CM_BUILD_DIR/distribution_cert.p12" ] || [ ! -s "$CM_BUILD_DIR/distribution_cert.p12" ]; then
+            echo "❌ Error: Certificate file is empty or missing"
+            exit 1
+          fi
+          
+          echo "✅ Certificate decoded: $(ls -lh $CM_BUILD_DIR/distribution_cert.p12)"
           
           # 証明書を一時キーチェーンにインストールします
-          keychain add-certificates \
-            --certificate $CM_BUILD_DIR/distribution_cert.p12 \
-            --certificate-password "$CERTIFICATE_PASSWORD"
+          if [ -z "$CERTIFICATE_PASSWORD" ]; then
+            echo "📝 Installing certificate without password"
+            keychain add-certificates \
+              --certificate $CM_BUILD_DIR/distribution_cert.p12
+          else
+            echo "📝 Installing certificate with password"
+            keychain add-certificates \
+              --certificate $CM_BUILD_DIR/distribution_cert.p12 \
+              --certificate-password "$CERTIFICATE_PASSWORD"
+          fi
       
       - name: Decode and install App Store Provisioning Profile
         script: |
           # Base64エンコードされたプロファイルをデコードしてファイルに書き出します
-          echo $APP_STORE_PROFILE | base64 --decode > $CM_BUILD_DIR/app_store.mobileprovision
+          echo "$APP_STORE_PROFILE" | base64 --decode > $CM_BUILD_DIR/app_store.mobileprovision
+          
+          # デコード結果を検証
+          if [ ! -f "$CM_BUILD_DIR/app_store.mobileprovision" ] || [ ! -s "$CM_BUILD_DIR/app_store.mobileprovision" ]; then
+            echo "❌ Error: Provisioning profile is empty or missing"
+            exit 1
+          fi
+          
+          echo "✅ Profile decoded: $(ls -lh $CM_BUILD_DIR/app_store.mobileprovision)"
           
           # xcodebuildが見つけられるように、プロファイルを正しいディレクトリにインストールします
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           cp $CM_BUILD_DIR/app_store.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/"
+          
+          echo "✅ Profile installed to: $HOME/Library/MobileDevice/Provisioning Profiles/"
+          ls -lh "$HOME/Library/MobileDevice/Provisioning Profiles/"
       
       # 注: xcode-project use-profiles は「個人」APIキーでは機能しないため削除
       
