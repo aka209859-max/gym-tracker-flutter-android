@@ -82,9 +82,16 @@ workflows:
           failure: true
       
       # 🚀 【最終目的】TestFlightへの自動アップロード
-      # integrations ブロックの 'app_store_connect' を使用
+      # App Store Connect API認証情報を環境変数から取得
       app_store_connect:
+        # 🔑 App Store Connect API認証情報
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        
+        # TestFlightへの自動アップロード
         submit_to_testflight: true
+        
         # (オプション) 特定のベータグループに即時配布
         # beta_groups:
         #   - "Internal Testers"
