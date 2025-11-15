@@ -4,14 +4,16 @@ workflows:
     max_build_duration: 30
     instance_type: mac_mini_m2
     
-    # 🔑 【最重要】コード署名のためのApp Store Connect APIキー連携
-    # Codemagic UI > Team > Integrations で設定したキー名を指定
-    integrations:
-      app_store_connect: app_store_api_key
-    
     environment:
+      groups:
+        - app_store_credentials
+      
       vars:
         PROJECT_ROOT: $CM_BUILD_DIR
+        APP_STORE_CONNECT_ISSUER_ID: 089530c4-f36e-4828-8198-eec5ae23ad19
+        APP_STORE_CONNECT_KEY_IDENTIFIER: DFXAU88R2R
+        # APP_STORE_CONNECT_PRIVATE_KEY: Set as secure variable in Codemagic UI
+      
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -37,11 +39,13 @@ workflows:
           pod install
           cd ..
       
-      # 🔑 【重要】App Store Connect 統合を使用して署名ファイルを取得
-      # これにより、ビルドVM上に一時的なキーチェーンとプロファイルが設定される
+      # 🔑 【重要】App Store Connect APIキーで署名ファイルを取得
       - name: Fetch signing files
         script: |
           app-store-connect fetch-signing-files $(xcode-project get-bundle-id --project ios/Runner.xcworkspace) \
+            --issuer-id $APP_STORE_CONNECT_ISSUER_ID \
+            --key-id $APP_STORE_CONNECT_KEY_IDENTIFIER \
+            --private-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
             --type IOS_APP_STORE \
             --create
       
@@ -82,7 +86,8 @@ workflows:
           failure: true
       
       # 🚀 【最終目的】TestFlightへの自動アップロード
-      # integrations ブロックから認証情報を継承
       app_store_connect:
-        # 認証情報は integrations から自動継承される
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
