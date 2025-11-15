@@ -63,6 +63,23 @@ workflows:
             --certificate-password "$CM_CERTIFICATE_PASSWORD"
           echo "✅ Certificate installed to keychain"
       
+      # 🔧 【重要】Xcodeプロジェクトを手動署名に設定
+      - name: Configure manual code signing in Xcode project
+        script: |
+          set -x
+          cd ios
+          # Release設定（97C147071CF9000F007C117D）に手動署名設定を追加
+          # VERSIONING_SYSTEM行の後に署名設定を挿入
+          sed -i.bak '/97C147071CF9000F007C117D \/\* Release \*\//,/name = Release;/{
+            /VERSIONING_SYSTEM = "apple-generic";/a\
+\				CODE_SIGN_STYLE = Manual;\
+\				CODE_SIGN_IDENTITY = "Apple Distribution";\
+\				DEVELOPMENT_TEAM = AXZBK8B732;\
+\				PROVISIONING_PROFILE_SPECIFIER = "GymMatch AppStore Profile";
+          }' Runner.xcodeproj/project.pbxproj
+          cd ..
+          echo "✅ Xcode project configured for manual signing"
+      
       # 🔐 【重要】ExportOptionsを生成
       - name: Create ExportOptions.plist
         script: |
