@@ -43,15 +43,29 @@ workflows:
         script: |
           keychain initialize
       
-      # 🔐 【重要】Provisioning Profileをインストール
+      # 🔐 【重要】Provisioning Profileをインストール（UUID修正版）
       - name: Decode and install provisioning profile
         script: |
           set -x
           PROFILES_HOME="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILES_HOME"
-          PROFILE_PATH="$(mktemp "$PROFILES_HOME"/$(uuidgen).mobileprovision)"
-          echo "${CM_PROVISIONING_PROFILE}" | base64 --decode > "$PROFILE_PATH"
-          echo "✅ Saved profile to $PROFILE_PATH"
+          
+          # プロファイルを一時ファイルにデコード
+          echo "${CM_PROVISIONING_PROFILE}" | base64 --decode > /tmp/profile.mobileprovision
+          
+          # プロファイル内からUUIDを抽出
+          PROFILE_UUID=$(security cms -D -i /tmp/profile.mobileprovision | grep -A1 '<key>UUID</key>' | grep '<string>' | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
+          
+          echo "📋 Extracted Profile UUID: $PROFILE_UUID"
+          
+          # UUIDをファイル名にしてインストール
+          PROFILE_PATH="$PROFILES_HOME/$PROFILE_UUID.mobileprovision"
+          cp /tmp/profile.mobileprovision "$PROFILE_PATH"
+          
+          echo "✅ Installed profile to $PROFILE_PATH"
+          
+          # プロファイル情報を確認
+          security cms -D -i "$PROFILE_PATH" | grep -A2 '<key>Name</key>' || true
       
       # 🔐 【重要】証明書をKeychainにインストール
       - name: Decode and install certificate
