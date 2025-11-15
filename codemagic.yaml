@@ -42,7 +42,7 @@ workflows:
       # 🔑 【重要】App Store Connect APIキーで署名ファイルを取得
       - name: Fetch signing files
         script: |
-          app-store-connect fetch-signing-files $(xcode-project get-bundle-id --project ios/Runner.xcworkspace) \
+          app-store-connect fetch-signing-files com.nexa.gymmatch \
             --issuer-id $APP_STORE_CONNECT_ISSUER_ID \
             --key-id $APP_STORE_CONNECT_KEY_IDENTIFIER \
             --private-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
