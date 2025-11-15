@@ -10,9 +10,9 @@ workflows:
       
       vars:
         PROJECT_ROOT: $CM_BUILD_DIR
-        APP_STORE_CONNECT_ISSUER_ID: 089530c4-f36e-4828-8198-eec5ae23ad19
-        APP_STORE_CONNECT_KEY_IDENTIFIER: DFXAU88R2R
-        # APP_STORE_CONNECT_PRIVATE_KEY: Set as secure variable in Codemagic UI
+        # All App Store Connect credentials are loaded from app_store_credentials group
+        # Including: APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_KEY_IDENTIFIER,
+        # APP_STORE_CONNECT_PRIVATE_KEY, CERTIFICATE_PRIVATE_KEY
       
       flutter: stable
       xcode: latest
