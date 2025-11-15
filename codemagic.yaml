@@ -43,7 +43,7 @@ workflows:
         script: |
           keychain initialize
       
-      # 🔐 【重要】Provisioning Profileをインストール (診断レポート推奨方法)
+      # 🔐 【重要】Provisioning Profileをインストール (一時ファイル経由)
       - name: Decode and install provisioning profile
         script: |
           set -e
@@ -53,22 +53,32 @@ workflows:
           PROFILES_HOME="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILES_HOME"
           
-          # 診断レポート推奨: パイプラインで直接UUID抽出
-          PROFILE_UUID=$(echo "${CM_PROVISIONING_PROFILE}" | base64 --decode | \
-                         security cms -D -i /dev/stdin | \
-                         /usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin)
+          # プロファイルを一時ファイルにデコード
+          echo "${CM_PROVISIONING_PROFILE}" | base64 --decode > /tmp/profile.mobileprovision
+          
+          # security cms でXML形式に変換
+          security cms -D -i /tmp/profile.mobileprovision > /tmp/profile.plist
+          
+          # PlistBuddyでUUID抽出（ファイル経由）
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' /tmp/profile.plist)
           
           if [ -z "$PROFILE_UUID" ]; then
-            echo "エラー: プロビジョニングプロファイルからUUIDの抽出に失敗しました。ビルドを中止します。"
+            echo "エラー: プロビジョニングプロファイルからUUIDの抽出に失敗しました。"
+            echo "デバッグ情報:"
+            ls -la /tmp/profile.*
+            head -20 /tmp/profile.plist
             exit 1
           fi
           
           echo "抽出されたプロファイルUUID: $PROFILE_UUID"
           
           # UUIDをファイル名として正しい場所に保存
-          echo "${CM_PROVISIONING_PROFILE}" | base64 --decode > "$PROFILES_HOME/$PROFILE_UUID.mobileprovision"
+          cp /tmp/profile.mobileprovision "$PROFILES_HOME/$PROFILE_UUID.mobileprovision"
           
           echo "プロファイルが正常にインストールされました: $PROFILES_HOME/$PROFILE_UUID.mobileprovision"
+          
+          # 検証
+          ls -la "$PROFILES_HOME/$PROFILE_UUID.mobileprovision"
       
       # 🔐 【重要】証明書をKeychainにインストール
       - name: Decode and install certificate
