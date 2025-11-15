@@ -54,7 +54,7 @@ jobs:
       
       - name: Configure Xcode project for manual signing
         run: |
-          pip3 install pbxproj
+          pip3 install --break-system-packages pbxproj
           
           python3 << 'PYTHON_SCRIPT'
           import sys
