@@ -46,23 +46,37 @@ jobs:
           
           security cms -D -i profile.mobileprovision > profile.plist
           UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' profile.plist)
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' profile.plist)
           echo "📋 Extracted Profile UUID: $UUID"
+          echo "📋 Extracted Profile Name: $PROFILE_NAME"
           
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
+          
+          # Export UUID for later steps
+          echo "PROFILE_UUID=$UUID" >> $GITHUB_ENV
+          echo "PROFILE_NAME=$PROFILE_NAME" >> $GITHUB_ENV
           
           echo "✅ Certificate and provisioning profile installed"
       
       - name: Configure Xcode project for manual signing
+        env:
+          PROFILE_UUID: ${{ env.PROFILE_UUID }}
+          PROFILE_NAME: ${{ env.PROFILE_NAME }}
         run: |
           pip3 install --break-system-packages pbxproj
           
           python3 << 'PYTHON_SCRIPT'
           import sys
+          import os
           from pbxproj import XcodeProject
           
           PROJECT_PATH = 'ios/Runner.xcodeproj/project.pbxproj'
           TEAM_ID = 'AXZBK8B732'
-          PROFILE_NAME = 'GymMatch AppStore Profile'
+          PROFILE_UUID = os.environ.get('PROFILE_UUID', '')
+          PROFILE_NAME = os.environ.get('PROFILE_NAME', 'GymMatch AppStore Profile')
+          
+          print(f'Using Profile UUID: {PROFILE_UUID}')
+          print(f'Using Profile Name: {PROFILE_NAME}')
           
           try:
               print(f'Loading project: {PROJECT_PATH}')
@@ -81,7 +95,8 @@ jobs:
                       settings = config.buildSettings
                       settings['CODE_SIGN_STYLE'] = 'Manual'
                       settings['DEVELOPMENT_TEAM'] = TEAM_ID
-                      settings['PROVISIONING_PROFILE_SPECIFIER'] = PROFILE_NAME
+                      settings['PROVISIONING_PROFILE_SPECIFIER'] = PROFILE_UUID if PROFILE_UUID else PROFILE_NAME
+                      settings['PROVISIONING_PROFILE'] = PROFILE_UUID if PROFILE_UUID else ''
                       settings['CODE_SIGN_IDENTITY'] = 'Apple Distribution'
                       modified_configs += 1
           
@@ -96,6 +111,8 @@ jobs:
           PYTHON_SCRIPT
       
       - name: Create ExportOptions.plist
+        env:
+          PROFILE_UUID: ${{ env.PROFILE_UUID }}
         run: |
           cat > ExportOptions.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
@@ -109,7 +126,7 @@ jobs:
               <key>provisioningProfiles</key>
               <dict>
                   <key>com.nexa.gymmatch</key>
-                  <string>GymMatch AppStore Profile</string>
+                  <string>${PROFILE_UUID}</string>
               </dict>
               <key>signingCertificate</key>
               <string>Apple Distribution</string>
@@ -118,7 +135,7 @@ jobs:
           </dict>
           </plist>
           EOF
-          echo "✅ ExportOptions.plist created"
+          echo "✅ ExportOptions.plist created with Profile UUID: ${PROFILE_UUID}"
       
       - name: Build Flutter IPA
         run: |
