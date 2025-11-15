@@ -43,47 +43,32 @@ workflows:
         script: |
           keychain initialize
       
-      # 🔐 【重要】Provisioning Profileをインストール（UUID抽出改善版）
+      # 🔐 【重要】Provisioning Profileをインストール (診断レポート推奨方法)
       - name: Decode and install provisioning profile
         script: |
-          set -x
+          set -e
+          
+          echo "'GymMatch AppStore Profile' をインストールしています..."
+          
           PROFILES_HOME="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILES_HOME"
           
-          # プロファイルを一時ファイルにデコード
-          echo "${CM_PROVISIONING_PROFILE}" | base64 --decode > /tmp/profile.mobileprovision
-          
-          # プロファイル内容をXML形式で出力
-          security cms -D -i /tmp/profile.mobileprovision > /tmp/profile.plist
-          
-          # 複数の方法でUUID抽出を試行
-          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" /tmp/profile.plist 2>/dev/null)
+          # 診断レポート推奨: パイプラインで直接UUID抽出
+          PROFILE_UUID=$(echo "${CM_PROVISIONING_PROFILE}" | base64 --decode | \
+                         security cms -D -i /dev/stdin | \
+                         /usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin)
           
           if [ -z "$PROFILE_UUID" ]; then
-            echo "⚠️ PlistBuddy failed, trying grep method..."
-            PROFILE_UUID=$(grep -A1 '<key>UUID</key>' /tmp/profile.plist | grep '<string>' | sed 's/.*<string>\(.*\)<\/string>.*/\1/')
-          fi
-          
-          if [ -z "$PROFILE_UUID" ]; then
-            echo "❌ Failed to extract UUID from provisioning profile"
-            cat /tmp/profile.plist | head -50
+            echo "エラー: プロビジョニングプロファイルからUUIDの抽出に失敗しました。ビルドを中止します。"
             exit 1
           fi
           
-          echo "📋 Extracted Profile UUID: $PROFILE_UUID"
+          echo "抽出されたプロファイルUUID: $PROFILE_UUID"
           
-          # UUIDをファイル名にしてインストール
-          PROFILE_PATH="$PROFILES_HOME/$PROFILE_UUID.mobileprovision"
-          cp /tmp/profile.mobileprovision "$PROFILE_PATH"
+          # UUIDをファイル名として正しい場所に保存
+          echo "${CM_PROVISIONING_PROFILE}" | base64 --decode > "$PROFILES_HOME/$PROFILE_UUID.mobileprovision"
           
-          echo "✅ Installed profile to $PROFILE_PATH"
-          
-          # インストール確認
-          ls -la "$PROFILES_HOME"
-          
-          # プロファイル情報を確認
-          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print :Name" /tmp/profile.plist 2>/dev/null || echo "Unknown")
-          echo "📝 Profile Name: $PROFILE_NAME"
+          echo "プロファイルが正常にインストールされました: $PROFILES_HOME/$PROFILE_UUID.mobileprovision"
       
       # 🔐 【重要】証明書をKeychainにインストール
       - name: Decode and install certificate
@@ -95,35 +80,63 @@ workflows:
             --certificate-password "$CM_CERTIFICATE_PASSWORD"
           echo "✅ Certificate installed to keychain"
       
-      # 🔧 【重要】Xcodeプロジェクトを手動署名に設定
+      # 🔧 【重要】pbxprojライブラリで手動署名設定 (診断レポート推奨)
       - name: Configure manual code signing in Xcode project
         script: |
-          set -x
+          set -e
+          
+          echo "Xcode プロジェクトに手動署名設定を適用しています..."
+          
+          pip3 install pbxproj
+          
           python3 << 'PYTHON_SCRIPT'
-          import re
+          import sys
+          from pbxproj import XcodeProject
           
-          project_path = "ios/Runner.xcodeproj/project.pbxproj"
+          PROJECT_PATH = 'ios/Runner.xcodeproj/project.pbxproj'
+          TEAM_ID = 'AXZBK8B732'
+          PROFILE_NAME = 'GymMatch AppStore Profile'
           
-          with open(project_path, 'r') as f:
-              content = f.read()
+          try:
+              print(f'プロジェクトファイルをロード中: {PROJECT_PATH}')
+              project = XcodeProject.load(PROJECT_PATH)
+          except Exception as e:
+              print(f'プロジェクトファイルのロードに失敗しました: {e}')
+              sys.exit(1)
           
-          # Release設定（97C147071CF9000F007C117D）を探して手動署名設定を追加
-          pattern = r'(97C147071CF9000F007C117D /\* Release \*/.*?buildSettings = \{[^\}]*?VERSIONING_SYSTEM = "apple-generic";)'
+          print('ビルド構成を手動署名用に変更中...')
           
-          replacement = r'\1\n\t\t\t\tCODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = "Apple Distribution";\n\t\t\t\tDEVELOPMENT_TEAM = AXZBK8B732;\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "GymMatch AppStore Profile";'
+          modified_configs = 0
+          for config in project.objects.get_objects_in_section('XCBuildConfiguration'):
+              # Release と Profile の両方の構成を対象にします
+              if hasattr(config, 'name') and ('Release' in config.name or 'Profile' in config.name):
+                  print(f'  -> 構成を修正中: {config.name}')
+                  if hasattr(config, 'buildSettings'):
+                      settings = config.buildSettings
+                      settings['CODE_SIGN_STYLE'] = 'Manual'
+                      settings['DEVELOPMENT_TEAM'] = TEAM_ID
+                      settings['PROVISIONING_PROFILE_SPECIFIER'] = f'"{PROFILE_NAME}"'
+                      settings['CODE_SIGN_IDENTITY'] = '"Apple Distribution"'
+                      modified_configs += 1
           
-          content = re.sub(pattern, replacement, content, flags=re.DOTALL)
+          if modified_configs == 0:
+              print('警告: Release または Profile 構成が見つかりませんでした。')
+          else:
+              print(f'{modified_configs} 個の構成を修正しました。')
           
-          with open(project_path, 'w') as f:
-              f.write(content)
-          
-          print("✅ Xcode project configured for manual signing")
+          print('変更をプロジェクトファイルに保存中...')
+          project.save()
+          print('プロジェクトの署名設定が正常に適用されました。')
           PYTHON_SCRIPT
       
-      # 🔐 【重要】ExportOptionsを生成
+      # 🔐 【重要】ExportOptionsを生成 (診断レポート推奨)
       - name: Create ExportOptions.plist
         script: |
-          cat > /tmp/ExportOptions.plist <<EOF
+          set -e
+          
+          echo "手動 AppStore 署名用の ExportOptions.plist を生成しています..."
+          
+          cat > $CM_BUILD_DIR/ExportOptions.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -146,13 +159,19 @@ workflows:
           EOF
           echo "✅ ExportOptions.plist created"
       
-      # 🚀 【重要】FlutterによるIPAのビルド（手動署名）
+      # 🚀 【重要】FlutterによるIPAのビルド（診断レポート推奨）
       - name: Flutter build ipa
         script: |
+          set -e
+          
+          echo "Flutter IPA ビルドを開始します..."
+          
           flutter build ipa --release \
-            --export-options-plist=/tmp/ExportOptions.plist \
+            --export-options-plist=$CM_BUILD_DIR/ExportOptions.plist \
             --build-name=1.0.$PROJECT_BUILD_NUMBER \
             --build-number=$PROJECT_BUILD_NUMBER
+          
+          echo "Flutter IPA ビルドが正常に完了しました。"
       
       # ✅ 【検証】IPAが実際に生成されたか検証
       - name: Verify IPA exists
