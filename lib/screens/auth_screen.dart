@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, FirebaseAuthException;
 
 /// 認証画面（ログイン・新規登録）
 class AuthScreen extends StatefulWidget {
@@ -27,7 +29,7 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  /// ログイン処理
+  /// ログイン処理（匿名アカウントとのリンクをサポート）
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -37,10 +39,44 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      final currentUser = FirebaseAuth.instance.currentUser;
+      
+      // 匿名ユーザーの場合、アカウントをリンク（データ引き継ぎ）
+      if (currentUser != null && currentUser.isAnonymous) {
+        try {
+          final credential = firebase_auth.EmailAuthProvider.credential(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
+          
+          // 匿名アカウントにメール/パスワード認証をリンク
+          await currentUser.linkWithCredential(credential);
+          if (kDebugMode) {
+            debugPrint('✅ 匿名アカウントをメールアカウントにリンク成功');
+          }
+        } on FirebaseAuthException catch (linkError) {
+          // リンクエラー（例: メールアドレスが既に使用されている）
+          if (linkError.code == 'email-already-in-use' || 
+              linkError.code == 'credential-already-in-use') {
+            // 既存アカウントでログイン
+            if (kDebugMode) {
+              debugPrint('⚠️ メールアドレスが既に使用中、通常ログインに切り替え');
+            }
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
+              email: _emailController.text.trim(),
+              password: _passwordController.text.trim(),
+            );
+          } else {
+            rethrow;
+          }
+        }
+      } else {
+        // 通常のログイン
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+      }
       
       if (mounted) {
         Navigator.of(context).pop(); // 認証成功 → メイン画面へ
