@@ -93,9 +93,23 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
   @override
   void initState() {
     super.initState();
+    _autoLoginIfNeeded();
     _loadCustomExercises();
     _loadLastWorkoutData();
     _applyTemplateDataIfProvided();
+  }
+  
+  /// 未ログイン時に自動的に匿名ログイン
+  Future<void> _autoLoginIfNeeded() async {
+    final user = firebase_auth.FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      try {
+        await firebase_auth.FirebaseAuth.instance.signInAnonymously();
+        debugPrint('✅ トレーニング記録: 匿名認証成功');
+      } catch (e) {
+        debugPrint('❌ トレーニング記録: 匿名認証エラー: $e');
+      }
+    }
   }
   
   // カスタム種目をSharedPreferencesから読み込み
@@ -239,11 +253,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
       final user = firebase_auth.FirebaseAuth.instance.currentUser;
       if (user == null) {
         print('⚠️ ユーザー未ログイン - 前回データなし');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('ログインが必要です'), backgroundColor: Colors.orange),
-          );
-        }
+        // 匿名ログイン実装により、この状態には通常到達しない
         return;
       }
 
@@ -399,9 +409,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     try {
       final user = firebase_auth.FirebaseAuth.instance.currentUser;
       if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ログインが必要です'), backgroundColor: Colors.orange),
-        );
+        // 匿名ログイン実装により、この状態には通常到達しない
         return;
       }
 

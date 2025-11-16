@@ -28,6 +28,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _autoLoginIfNeeded();
     // 初回読み込み
     _loadStatistics();
     
@@ -44,6 +45,19 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+  
+  /// 未ログイン時に自動的に匿名ログイン
+  Future<void> _autoLoginIfNeeded() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      try {
+        await FirebaseAuth.instance.signInAnonymously();
+        debugPrint('✅ 統計ダッシュボード: 匿名認証成功');
+      } catch (e) {
+        debugPrint('❌ 統計ダッシュボード: 匿名認証エラー: $e');
+      }
+    }
   }
   
   @override

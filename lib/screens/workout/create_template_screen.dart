@@ -22,6 +22,25 @@ class _CreateTemplateScreenState extends State<CreateTemplateScreen> {
 
   final List<String> _muscleGroups = ['胸', '背中', '脚', '肩', '二頭', '三頭'];
   
+  @override
+  void initState() {
+    super.initState();
+    _autoLoginIfNeeded();
+  }
+  
+  /// 未ログイン時に自動的に匿名ログイン
+  Future<void> _autoLoginIfNeeded() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      try {
+        await FirebaseAuth.instance.signInAnonymously();
+        debugPrint('✅ テンプレート作成: 匿名認証成功');
+      } catch (e) {
+        debugPrint('❌ テンプレート作成: 匿名認証エラー: $e');
+      }
+    }
+  }
+  
   final Map<String, List<String>> _muscleGroupExercises = {
     '胸': ['ベンチプレス', 'ダンベルプレス', 'インクラインプレス', 'ケーブルフライ', 'ディップス'],
     '脚': ['スクワット', 'レッグプレス', 'レッグエクステンション', 'レッグカール', 'カーフレイズ'],
@@ -335,7 +354,8 @@ class _CreateTemplateScreenState extends State<CreateTemplateScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        throw Exception('ログインが必要です');
+        // 匿名ログイン実装により、この状態には通常到達しない
+        throw Exception('認証エラーが発生しました');
       }
 
       final template = WorkoutTemplate(

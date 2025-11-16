@@ -76,8 +76,22 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
   @override
   void initState() {
     super.initState();
+    _autoLoginIfNeeded();
     _loadLastWorkoutData();
     _applyTemplateDataIfProvided();
+  }
+  
+  /// 未ログイン時に自動的に匿名ログイン
+  Future<void> _autoLoginIfNeeded() async {
+    final user = firebase_auth.FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      try {
+        await firebase_auth.FirebaseAuth.instance.signInAnonymously();
+        debugPrint('✅ トレーニング記録完了: 匿名認証成功');
+      } catch (e) {
+        debugPrint('❌ トレーニング記録完了: 匿名認証エラー: $e');
+      }
+    }
   }
   
   void _applyTemplateDataIfProvided() {
