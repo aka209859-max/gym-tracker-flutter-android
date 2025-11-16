@@ -32,9 +32,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  CalendarFormat _calendarFormat = CalendarFormat.week;
+  CalendarFormat _calendarFormat = CalendarFormat.month;
   List<Map<String, dynamic>> _selectedDayWorkouts = [];
   bool _isLoading = false;
+  
+  // トレーニング記録がある日付のセット
+  Set<DateTime> _workoutDates = {};
   
   // 種目ごとの展開状態を管理
   Map<String, bool> _expandedExercises = {};
@@ -72,6 +75,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _selectedDay = _focusedDay;
     // 空セットをクリーンアップしてからデータ読み込み
     _cleanupEmptySets().then((_) {
+      _loadWorkoutDates(); // トレーニング記録がある日付を読み込む
       _loadWorkoutsForSelectedDay();
       _loadBadgeStats();
       _loadActiveGoals();
@@ -162,6 +166,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       // アプリが foreground に戻った時に自動リフレッシュ
       print('🔄 アプリがアクティブになりました - データを再読み込み');
+      _loadWorkoutDates(); // トレーニング記録日付も再読み込み
       _loadWorkoutsForSelectedDay();
       _loadStatistics(); // 統計データも再読み込み
     }
@@ -285,6 +290,43 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         _monthlyActiveDays = 0;
         _totalDaysFromStart = 0;
       });
+    }
+  }
+
+  /// トレーニング記録がある日付を読み込む（カレンダーマーカー用）
+  Future<void> _loadWorkoutDates() async {
+    final user = firebase_auth.FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    
+    try {
+      print('📅 トレーニング記録日付を取得中...');
+      
+      // 全トレーニング記録の日付を取得
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('workout_logs')
+          .where('user_id', isEqualTo: user.uid)
+          .get();
+      
+      final workoutDates = <DateTime>{};
+      for (final doc in querySnapshot.docs) {
+        final data = doc.data();
+        final date = (data['date'] as Timestamp?)?.toDate();
+        
+        if (date != null) {
+          // 時刻を正規化（日付のみを使用）
+          final normalizedDate = DateTime(date.year, date.month, date.day);
+          workoutDates.add(normalizedDate);
+        }
+      }
+      
+      print('✅ トレーニング記録日付: ${workoutDates.length}日');
+      
+      setState(() {
+        _workoutDates = workoutDates;
+      });
+      
+    } catch (e) {
+      print('❌ トレーニング記録日付の取得エラー: $e');
     }
   }
 
@@ -787,7 +829,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           _loadWorkoutsForSelectedDay();
         },
         availableCalendarFormats: const {
-          CalendarFormat.week: '週',
+          CalendarFormat.month: '月',
+        },
+        eventLoader: (day) {
+          // この日にトレーニング記録があるかチェック
+          final normalizedDay = DateTime(day.year, day.month, day.day);
+          return _workoutDates.contains(normalizedDay) ? ['workout'] : [];
         },
         onPageChanged: (focusedDay) {
           _focusedDay = focusedDay;

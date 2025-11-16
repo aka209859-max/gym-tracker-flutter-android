@@ -500,8 +500,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             Text(
               '• 月額プランはいつでもキャンセル可能です\n'
               '• キャンセル後も期間満了まで利用できます\n'
-              '• プラン変更は即座に反映されます\n'
-              '• 決済は開発中のため、現在はデモ動作です',
+              '• プラン変更は即座に反映されます',
               style: TextStyle(
                 fontSize: 13,
                 color: Colors.grey[700],
