@@ -63,23 +63,25 @@ class DefaultFirebaseOptions {
     storageBucket: 'fitsync-demo.appspot.com',
   );
 
-  // iOS Platform Configuration (後で本番設定に置き換え)
+  // iOS Platform Configuration (GYM MATCH Production - 暫定設定)
+  // TODO: Firebase ConsoleからiOS用GoogleService-Info.plistを取得し正式設定に置き換え
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDemoIOS-FitSync-Key-Replace-With-Real',
-    appId: '1:123456789:ios:abcdef123456',
-    messagingSenderId: '123456789',
-    projectId: 'fitsync-demo',
-    storageBucket: 'fitsync-demo.appspot.com',
+    apiKey: 'AIzaSyDYwD-_fz9m4vSQsbdXuQpKtbHguIl4LaM',  // Web設定を流用
+    appId: '1:506175392633:ios:TEMP-iOS-AppID',        // 暫定iOS App ID
+    messagingSenderId: '506175392633',
+    projectId: 'gym-match-e560d',  // ✅ 正しいプロジェクトID
+    storageBucket: 'gym-match-e560d.firebasestorage.app',
     iosBundleId: 'jp.nexa.fitsync',
   );
 
-  // macOS Platform Configuration (後で本番設定に置き換え)
+  // macOS Platform Configuration (GYM MATCH Production - 暫定設定)
+  // TODO: Firebase ConsoleからmacOS用設定を取得し正式設定に置き換え
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDemoMacOS-FitSync-Key-Replace-With-Real',
-    appId: '1:123456789:macos:abcdef123456',
-    messagingSenderId: '123456789',
-    projectId: 'fitsync-demo',
-    storageBucket: 'fitsync-demo.appspot.com',
+    apiKey: 'AIzaSyDYwD-_fz9m4vSQsbdXuQpKtbHguIl4LaM',  // Web設定を流用
+    appId: '1:506175392633:macos:TEMP-macOS-AppID',    // 暫定macOS App ID
+    messagingSenderId: '506175392633',
+    projectId: 'gym-match-e560d',  // ✅ 正しいプロジェクトID
+    storageBucket: 'gym-match-e560d.firebasestorage.app',
     iosBundleId: 'jp.nexa.fitsync',
   );
 }
