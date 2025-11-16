@@ -10,7 +10,7 @@ class WorkoutImportService {
   // Gemini API設定（写真取り込み専用：無料枠モデル使用）
   static const String _apiKey = 'AIzaSyA9XmQSHA1llGg7gihqjmOOIaLA856fkLc';
   static const String _apiUrl = 
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
   /// 画像からトレーニングデータを抽出（リトライロジック付き）
   /// 
@@ -28,8 +28,25 @@ class WorkoutImportService {
           print('📸 画像解析開始... (試行 $attempt/$maxRetries)');
         }
 
+        // 画像サイズチェックと最適化（Gemini API制限: 20MB）
+        Uint8List processedImageBytes = imageBytes;
+        
+        // 画像が10MBを超える場合は警告（20MB制限の半分）
+        const maxSizeBytes = 10 * 1024 * 1024; // 10MB
+        if (imageBytes.length > maxSizeBytes) {
+          if (kDebugMode) {
+            print('⚠️ 画像サイズが大きすぎます: ${(imageBytes.length / 1024 / 1024).toStringAsFixed(2)}MB');
+            print('💡 ヒント: より小さい画像を使用するか、スクリーンショットの品質を下げてください');
+          }
+          // 大きすぎる場合はエラーとする
+          throw Exception(
+            '画像サイズが大きすぎます (${(imageBytes.length / 1024 / 1024).toStringAsFixed(1)}MB)。\n'
+            '10MB以下の画像を使用してください。'
+          );
+        }
+        
         // 画像をBase64エンコード
-        final base64Image = base64Encode(imageBytes);
+        final base64Image = base64Encode(processedImageBytes);
         
         // 画像のMIME Typeを判定（バイトシグネチャから）
         String mimeType = 'image/jpeg'; // デフォルトはJPEG
@@ -129,14 +146,26 @@ class WorkoutImportService {
         }
         await Future.delayed(retryDelay);
         continue; // 次の試行へ
+      } else if (response.statusCode == 403) {
+        // 403 Forbiddenエラー（API権限エラー）
+        if (kDebugMode) {
+          print('❌ API権限エラー (403): ${response.body}');
+        }
+        throw Exception('画像解析APIの権限エラーです。しばらく待ってから再度お試しください。');
+      } else if (response.statusCode == 400) {
+        // 400 Bad Request（リクエスト形式エラー）
+        if (kDebugMode) {
+          print('❌ リクエストエラー (400): ${response.body}');
+        }
+        throw Exception('画像形式が正しくありません。別の画像でお試しください。');
       } else {
-        // エラーレスポンスの詳細をログ出力
+        // その他のエラー
         if (kDebugMode) {
           print('❌ API Error: HTTP ${response.statusCode}');
           print('Response Headers: ${response.headers}');
           print('Response Body (first 500 chars): ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}');
         }
-        throw Exception('API Error: ${response.statusCode} - ${response.body}');
+        throw Exception('画像解析に失敗しました (HTTP ${response.statusCode})。もう一度お試しください。');
       }
     } catch (e) {
       if (attempt == maxRetries) {
