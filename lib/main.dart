@@ -217,12 +217,8 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     
-    // トライアル案内ダイアログを初回起動時に表示
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        TrialWelcomeDialog.showIfFirstLaunch(context);
-      }
-    });
+    // 7日間トライアルは廃止
+    // 新システム: 乗り換え割キャンペーン（プロフィール画面からアクセス）
   }
 
   @override

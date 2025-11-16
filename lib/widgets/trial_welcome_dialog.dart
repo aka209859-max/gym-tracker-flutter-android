@@ -10,21 +10,15 @@ class TrialWelcomeDialog extends StatelessWidget {
   const TrialWelcomeDialog({super.key});
 
   /// 初回起動チェック＆ダイアログ表示
+  /// 
+  /// ⚠️ 注意: 7日間トライアルは廃止されました
+  /// 新システム: 乗り換え割キャンペーン（SNSシェアで無料）
+  /// このダイアログは表示されません
   static Future<void> showIfFirstLaunch(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    final hasShown = prefs.getBool('trial_welcome_shown') ?? false;
-
-    if (!hasShown && context.mounted) {
-      // 初回起動フラグを設定
-      await prefs.setBool('trial_welcome_shown', true);
-      
-      // ダイアログ表示
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const TrialWelcomeDialog(),
-      );
-    }
+    // 7日間トライアルシステムは廃止
+    // 乗り換え割キャンペーン（SNSシェア）に移行済み
+    // このダイアログは表示しない
+    return;
   }
 
   @override
