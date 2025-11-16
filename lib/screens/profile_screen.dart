@@ -11,7 +11,6 @@ import 'messages/messages_screen.dart';
 import 'partner/partner_screen.dart';
 import 'settings/notification_settings_screen.dart';
 import 'workout_import_preview_screen.dart';
-import 'fatigue_management_screen.dart';
 import 'achievements_screen.dart';
 import '../services/favorites_service.dart';
 import '../services/subscription_service.dart';
@@ -468,35 +467,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        // 🔬 疲労管理システム（NEW!）
-        Card(
-          elevation: 2,
-          color: Colors.blue[50],
-          child: ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.blue[700],
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.psychology, color: Colors.white),
-            ),
-            title: const Text(
-              '🔬 疲労管理システム',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: const Text(
-              '科学的根拠に基づく疲労度分析とアドバイス',
-              style: TextStyle(fontSize: 12),
-            ),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const FatigueManagementScreen()),
-              );
-            },
-          ),
+        // デザインテーマ選択は削除（Energetic系に固定）
+        _buildMenuCard(
+          context,
+          icon: Icons.favorite,
+          title: 'お気に入りジム',
+          subtitle: '$_favoriteCount件',
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const FavoritesScreen()),
+            ).then((_) => _loadUserData());
+          },
         ),
         const SizedBox(height: 12),
         // 🏆 達成バッジ
@@ -510,20 +492,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               context,
               MaterialPageRoute(builder: (context) => const AchievementsScreen()),
             );
-          },
-        ),
-        const SizedBox(height: 12),
-        // デザインテーマ選択は削除（Energetic系に固定）
-        _buildMenuCard(
-          context,
-          icon: Icons.favorite,
-          title: 'お気に入りジム',
-          subtitle: '$_favoriteCount件',
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const FavoritesScreen()),
-            ).then((_) => _loadUserData());
           },
         ),
         const SizedBox(height: 12),

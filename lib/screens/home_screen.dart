@@ -18,6 +18,7 @@ import '../services/achievement_service.dart';
 import '../services/goal_service.dart';
 import '../services/share_service.dart';
 import '../services/workout_share_service.dart';
+import '../services/fatigue_management_service.dart';
 import '../widgets/workout_share_card.dart';
 import '../widgets/workout_share_image.dart';
 import '../providers/navigation_provider.dart';
@@ -67,6 +68,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   
   // Task 27: SNSシェア
   final ShareService _shareService = ShareService();
+  
+  // 疲労管理システム
+  final FatigueManagementService _fatigueService = FatigueManagementService();
 
   @override
   void initState() {
@@ -549,8 +553,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             
             const SizedBox(height: 16),
             
-            // Task 16: バッジセクション
-            _buildBadgeSection(theme),
+            // Task 16: 疲労管理システムセクション
+            _buildFatigueManagementSection(theme),
             
             const SizedBox(height: 16),
             
@@ -2775,141 +2779,187 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // TODO: AddWorkoutScreenに既存データを渡して編集モードで開く
   }
   
-  // ==================== Task 16: バッジセクション ====================
+  // ==================== Task 16: 疲労管理システムセクション ====================
   
-  /// バッジセクション
-  Widget _buildBadgeSection(ThemeData theme) {
-    final unlockedPercent = _badgeStats['total']! > 0
-        ? (_badgeStats['unlocked']! / _badgeStats['total']! * 100).toInt()
-        : 0;
-    
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: InkWell(
-        onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AchievementsScreen(),
-            ),
-          );
-          // バッジ画面から戻ったら統計を更新
-          _loadBadgeStats();
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                theme.colorScheme.primary,
-                theme.colorScheme.secondary,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
+  /// 疲労管理システムセクション
+  Widget _buildFatigueManagementSection(ThemeData theme) {
+    return FutureBuilder<bool>(
+      future: _fatigueService.isFatigueManagementEnabled(),
+      builder: (context, snapshot) {
+        final isEnabled = snapshot.data ?? false;
+        
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.blue[700]!,
+                  Colors.blue[500]!,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.psychology,
+                        color: Colors.white,
+                        size: 28,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.emoji_events,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '達成バッジ',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '🔬 疲労管理システム',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
+                          Text(
+                            '科学的根拠に基づく疲労度分析',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                
+                // ON/OFFスイッチ
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'システム状態',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Switch(
+                      value: isEnabled,
+                      onChanged: (value) async {
+                        await _fatigueService.setFatigueManagementEnabled(value);
+                        setState(() {});
+                        
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                value ? '✅ 疲労管理システムを有効にしました' : '❌ 疲労管理システムを無効にしました',
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                      activeColor: Colors.white,
+                      activeTrackColor: Colors.white.withValues(alpha: 0.5),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // 全トレーニング終了ボタン
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: isEnabled ? _endTodayWorkout : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.blue[700],
+                      disabledBackgroundColor: Colors.grey[300],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.check_circle,
+                          size: 24,
+                          color: isEnabled ? Colors.blue[700] : Colors.grey,
                         ),
+                        const SizedBox(width: 12),
                         Text(
-                          'あなたの実績を確認',
+                          '本日の全トレーニング終了',
                           style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white70,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isEnabled ? Colors.blue[700] : Colors.grey,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(
-                    Icons.chevron_right,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildBadgeStat(
-                      '解除済み',
-                      '${_badgeStats['unlocked']}',
-                      Icons.check_circle,
-                    ),
-                  ),
-                  Expanded(
-                    child: _buildBadgeStat(
-                      '未解除',
-                      '${_badgeStats['locked']}',
-                      Icons.lock_outline,
-                    ),
-                  ),
-                  Expanded(
-                    child: _buildBadgeStat(
-                      '達成率',
-                      '$unlockedPercent%',
-                      Icons.insights,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: _badgeStats['total']! > 0
-                      ? _badgeStats['unlocked']! / _badgeStats['total']!
-                      : 0,
-                  minHeight: 8,
-                  backgroundColor: Colors.white30,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
-              ),
-            ],
+                
+                if (!isEnabled) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.info, color: Colors.white, size: 16),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'システムをONにしてください',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
   
-  Widget _buildBadgeStat(String label, String value, IconData icon) {
+  Widget _buildFatigueStat(String label, String value, IconData icon) {
     return Column(
       children: [
         Icon(icon, color: Colors.white, size: 24),
@@ -2927,6 +2977,274 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           style: const TextStyle(
             fontSize: 11,
             color: Colors.white70,
+          ),
+        ),
+      ],
+    );
+  }
+  
+  /// 全トレーニング終了処理
+  Future<void> _endTodayWorkout() async {
+    try {
+      // 本日のトレーニング記録を取得
+      final user = firebase_auth.FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('ユーザーが認証されていません');
+      }
+
+      final today = DateTime.now();
+      final todayStart = DateTime(today.year, today.month, today.day);
+      final todayEnd = todayStart.add(const Duration(days: 1));
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('workout_logs')
+          .where('user_id', isEqualTo: user.uid)
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart))
+          .where('date', isLessThan: Timestamp.fromDate(todayEnd))
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('本日のトレーニング記録が見つかりません'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // トレーニング記録を分析
+      int totalSets = 0;
+      double totalVolumeLoad = 0.0;
+      Set<String> bodyParts = {};
+
+      for (final doc in querySnapshot.docs) {
+        final data = doc.data();
+        final exercises = data['exercises'] as List<dynamic>? ?? [];
+        
+        for (final exercise in exercises) {
+          final sets = exercise['sets'] as List<dynamic>? ?? [];
+          totalSets += sets.length;
+          
+          for (final set in sets) {
+            final weight = (set['weight_kg'] as num?)?.toDouble() ?? 0.0;
+            final reps = (set['reps'] as num?)?.toInt() ?? 0;
+            totalVolumeLoad += weight * reps;
+          }
+          
+          final bodyPart = exercise['body_part'] as String? ?? '不明';
+          bodyParts.add(bodyPart);
+        }
+      }
+
+      // 最後のトレーニング日を保存
+      await _fatigueService.saveLastWorkoutDate(DateTime.now());
+
+      // 疲労度アドバイスダイアログを表示
+      if (mounted) {
+        _showFatigueAdviceDialog(
+          totalSets: totalSets,
+          totalVolumeLoad: totalVolumeLoad,
+          bodyParts: bodyParts.toList(),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ エラー: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+  }
+
+  void _showFatigueAdviceDialog({
+    required int totalSets,
+    required double totalVolumeLoad,
+    required List<String> bodyParts,
+  }) {
+    // 簡易的な疲労度計算
+    double fatigueScore = 0.0;
+    
+    fatigueScore += totalSets * 2.0;
+    
+    if (bodyParts.contains('脚')) fatigueScore += 15.0;
+    if (bodyParts.contains('背中')) fatigueScore += 10.0;
+    if (bodyParts.contains('胸')) fatigueScore += 8.0;
+    
+    // 疲労度レベルを判定
+    String fatigueLevel;
+    Color levelColor;
+    String advice;
+    String recoveryTime;
+    IconData levelIcon;
+    
+    if (fatigueScore < 30) {
+      fatigueLevel = '軽度';
+      levelColor = Colors.green;
+      levelIcon = Icons.sentiment_satisfied;
+      advice = '良好なトレーニングでした！\n軽いストレッチと十分な水分補給をしましょう。';
+      recoveryTime = '24時間';
+    } else if (fatigueScore < 50) {
+      fatigueLevel = '中程度';
+      levelColor = Colors.blue;
+      levelIcon = Icons.sentiment_neutral;
+      advice = '適度な負荷のトレーニングでした。\n7-8時間の睡眠とタンパク質補給を心がけましょう。';
+      recoveryTime = '36-48時間';
+    } else if (fatigueScore < 70) {
+      fatigueLevel = '高め';
+      levelColor = Colors.orange;
+      levelIcon = Icons.sentiment_dissatisfied;
+      advice = '高強度のトレーニングでした。\n十分な休息と栄養補給が必要です。無理せず回復を優先しましょう。';
+      recoveryTime = '48-72時間';
+    } else {
+      fatigueLevel = '極めて高い';
+      levelColor = Colors.red;
+      levelIcon = Icons.warning;
+      advice = '非常に高強度のトレーニングでした。\n今日は完全休養を推奨します。睡眠・栄養・ストレッチを重視してください。';
+      recoveryTime = '72時間以上';
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(levelIcon, color: levelColor, size: 32),
+            const SizedBox(width: 12),
+            const Text('疲労度分析結果'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: levelColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: levelColor, width: 2),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      '疲労度レベル',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      fatigueLevel,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: levelColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'スコア: ${fatigueScore.toInt()} / 100',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              _buildInfoRow('総セット数', '$totalSets セット'),
+              const SizedBox(height: 8),
+              _buildInfoRow('総負荷量', '${totalVolumeLoad.toStringAsFixed(0)} kg'),
+              const SizedBox(height: 8),
+              _buildInfoRow('実施部位', bodyParts.join('、')),
+              const SizedBox(height: 8),
+              _buildInfoRow('推奨回復時間', recoveryTime),
+              
+              const Divider(height: 32),
+              
+              Row(
+                children: [
+                  Icon(Icons.lightbulb, color: Colors.amber[700], size: 20),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'アドバイス',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                advice,
+                style: const TextStyle(fontSize: 14, height: 1.5),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.science, color: Colors.blue[700], size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '※ 科学的根拠に基づく詳細分析機能は近日実装予定',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('閉じる'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[700],
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
