@@ -12,6 +12,7 @@ import 'partner/partner_screen.dart';
 import 'settings/notification_settings_screen.dart';
 import 'workout_import_preview_screen.dart';
 import 'achievements_screen.dart';
+import 'personal_factors_screen.dart';
 import '../services/favorites_service.dart';
 import '../services/subscription_service.dart';
 import '../services/chat_service.dart';
@@ -433,6 +434,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: _importWorkoutData,
+          ),
+        ),
+        const SizedBox(height: 12),
+        // 🔬 個人要因設定（Phase 2b）
+        Card(
+          elevation: 2,
+          color: Colors.blue[50],
+          child: ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blue[700],
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.psychology, color: Colors.white),
+            ),
+            title: const Text(
+              '🔬 個人要因設定',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: const Text(
+              '年齢・経験・睡眠・栄養・アルコール（PFM補正）',
+              style: TextStyle(fontSize: 12),
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PersonalFactorsScreen()),
+              );
+            },
           ),
         ),
         const SizedBox(height: 12),
