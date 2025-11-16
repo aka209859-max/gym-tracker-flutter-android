@@ -260,11 +260,75 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
   Widget _buildCrowdCard() {
     final gym = widget.gym;
     
-    // 混雑度データが未実装の場合は非表示（広告バナー削除）
+    // 混雑度データが無い場合：報告ボタンのみ表示
     if (gym.currentCrowdLevel == 0 || gym.lastCrowdUpdate == null) {
-      return const SizedBox.shrink();
+      return Card(
+        elevation: 4,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                children: const [
+                  Icon(Icons.people, color: Colors.grey, size: 24),
+                  SizedBox(width: 8),
+                  Text(
+                    '混雑度情報',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Column(
+                  children: [
+                    Icon(Icons.help_outline, size: 48, color: Colors.grey[400]),
+                    const SizedBox(height: 8),
+                    Text(
+                      'まだ混雑度情報がありません',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '最初の報告者になりましょう！',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CrowdReportScreen(gym: widget.gym),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.edit),
+                  label: const Text('混雑度を報告する'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
     
+    // 混雑度データがある場合：通常の混雑度カード
     final minutesAgo = gym.lastCrowdUpdate != null
         ? DateTime.now().difference(gym.lastCrowdUpdate!).inMinutes
         : null;
