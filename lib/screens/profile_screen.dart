@@ -13,6 +13,7 @@ import 'settings/notification_settings_screen.dart';
 import 'workout_import_preview_screen.dart';
 import 'achievements_screen.dart';
 import 'personal_factors_screen.dart';
+import 'campaign/campaign_registration_screen.dart';
 import '../services/favorites_service.dart';
 import '../services/subscription_service.dart';
 import '../services/chat_service.dart';
@@ -434,6 +435,92 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: _importWorkoutData,
+          ),
+        ),
+        const SizedBox(height: 12),
+        // 🎉 乗り換え割キャンペーン
+        Card(
+          elevation: 2,
+          color: Colors.orange[50],
+          child: ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange[700],
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.card_giftcard, color: Colors.white),
+            ),
+            title: const Text(
+              '🎉 乗り換え割キャンペーン',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: const Text(
+              '他社アプリからの乗り換えで最大2ヶ月無料',
+              style: TextStyle(fontSize: 12),
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              // プラン選択ダイアログ表示
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Row(
+                    children: [
+                      Icon(Icons.card_giftcard, color: Colors.orange),
+                      SizedBox(width: 8),
+                      Text('プランを選択'),
+                    ],
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.workspace_premium, color: Colors.blue),
+                        title: const Text('プレミアムプラン'),
+                        subtitle: const Text('初月無料'),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CampaignRegistrationScreen(
+                                planType: 'premium',
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const Divider(),
+                      ListTile(
+                        leading: const Icon(Icons.emoji_events, color: Colors.amber),
+                        title: const Text('Proプラン'),
+                        subtitle: const Text('2ヶ月無料'),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CampaignRegistrationScreen(
+                                planType: 'pro',
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('キャンセル'),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(height: 12),

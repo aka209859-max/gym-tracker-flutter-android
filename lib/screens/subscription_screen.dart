@@ -4,6 +4,7 @@ import '../services/subscription_service.dart';
 import '../services/revenue_cat_service.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'ai_addon_purchase_screen.dart';
+import 'campaign/campaign_registration_screen.dart';
 
 /// サブスクリプション管理画面
 class SubscriptionScreen extends StatefulWidget {
@@ -361,40 +362,92 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             // ボタン
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: SizedBox(
-                width: double.infinity,
-                child: isCurrentPlan
-                    ? OutlinedButton(
-                        onPressed: null,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: BorderSide(color: color, width: 2),
-                        ),
-                        child: const Text(
-                          '現在のプラン',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      )
-                    : ElevatedButton(
-                        onPressed: () => _changePlan(type),
+              child: Column(
+                children: [
+                  // 乗り換え割ボタン（有料プランのみ）
+                  if (!isCurrentPlan && type != SubscriptionType.free) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CampaignRegistrationScreen(
+                                planType: type == SubscriptionType.premium ? 'premium' : 'pro',
+                              ),
+                            ),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: color,
+                          backgroundColor: Colors.orange[700],
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                         child: Text(
-                          type == SubscriptionType.free
-                              ? 'このプランに変更'
-                              : 'アップグレード',
+                          type == SubscriptionType.premium
+                              ? '🎉 乗り換え割で初月無料'
+                              : '🎉 乗り換え割で2ヶ月無料',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  
+                  // 通常ボタン
+                  SizedBox(
+                    width: double.infinity,
+                    child: isCurrentPlan
+                        ? OutlinedButton(
+                            onPressed: null,
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: BorderSide(color: color, width: 2),
+                            ),
+                            child: const Text(
+                              '現在のプラン',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        : type == SubscriptionType.free
+                            ? ElevatedButton(
+                                onPressed: () => _changePlan(type),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: color,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                ),
+                                child: const Text(
+                                  'このプランに変更',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              )
+                            : OutlinedButton(
+                                onPressed: () => _changePlan(type),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  side: BorderSide(color: color, width: 2),
+                                ),
+                                child: const Text(
+                                  '通常登録',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                  ),
+                ],
               ),
             ),
           ],
