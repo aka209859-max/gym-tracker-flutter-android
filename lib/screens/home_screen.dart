@@ -19,6 +19,8 @@ import '../services/goal_service.dart';
 import '../services/share_service.dart';
 import '../services/workout_share_service.dart';
 import '../services/fatigue_management_service.dart';
+import '../services/advanced_fatigue_service.dart';
+import '../models/user_profile.dart';
 import '../widgets/workout_share_card.dart';
 import '../widgets/workout_share_image.dart';
 import '../providers/navigation_provider.dart';
@@ -71,6 +73,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   
   // 疲労管理システム
   final FatigueManagementService _fatigueService = FatigueManagementService();
+  final AdvancedFatigueService _advancedFatigueService = AdvancedFatigueService();
 
   @override
   void initState() {
@@ -3067,12 +3070,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           return;
         }
 
-        // 科学的疲労度計算（Training Load）
-        final trainingLoad = _fatigueService.calculateTrainingLoad(
+        // Phase 2a: 基礎Training Load計算
+        final baseTrainingLoad = _fatigueService.calculateTrainingLoad(
           sessionRPE: sessionRPE,
           durationMinutes: sessionDuration,
           totalSets: totalSets,
           bodyParts: bodyParts.toList(),
+        );
+
+        // Phase 2b+2c: ユーザープロファイル取得 + 統合分析
+        final userProfile = await _advancedFatigueService.getUserProfile();
+        final comprehensiveAnalysis = await _advancedFatigueService.getComprehensiveFatigueAnalysis(
+          baseTrainingLoad: baseTrainingLoad,
+          profile: userProfile,
         );
 
         // セッションデータを保存
@@ -3084,9 +3094,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         // 最後のトレーニング日を保存
         await _fatigueService.saveLastWorkoutDate(DateTime.now());
 
-        // 疲労度アドバイスダイアログを表示
+        // Phase 2a+2b+2c統合: 疲労度アドバイスダイアログを表示
         if (mounted) {
-          _showFatigueAdviceDialog(trainingLoad);
+          _showComprehensiveFatigueDialog(comprehensiveAnalysis);
         }
       }
     } catch (e) {
@@ -3452,6 +3462,263 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
         ),
       ],
+    );
+  }
+  
+  /// Phase 2a+2b+2c統合: 包括的疲労度分析ダイアログ
+  void _showComprehensiveFatigueDialog(Map<String, dynamic> analysis) {
+    final baseTrainingLoad = analysis['base_training_load'] as double;
+    final pfm = analysis['personal_factor_multiplier'] as double;
+    final adjustedTrainingLoad = analysis['adjusted_training_load'] as double;
+    final acwrData = analysis['acwr_data'] as Map<String, dynamic>;
+    
+    // Phase 2a: 基礎疲労度レベル
+    final baseFatigueData = _fatigueService.getFatigueLevel(adjustedTrainingLoad);
+    final baseFatigueLevel = baseFatigueData['label'] as String;
+    final recoveryHours = baseFatigueData['recoveryHours'] as int;
+    final baseAdvice = baseFatigueData['advice'] as String;
+    
+    // Phase 2c: ACWR分析
+    final acwr = acwrData['acwr'] as double?;
+    final acuteLoad = acwrData['acute_load'] as double;
+    final chronicLoad = acwrData['chronic_load'] as double;
+    final riskLevel = acwrData['risk_level'] as String;
+    final riskColorName = acwrData['risk_color'] as String;
+    final acwrAdvice = acwrData['advice'] as String;
+    
+    // Traffic Light Color
+    Color trafficLightColor;
+    IconData trafficLightIcon;
+    String trafficLightLabel;
+    
+    switch (riskColorName) {
+      case 'green':
+        trafficLightColor = Colors.green;
+        trafficLightIcon = Icons.check_circle;
+        trafficLightLabel = '安全';
+        break;
+      case 'yellow':
+        trafficLightColor = Colors.amber;
+        trafficLightIcon = Icons.warning;
+        trafficLightLabel = '警戒';
+        break;
+      case 'red':
+        trafficLightColor = Colors.red;
+        trafficLightIcon = Icons.error;
+        trafficLightLabel = '危険';
+        break;
+      case 'blue':
+        trafficLightColor = Colors.blue;
+        trafficLightIcon = Icons.trending_down;
+        trafficLightLabel = 'アンダートレーニング';
+        break;
+      default:
+        trafficLightColor = Colors.grey;
+        trafficLightIcon = Icons.help;
+        trafficLightLabel = 'データ不足';
+    }
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.psychology, color: Colors.blue[700], size: 32),
+            const SizedBox(width: 12),
+            const Text('🔬 総合疲労度分析'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Phase 2c: Traffic Light Model
+              if (acwr != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: trafficLightColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: trafficLightColor, width: 3),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(trafficLightIcon, color: trafficLightColor, size: 48),
+                      const SizedBox(height: 8),
+                      Text(
+                        trafficLightLabel,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: trafficLightColor,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'ACWR: ${acwr.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              
+              // Phase 2b: Personal Factor Multiplier
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.purple[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.purple[200]!, width: 1),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.person, color: Colors.purple[700], size: 18),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Phase 2b: 個人補正係数 (PFM)',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'PFM: ${pfm.toStringAsFixed(2)}x',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    Text(
+                      '基礎TL: ${baseTrainingLoad.toInt()} AU → 補正後: ${adjustedTrainingLoad.toInt()} AU',
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Phase 2c: ACWR詳細データ
+              if (acwr != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue[200]!, width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.trending_up, color: Colors.blue[700], size: 18),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Phase 2c: ACWR分析',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      _buildInfoRow('急性負荷 (7日)', '${acuteLoad.toInt()} AU'),
+                      const SizedBox(height: 4),
+                      _buildInfoRow('慢性負荷 (28日)', '${chronicLoad.toInt()} AU'),
+                      const SizedBox(height: 4),
+                      _buildInfoRow('ACWR比', acwr.toStringAsFixed(2)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              
+              // 疲労度レベル
+              _buildInfoRow('疲労度レベル', baseFatigueLevel),
+              const SizedBox(height: 8),
+              _buildInfoRow('推奨回復時間', '${recoveryHours}時間'),
+              
+              const Divider(height: 32),
+              
+              // アドバイス
+              Row(
+                children: [
+                  Icon(Icons.lightbulb, color: Colors.amber[700], size: 20),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'アドバイス',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              
+              // Phase 2a アドバイス
+              Text(
+                '【基礎分析】\n$baseAdvice',
+                style: const TextStyle(fontSize: 13, height: 1.5),
+              ),
+              
+              if (acwr != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  '【ACWR分析】\n$acwrAdvice',
+                  style: const TextStyle(fontSize: 13, height: 1.5),
+                ),
+              ],
+              
+              const SizedBox(height: 16),
+              
+              // 科学的根拠表示
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green[200]!, width: 1),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.science, color: Colors.green[700], size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Phase 2a+2b+2c統合実装\nFoster (2001), Murray (2016), Windt & Gabbett (2017)',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.green[900],
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('閉じる'),
+          ),
+        ],
+      ),
     );
   }
   
