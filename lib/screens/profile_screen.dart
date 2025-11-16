@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'favorites_screen.dart';
 import 'subscription_screen.dart';
 import 'body_measurement_screen.dart';
@@ -14,6 +15,7 @@ import '../services/favorites_service.dart';
 import '../services/subscription_service.dart';
 import '../services/chat_service.dart';
 import '../services/workout_import_service.dart';
+import 'dart:convert';
 
 /// プロフィール画面
 class ProfileScreen extends StatefulWidget {
@@ -58,6 +60,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
       }
     });
+  }
+
+  /// 写真・CSVから取り込み機能（ファイル種類選択）
+  Future<void> _importWorkoutData() async {
+    // ファイル種類選択ダイアログ
+    final importType = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.upload_file, color: Colors.purple),
+            SizedBox(width: 8),
+            Text('データ取り込み'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'トレーニング記録をどの形式で取り込みますか？',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 20),
+            // 写真から取り込み
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Colors.blue,
+                child: Icon(Icons.photo_camera, color: Colors.white),
+              ),
+              title: const Text('📸 写真から取り込み'),
+              subtitle: const Text(
+                '他アプリのスクリーンショット',
+                style: TextStyle(fontSize: 12),
+              ),
+              onTap: () => Navigator.pop(context, 'photo'),
+            ),
+            const Divider(),
+            // CSVから取り込み
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Colors.green,
+                child: Icon(Icons.description, color: Colors.white),
+              ),
+              title: const Text('📄 CSVから取り込み'),
+              subtitle: const Text(
+                'CSV形式のファイル',
+                style: TextStyle(fontSize: 12),
+              ),
+              onTap: () => Navigator.pop(context, 'csv'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+        ],
+      ),
+    );
+
+    if (importType == null) return;
+
+    // 選択された形式で取り込み実行
+    if (importType == 'photo') {
+      await _importFromPhoto();
+    } else if (importType == 'csv') {
+      await _importFromCSV();
+    }
   }
 
   /// 写真から取り込み機能
@@ -127,6 +198,105 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SnackBar(
             content: Text('❌ 画像解析エラー: $e'),
             backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    }
+  }
+
+  /// CSVから取り込み機能
+  Future<void> _importFromCSV() async {
+    try {
+      // CSVファイル選択
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final file = result.files.first;
+      
+      // ファイルサイズチェック（5MB制限）
+      if (file.size > 5 * 1024 * 1024) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('❌ ファイルサイズが大きすぎます（5MB以下）'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      // ローディング表示
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('CSVファイルを解析しています...'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // CSVファイルを読み込み
+      String csvContent;
+      if (file.bytes != null) {
+        // Web: バイトデータから読み込み
+        csvContent = utf8.decode(file.bytes!);
+      } else if (file.path != null) {
+        // Mobile: ファイルパスから読み込み
+        // Note: file_pickerはモバイルでもbytesを提供するため、通常このパスは使用されない
+        throw Exception('ファイルの読み込みに失敗しました');
+      } else {
+        throw Exception('ファイルデータが取得できませんでした');
+      }
+
+      // CSV解析
+      final extractedData = await WorkoutImportService.extractWorkoutFromCSV(
+        csvContent,
+      );
+
+      // ローディングを閉じる
+      if (mounted) {
+        Navigator.of(context).pop();
+
+        // プレビュー画面へ遷移
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WorkoutImportPreviewScreen(
+              extractedData: extractedData,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      // ローディングを閉じる
+      if (mounted) {
+        Navigator.of(context).pop();
+
+        // エラーメッセージ
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ CSV解析エラー: $e'),
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -253,15 +423,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: const Icon(Icons.photo_camera, color: Colors.white),
             ),
             title: const Text(
-              '📸 写真から取り込み',
+              '📸 写真・CSVから取り込み',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: const Text(
-              '他アプリの記録画像を自動データ化',
+              '他アプリの記録画像・CSVファイルを自動データ化',
               style: TextStyle(fontSize: 12),
             ),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: _importFromPhoto,
+            onTap: _importWorkoutData,
           ),
         ),
         const SizedBox(height: 12),

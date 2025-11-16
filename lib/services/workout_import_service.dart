@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:csv/csv.dart';
 
-/// トレーニング記録画像インポートサービス
+/// トレーニング記録インポートサービス
 /// 
-/// 筋トレMEMOなどの他アプリのスクリーンショットから
+/// 画像（筋トレMEMOなど）またはCSVファイルから
 /// トレーニングデータを自動抽出
 class WorkoutImportService {
   // Gemini API設定（写真取り込み専用：無料枠モデル使用）
@@ -241,6 +242,264 @@ JSON形式例:
   static String estimateBodyPart(String exerciseName) {
     final mapping = _exerciseToBodyPartMapping();
     return mapping[exerciseName] ?? '胸'; // デフォルト: 胸
+  }
+
+  /// CSVファイルからトレーニングデータを抽出
+  /// 
+  /// [csvContent]: CSVファイルの文字列内容
+  /// 戻り値: 抽出されたトレーニングデータのJSON
+  /// 
+  /// 対応CSVフォーマット:
+  /// - 筋トレMEMO形式: 日付,種目名,セット,重量,回数
+  /// - 汎用形式: date,exercise,set,weight,reps
+  static Future<Map<String, dynamic>> extractWorkoutFromCSV(
+    String csvContent,
+  ) async {
+    try {
+      if (kDebugMode) {
+        print('📄 CSV解析開始...');
+        print('📄 CSVサイズ: ${csvContent.length} bytes');
+      }
+
+      // CSV解析
+      final List<List<dynamic>> csvRows = const CsvToListConverter().convert(
+        csvContent,
+        eol: '\n',
+        shouldParseNumbers: true,
+      );
+
+      if (csvRows.isEmpty) {
+        throw Exception('CSVファイルが空です。データが含まれているか確認してください。');
+      }
+
+      if (kDebugMode) {
+        print('📊 CSV行数: ${csvRows.length}');
+        print('📊 最初の行: ${csvRows.first}');
+      }
+
+      // ヘッダー行を検出
+      final List<dynamic> headerRow = csvRows.first;
+      final bool hasHeader = _isHeaderRow(headerRow);
+      
+      int dataStartIndex = hasHeader ? 1 : 0;
+      
+      if (kDebugMode) {
+        print('📋 ヘッダー検出: ${hasHeader ? "あり" : "なし"}');
+      }
+
+      // データ行を解析
+      final Map<String, List<Map<String, dynamic>>> exercisesByDate = {};
+      
+      for (int i = dataStartIndex; i < csvRows.length; i++) {
+        final row = csvRows[i];
+        
+        // 空行をスキップ
+        if (row.isEmpty || row.every((cell) => cell == null || cell.toString().trim().isEmpty)) {
+          continue;
+        }
+
+        try {
+          // CSV形式を判定して解析
+          final parsedRow = _parseCSVRow(row);
+          
+          if (parsedRow != null) {
+            final date = parsedRow['date'] as String;
+            
+            // 日付ごとにグループ化
+            if (!exercisesByDate.containsKey(date)) {
+              exercisesByDate[date] = [];
+            }
+            
+            // 同じ種目を見つけてセットを追加
+            final existingExercise = exercisesByDate[date]!.firstWhere(
+              (ex) => ex['name'] == parsedRow['exercise'],
+              orElse: () => <String, dynamic>{},
+            );
+            
+            if (existingExercise.isEmpty) {
+              // 新しい種目
+              exercisesByDate[date]!.add({
+                'name': parsedRow['exercise'],
+                'sets': [
+                  {
+                    'set_number': parsedRow['set'],
+                    'weight_kg': parsedRow['weight'],
+                    'reps': parsedRow['reps'],
+                  }
+                ],
+              });
+            } else {
+              // 既存種目にセット追加
+              (existingExercise['sets'] as List).add({
+                'set_number': parsedRow['set'],
+                'weight_kg': parsedRow['weight'],
+                'reps': parsedRow['reps'],
+              });
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('⚠️ 行${i + 1}のパースエラー（スキップ）: $e');
+          }
+          // 行単位のエラーは無視して次の行へ
+          continue;
+        }
+      }
+
+      if (exercisesByDate.isEmpty) {
+        throw Exception('有効なトレーニングデータが見つかりませんでした。CSVフォーマットを確認してください。');
+      }
+
+      // 最初の日付のデータを返す（複数日ある場合は最新日）
+      final dates = exercisesByDate.keys.toList()..sort();
+      final targetDate = dates.last;
+      
+      final result = {
+        'date': targetDate,
+        'exercises': exercisesByDate[targetDate],
+      };
+
+      if (kDebugMode) {
+        print('✅ CSV解析成功: ${(result['exercises'] as List?)?.length ?? 0}種目');
+        print('📅 対象日: $targetDate');
+      }
+
+      return result;
+      
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ CSV解析エラー: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// CSV行がヘッダー行かを判定
+  static bool _isHeaderRow(List<dynamic> row) {
+    if (row.isEmpty) return false;
+    
+    // 日本語ヘッダー
+    final japaneseHeaders = ['日付', '種目', 'セット', '重量', '回数', 'メニュー', '部位'];
+    // 英語ヘッダー
+    final englishHeaders = ['date', 'exercise', 'set', 'weight', 'reps', 'menu', 'bodypart'];
+    
+    final firstCell = row.first.toString().toLowerCase();
+    
+    return japaneseHeaders.any((h) => row.first.toString().contains(h)) ||
+           englishHeaders.any((h) => firstCell.contains(h));
+  }
+
+  /// CSV行を解析して標準形式に変換
+  /// 
+  /// 対応フォーマット:
+  /// 1. 筋トレMEMO形式: 日付,種目名,セット番号,重量,回数
+  /// 2. 汎用5列形式: date,exercise,set,weight,reps
+  /// 3. 拡張6列形式: date,exercise,bodypart,set,weight,reps
+  static Map<String, dynamic>? _parseCSVRow(List<dynamic> row) {
+    if (row.length < 5) {
+      return null; // 最低5列必要
+    }
+
+    try {
+      // 日付を正規化 (YYYY-MM-DD形式に変換)
+      String date = row[0].toString().trim();
+      date = _normalizeDate(date);
+
+      // 種目名
+      String exercise = row[1].toString().trim();
+      
+      // セット番号（3列目または4列目）
+      int setNumber;
+      double weight;
+      int reps;
+      
+      if (row.length == 5) {
+        // 5列形式: 日付,種目,セット,重量,回数
+        setNumber = _parseInt(row[2]);
+        weight = _parseDouble(row[3]);
+        reps = _parseInt(row[4]);
+      } else if (row.length >= 6) {
+        // 6列以上形式: 日付,種目,部位,セット,重量,回数
+        setNumber = _parseInt(row[3]);
+        weight = _parseDouble(row[4]);
+        reps = _parseInt(row[5]);
+      } else {
+        return null;
+      }
+
+      return {
+        'date': date,
+        'exercise': exercise,
+        'set': setNumber,
+        'weight': weight,
+        'reps': reps,
+      };
+      
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️ 行パースエラー: $e');
+      }
+      return null;
+    }
+  }
+
+  /// 日付文字列を YYYY-MM-DD 形式に正規化
+  static String _normalizeDate(String dateStr) {
+    // スラッシュ区切り: 2025/01/15 → 2025-01-15
+    if (dateStr.contains('/')) {
+      final parts = dateStr.split('/');
+      if (parts.length == 3) {
+        final year = parts[0].padLeft(4, '0');
+        final month = parts[1].padLeft(2, '0');
+        final day = parts[2].padLeft(2, '0');
+        return '$year-$month-$day';
+      }
+    }
+    
+    // ドット区切り: 2025.01.15 → 2025-01-15
+    if (dateStr.contains('.')) {
+      final parts = dateStr.split('.');
+      if (parts.length == 3) {
+        final year = parts[0].padLeft(4, '0');
+        final month = parts[1].padLeft(2, '0');
+        final day = parts[2].padLeft(2, '0');
+        return '$year-$month-$day';
+      }
+    }
+    
+    // 日本語形式: 2025年1月15日 → 2025-01-15
+    final japaneseMatch = RegExp(r'(\d{4})年(\d{1,2})月(\d{1,2})日').firstMatch(dateStr);
+    if (japaneseMatch != null) {
+      final year = japaneseMatch.group(1)!;
+      final month = japaneseMatch.group(2)!.padLeft(2, '0');
+      final day = japaneseMatch.group(3)!.padLeft(2, '0');
+      return '$year-$month-$day';
+    }
+    
+    // すでに YYYY-MM-DD 形式
+    return dateStr;
+  }
+
+  /// 文字列を整数に変換（エラー時は0）
+  static int _parseInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) {
+      final cleaned = value.replaceAll(RegExp(r'[^\d.]'), '');
+      return int.tryParse(cleaned) ?? 0;
+    }
+    return 0;
+  }
+
+  /// 文字列を浮動小数点に変換（エラー時は0.0）
+  static double _parseDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      final cleaned = value.replaceAll(RegExp(r'[^\d.]'), '');
+      return double.tryParse(cleaned) ?? 0.0;
+    }
+    return 0.0;
   }
 
   /// 種目名 → 部位のマッピング辞書

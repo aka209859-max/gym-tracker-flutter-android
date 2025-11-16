@@ -62,6 +62,8 @@ dependencies:
   fl_chart: ^0.69.0  # For workout progress charts
   table_calendar: ^3.1.2  # Calendar widget for home screen
   vibration: ^2.0.0  # Vibration for rest timer notifications
+  csv: ^6.0.0  # CSV file parsing for workout data import
+  file_picker: ^8.1.6  # File selection for CSV import
   
   # SNS Share & Image Generation (Task 27)
   screenshot: ^3.0.0  # Widget to image conversion
