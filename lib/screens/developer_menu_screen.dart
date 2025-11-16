@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../providers/user_provider.dart';
 import '../services/subscription_service.dart';
 
 /// 開発者専用メニュー画面（リリースビルドでは非表示）
