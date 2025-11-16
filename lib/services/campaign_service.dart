@@ -145,7 +145,7 @@ class CampaignService {
     });
 
     // サブスクリプション特典適用
-    final benefitMonths = planType == 'premium' ? 1 : 2; // プレミアム1ヶ月、Pro2ヶ月
+    final benefitMonths = planType == 'premium' ? 2 : 1; // プレミアム2ヶ月、Pro1ヶ月
 
     await _firestore.collection('user_subscriptions').doc(userId).update({
       'free_months_remaining': FieldValue.increment(benefitMonths),
@@ -175,7 +175,7 @@ class CampaignService {
     required String previousAppName,
     required String planType,
   }) {
-    final benefit = planType == 'premium' ? '初月無料' : '2ヶ月無料';
+    final benefit = planType == 'premium' ? '2ヶ月無料' : '初月無料';
 
     return '''
 $previousAppName から GYM MATCH に乗り換えました！

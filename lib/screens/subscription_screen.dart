@@ -386,8 +386,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         ),
                         child: Text(
                           type == SubscriptionType.premium
-                              ? '🎉 乗り換え割で初月無料'
-                              : '🎉 乗り換え割で2ヶ月無料',
+                              ? '🎉 乗り換え割で2ヶ月無料'
+                              : '🎉 乗り換え割で初月無料',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

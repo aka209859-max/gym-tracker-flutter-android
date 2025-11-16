@@ -196,7 +196,7 @@ OK または NG のみ回答してください。
  * @param {string} planType - プランタイプ
  */
 async function applyBenefit(applicationId, userId, planType) {
-  const benefitMonths = planType === 'premium' ? 1 : 2;
+  const benefitMonths = planType === 'premium' ? 2 : 1;
   const db = admin.firestore();
 
   // トランザクションで確実に適用
@@ -249,7 +249,7 @@ async function rejectApplication(applicationId, reason) {
  * @param {string} planType - プランタイプ
  */
 async function sendApprovalNotification(userId, planType) {
-  const benefit = planType === 'premium' ? '初月無料' : '2ヶ月無料';
+  const benefit = planType === 'premium' ? '2ヶ月無料' : '初月無料';
 
   const db = admin.firestore();
   const userDoc = await db.collection('users').doc(userId).get();

@@ -456,7 +456,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: const Text(
-              '他社アプリからの乗り換えで最大2ヶ月無料',
+              '他社アプリからの乗り換え（プレミアム2ヶ月無料/Pro初月無料）',
               style: TextStyle(fontSize: 12),
             ),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
@@ -478,7 +478,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ListTile(
                         leading: const Icon(Icons.workspace_premium, color: Colors.blue),
                         title: const Text('プレミアムプラン'),
-                        subtitle: const Text('初月無料'),
+                        subtitle: const Text('2ヶ月無料'),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
                           Navigator.pop(context);
@@ -496,7 +496,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ListTile(
                         leading: const Icon(Icons.emoji_events, color: Colors.amber),
                         title: const Text('Proプラン'),
-                        subtitle: const Text('2ヶ月無料'),
+                        subtitle: const Text('初月無料'),
                         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
                           Navigator.pop(context);

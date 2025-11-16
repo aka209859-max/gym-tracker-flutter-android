@@ -98,7 +98,7 @@ class _CampaignRegistrationScreenState extends State<CampaignRegistrationScreen>
 
   @override
   Widget build(BuildContext context) {
-    final benefit = widget.planType == 'premium' ? '初月無料' : '2ヶ月無料';
+    final benefit = widget.planType == 'premium' ? '2ヶ月無料' : '初月無料';
 
     return Scaffold(
       appBar: AppBar(

@@ -144,7 +144,7 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final benefit = widget.application.planType == 'premium' ? '初月無料' : '2ヶ月無料';
+    final benefit = widget.application.planType == 'premium' ? '2ヶ月無料' : '初月無料';
 
     return Scaffold(
       appBar: AppBar(
