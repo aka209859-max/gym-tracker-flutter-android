@@ -59,8 +59,14 @@ post_install do |installer|
         config.build_settings['CODE_SIGN_IDENTITY'] = 'Apple Development'
       end
       
-      # Archive configuration
-      config.build_settings['SKIP_INSTALL'] = 'NO'
+      # ✅ CRITICAL FIX: Archive configuration
+      # Pods must have SKIP_INSTALL=YES to prevent Generic Xcode Archive
+      # Only the main app target (Runner) should have SKIP_INSTALL=NO
+      if target.name == 'Runner'
+        config.build_settings['SKIP_INSTALL'] = 'NO'
+      else
+        config.build_settings['SKIP_INSTALL'] = 'YES'
+      end
     end
   end
 end
