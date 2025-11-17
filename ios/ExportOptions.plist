@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>method</key>
-    <string>app-store-connect</string>
+    <string>app-store</string>
     <key>teamID</key>
     <string>7V5DA99X2M</string>
     <key>signingStyle</key>
@@ -11,7 +11,7 @@
     <key>provisioningProfiles</key>
     <dict>
         <key>com.nexa.gymmatch</key>
-        <string>match AppStore com.nexa.gymmatch</string>
+        <string>GymMatch AppStore Profile</string>
     </dict>
     <key>uploadSymbols</key>
     <true/>
