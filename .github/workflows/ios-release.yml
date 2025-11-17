@@ -146,7 +146,7 @@ jobs:
       - name: Build Flutter IPA
         run: |
           flutter build ipa --release \
-            --export-options-plist=ExportOptions.plist \
+            --export-options-plist=ios/ExportOptions.plist \
             --build-name=1.0.${{ github.run_number }} \
             --build-number=${{ github.run_number }}
       
