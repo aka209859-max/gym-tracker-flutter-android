@@ -1,42 +1,38 @@
-import 'dart:js_interop';
-
-/// JavaScript Console への直接アクセス（Web Release Build でも動作）
-@JS('console.log')
-external void _consoleLog(JSString message);
-
-@JS('console.error')
-external void _consoleError(JSString message);
-
-@JS('console.warn')
-external void _consoleWarn(JSString message);
-
-@JS('console.info')
-external void _consoleInfo(JSString message);
-
-@JS('console.debug')
-external void _consoleDebug(JSString message);
+import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart';
 
 /// Production-safe ログ出力クラス
 /// 
 /// 特徴:
-/// - Web Release Build でも確実に出力される
-/// - dart2js の Tree Shaking で削除されない
-/// - JavaScript console への直接バインディング
+/// - すべてのプラットフォーム（Web/iOS/Android）で動作
+/// - Release Buildでも確実に出力される（developer.log使用）
+/// - プラットフォーム分岐不要
 class ConsoleLogger {
-  /// デバッグログ（Web環境では常に出力）
+  /// デバッグログ
   static void debug(String message, {String? tag}) {
     final timestamp = DateTime.now().toString().substring(11, 19);
     final tagStr = tag != null ? '[$tag] ' : '';
     final output = '🔍 DEBUG [$timestamp] $tagStr$message';
-    _consoleDebug(output.toJS);
+    
+    if (kDebugMode) {
+      debugPrint(output);
+    } else {
+      // Release Buildでもログ出力
+      developer.log(output, name: 'DEBUG', level: 500);
+    }
   }
   
-  /// 情報ログ（Web環境では常に出力）
+  /// 情報ログ
   static void info(String message, {String? tag}) {
     final timestamp = DateTime.now().toString().substring(11, 19);
     final tagStr = tag != null ? '[$tag] ' : '';
     final output = '✅ INFO [$timestamp] $tagStr$message';
-    _consoleInfo(output.toJS);
+    
+    if (kDebugMode) {
+      debugPrint(output);
+    } else {
+      developer.log(output, name: 'INFO', level: 800);
+    }
   }
   
   /// 警告ログ
@@ -44,7 +40,12 @@ class ConsoleLogger {
     final timestamp = DateTime.now().toString().substring(11, 19);
     final tagStr = tag != null ? '[$tag] ' : '';
     final output = '⚠️ WARN [$timestamp] $tagStr$message';
-    _consoleWarn(output.toJS);
+    
+    if (kDebugMode) {
+      debugPrint(output);
+    } else {
+      developer.log(output, name: 'WARN', level: 900);
+    }
   }
   
   /// エラーログ
@@ -52,13 +53,19 @@ class ConsoleLogger {
     final timestamp = DateTime.now().toString().substring(11, 19);
     final tagStr = tag != null ? '[$tag] ' : '';
     final output = '❌ ERROR [$timestamp] $tagStr$message';
-    _consoleError(output.toJS);
     
-    if (error != null) {
-      _consoleError('   Error: $error'.toJS);
-    }
-    if (stackTrace != null) {
-      _consoleError('   StackTrace: $stackTrace'.toJS);
+    if (kDebugMode) {
+      debugPrint(output);
+      if (error != null) debugPrint('   Error: $error');
+      if (stackTrace != null) debugPrint('   StackTrace: $stackTrace');
+    } else {
+      developer.log(
+        output,
+        name: 'ERROR',
+        level: 1000,
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
   }
   
@@ -67,12 +74,25 @@ class ConsoleLogger {
     final timestamp = DateTime.now().toString().substring(11, 19);
     final dataStr = data != null ? ' | Data: $data' : '';
     final output = '👤 USER_ACTION [$timestamp] $action$dataStr';
-    _consoleLog(output.toJS);
+    
+    if (kDebugMode) {
+      debugPrint(output);
+    } else {
+      developer.log(output, name: 'USER_ACTION', level: 800);
+    }
   }
   
   /// 初期化ログ
   static void init() {
     final timestamp = DateTime.now().toString().substring(11, 19);
-    _consoleLog('🚀 ConsoleLogger initialized [WEB RELEASE - JS INTEROP] [$timestamp]'.toJS);
+    final platform = kIsWeb ? 'WEB' : 'MOBILE';
+    final mode = kDebugMode ? 'DEBUG' : 'RELEASE';
+    final output = '🚀 ConsoleLogger initialized [$platform/$mode] [$timestamp]';
+    
+    if (kDebugMode) {
+      debugPrint(output);
+    } else {
+      developer.log(output, name: 'INIT', level: 800);
+    }
   }
 }
