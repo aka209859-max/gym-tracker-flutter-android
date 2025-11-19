@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../services/ai_prediction_service.dart';
 import '../../services/training_analysis_service.dart';
+import '../../services/subscription_service.dart';
+import '../../services/reward_ad_service.dart';
+import '../../services/ai_credit_service.dart';
 import '../../widgets/scientific_citation_card.dart';
 
 /// Layer 5: AIコーチング画面（統合版）
@@ -549,8 +552,77 @@ class _AIMenuTabState extends State<_AIMenuTab>
     );
   }
 
-  /// AIメニュー生成
+  /// AIメニュー生成（サブスクリプションチェック統合）
   Future<void> _generateMenu(List<String> bodyParts) async {
+    // ========================================
+    // 🔐 Step 1: サブスクリプション状態チェック
+    // ========================================
+    final subscriptionService = SubscriptionService();
+    final creditService = AICreditService();
+    final rewardAdService = RewardAdService();
+    
+    final currentPlan = await subscriptionService.getCurrentPlan();
+    debugPrint('🔍 [AI生成] 現在のプラン: $currentPlan');
+    
+    // ========================================
+    // 🎯 Step 2: AI利用可能性チェック
+    // ========================================
+    final canUseAI = await creditService.canUseAI();
+    debugPrint('🔍 [AI生成] AI使用可能: $canUseAI');
+    
+    if (!canUseAI) {
+      // 無料プランでAIクレジットがない場合
+      if (currentPlan == SubscriptionType.free) {
+        // リワード広告で獲得可能かチェック
+        final canEarnFromAd = await creditService.canEarnCreditFromAd();
+        debugPrint('🔍 [AI生成] 広告視聴可能: $canEarnFromAd');
+        
+        if (canEarnFromAd) {
+          // ========================================
+          // 📺 Step 3: リワード広告ダイアログ表示
+          // ========================================
+          final shouldShowAd = await _showRewardAdDialog();
+          
+          if (shouldShowAd == true) {
+            // 広告を表示してクレジット獲得
+            final adSuccess = await _showRewardAdAndEarn();
+            
+            if (!adSuccess) {
+              // 広告表示失敗
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('広告の読み込みに失敗しました。しばらくしてからお試しください。'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+              return;
+            }
+            // 広告視聴成功 → 下記のAI生成処理に進む
+          } else {
+            // ユーザーがキャンセル
+            return;
+          }
+        } else {
+          // 今月の広告視聴上限に達している
+          if (mounted) {
+            await _showUpgradeDialog('今月の無料AI利用回数を使い切りました');
+          }
+          return;
+        }
+      } else {
+        // 有料プランで月次上限に達している
+        if (mounted) {
+          await _showUpgradeDialog('今月のAI利用回数を使い切りました');
+        }
+        return;
+      }
+    }
+    
+    // ========================================
+    // 🤖 Step 4: AI生成処理（クレジット消費含む）
+    // ========================================
     setState(() {
       _isGenerating = true;
       _errorMessage = null;
@@ -589,12 +661,30 @@ class _AIMenuTabState extends State<_AIMenuTab>
         final text =
             data['candidates'][0]['content']['parts'][0]['text'] as String;
 
+        // ========================================
+        // ✅ Step 5: AI生成成功 → クレジット消費
+        // ========================================
+        final consumeSuccess = await creditService.consumeAICredit();
+        debugPrint('✅ AIクレジット消費: $consumeSuccess');
+        
         setState(() {
           _generatedMenu = text;
           _isGenerating = false;
         });
 
         debugPrint('✅ メニュー生成成功');
+        
+        // 残りクレジット表示
+        if (mounted) {
+          final statusMessage = await creditService.getAIUsageStatus();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('AI生成完了! ($statusMessage)'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
       } else {
         throw Exception('API Error: ${response.statusCode}');
       }
@@ -704,6 +794,222 @@ ${bodyParts.join('、')}
     }
   }
 
+  /// リワード広告ダイアログ表示
+  Future<bool?> _showRewardAdDialog() async {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.play_circle_outline, color: Colors.blue, size: 28),
+            SizedBox(width: 12),
+            Text('動画視聴でAI機能を利用'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '無料プランでは、動画広告を視聴することでAI機能を1回利用できます。',
+              style: TextStyle(fontSize: 14, height: 1.6),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        '月3回まで動画視聴でAI利用可能',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '※ 動画は約30秒です',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.of(context).pop(true),
+            icon: const Icon(Icons.play_arrow),
+            label: const Text('動画を視聴'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade700,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// リワード広告を表示してクレジット獲得
+  Future<bool> _showRewardAdAndEarn() async {
+    final rewardAdService = RewardAdService();
+    
+    // 広告読み込み待機ダイアログ表示
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('広告を読み込んでいます...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    
+    // 広告を読み込む
+    await rewardAdService.loadRewardedAd();
+    
+    // 読み込み完了まで最大5秒待機
+    for (int i = 0; i < 10; i++) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (rewardAdService.isAdReady()) {
+        break;
+      }
+    }
+    
+    // ローディングダイアログを閉じる
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+    
+    // 広告表示
+    if (rewardAdService.isAdReady()) {
+      final success = await rewardAdService.showRewardedAd();
+      
+      if (success) {
+        // 広告視聴成功メッセージ
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('🎁 AI機能1回分を獲得しました!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  /// アップグレード促進ダイアログ表示
+  Future<void> _showUpgradeDialog(String message) async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.workspace_premium, color: Colors.amber, size: 28),
+            SizedBox(width: 12),
+            Text('プレミアムプランにアップグレード'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'プレミアムプランなら:',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '• 月10回までAI機能が使い放題\n'
+              '• 広告なしで快適に利用\n'
+              '• お気に入りジム無制限\n'
+              '• レビュー投稿可能',
+              style: TextStyle(fontSize: 13, height: 1.6),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                '月額 ¥500',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('後で'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // TODO: サブスクリプション画面へ遷移
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('サブスクリプション機能は準備中です'),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber.shade700,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('アップグレード'),
+          ),
+        ],
+      ),
+    );
+  }
+  
   /// メニュー保存
   Future<void> _saveMenu() async {
     try {
@@ -806,10 +1112,79 @@ class _GrowthPredictionTabState extends State<_GrowthPredictionTab>
     super.dispose();
   }
 
-  /// 成長予測を実行
+  /// 成長予測を実行(サブスクリプションチェック統合)
   Future<void> _executePrediction() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // ========================================
+    // 🔐 Step 1: サブスクリプション状態チェック
+    // ========================================
+    final subscriptionService = SubscriptionService();
+    final creditService = AICreditService();
+    final rewardAdService = RewardAdService();
+    
+    final currentPlan = await subscriptionService.getCurrentPlan();
+    debugPrint('🔍 [成長予測] 現在のプラン: $currentPlan');
+    
+    // ========================================
+    // 🎯 Step 2: AI利用可能性チェック
+    // ========================================
+    final canUseAI = await creditService.canUseAI();
+    debugPrint('🔍 [成長予測] AI使用可能: $canUseAI');
+    
+    if (!canUseAI) {
+      // 無料プランでAIクレジットがない場合
+      if (currentPlan == SubscriptionType.free) {
+        // リワード広告で獲得可能かチェック
+        final canEarnFromAd = await creditService.canEarnCreditFromAd();
+        debugPrint('🔍 [成長予測] 広告視聴可能: $canEarnFromAd');
+        
+        if (canEarnFromAd) {
+          // ========================================
+          // 📺 Step 3: リワード広告ダイアログ表示
+          // ========================================
+          final shouldShowAd = await _showRewardAdDialog();
+          
+          if (shouldShowAd == true) {
+            // 広告を表示してクレジット獲得
+            final adSuccess = await _showRewardAdAndEarn();
+            
+            if (!adSuccess) {
+              // 広告表示失敗
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('広告の読み込みに失敗しました。しばらくしてからお試しください。'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+              return;
+            }
+            // 広告視聴成功 → 下記のAI生成処理に進む
+          } else {
+            // ユーザーがキャンセル
+            return;
+          }
+        } else {
+          // 今月の広告視聴上限に達している
+          if (mounted) {
+            await _showUpgradeDialog('今月の無料AI利用回数を使い切りました');
+          }
+          return;
+        }
+      } else {
+        // 有料プランで月次上限に達している
+        if (mounted) {
+          await _showUpgradeDialog('今月のAI利用回数を使い切りました');
+        }
+        return;
+      }
+    }
+
+    // ========================================
+    // 🤖 Step 4: AI予測処理(クレジット消費含む)
+    // ========================================
     setState(() {
       _isLoading = true;
       _predictionResult = null;
@@ -827,6 +1202,26 @@ class _GrowthPredictionTabState extends State<_GrowthPredictionTab>
         monthsAhead: 4,
       );
       print('✅ 成長予測完了: ${result['success']}');
+
+      if (result['success'] == true) {
+        // ========================================
+        // ✅ Step 5: AI生成成功 → クレジット消費
+        // ========================================
+        final consumeSuccess = await creditService.consumeAICredit();
+        debugPrint('✅ AIクレジット消費: $consumeSuccess');
+        
+        // 残りクレジット表示
+        if (mounted) {
+          final statusMessage = await creditService.getAIUsageStatus();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('AI予測完了! ($statusMessage)'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
 
       if (mounted) {
         setState(() {
@@ -1414,6 +1809,222 @@ class _GrowthPredictionTabState extends State<_GrowthPredictionTab>
     );
   }
 
+  /// リワード広告ダイアログ表示
+  Future<bool?> _showRewardAdDialog() async {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.play_circle_outline, color: Colors.blue, size: 28),
+            SizedBox(width: 12),
+            Text('動画視聴でAI機能を利用'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '無料プランでは、動画広告を視聴することでAI機能を1回利用できます。',
+              style: TextStyle(fontSize: 14, height: 1.6),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        '月3回まで動画視聴でAI利用可能',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '※ 動画は約30秒です',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.of(context).pop(true),
+            icon: const Icon(Icons.play_arrow),
+            label: const Text('動画を視聴'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade700,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// リワード広告を表示してクレジット獲得
+  Future<bool> _showRewardAdAndEarn() async {
+    final rewardAdService = RewardAdService();
+    
+    // 広告読み込み待機ダイアログ表示
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('広告を読み込んでいます...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    
+    // 広告を読み込む
+    await rewardAdService.loadRewardedAd();
+    
+    // 読み込み完了まで最大5秒待機
+    for (int i = 0; i < 10; i++) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (rewardAdService.isAdReady()) {
+        break;
+      }
+    }
+    
+    // ローディングダイアログを閉じる
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+    
+    // 広告表示
+    if (rewardAdService.isAdReady()) {
+      final success = await rewardAdService.showRewardedAd();
+      
+      if (success) {
+        // 広告視聴成功メッセージ
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('🎁 AI機能1回分を獲得しました!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  /// アップグレード促進ダイアログ表示
+  Future<void> _showUpgradeDialog(String message) async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.workspace_premium, color: Colors.amber, size: 28),
+            SizedBox(width: 12),
+            Text('プレミアムプランにアップグレード'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'プレミアムプランなら:',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '• 月10回までAI機能が使い放題\n'
+              '• 広告なしで快適に利用\n'
+              '• お気に入りジム無制限\n'
+              '• レビュー投稿可能',
+              style: TextStyle(fontSize: 13, height: 1.6),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                '月額 ¥500',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('後で'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // TODO: サブスクリプション画面へ遷移
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('サブスクリプション機能は準備中です'),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber.shade700,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('アップグレード'),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Markdown形式テキストをフォーマット済みウィジェットに変換
   Widget _buildFormattedText(String text) {
     final lines = text.split('\n');
@@ -1551,10 +2162,79 @@ class _EffectAnalysisTabState extends State<_EffectAnalysisTab>
   // 現在選択中の部位の種目リスト
   List<String> get _availableExercises => _exercisesByBodyPart[_selectedBodyPart] ?? [];
 
-  /// 効果分析を実行
+  /// 効果分析を実行(サブスクリプションチェック統合)
   Future<void> _executeAnalysis() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // ========================================
+    // 🔐 Step 1: サブスクリプション状態チェック
+    // ========================================
+    final subscriptionService = SubscriptionService();
+    final creditService = AICreditService();
+    final rewardAdService = RewardAdService();
+    
+    final currentPlan = await subscriptionService.getCurrentPlan();
+    debugPrint('🔍 [効果分析] 現在のプラン: $currentPlan');
+    
+    // ========================================
+    // 🎯 Step 2: AI利用可能性チェック
+    // ========================================
+    final canUseAI = await creditService.canUseAI();
+    debugPrint('🔍 [効果分析] AI使用可能: $canUseAI');
+    
+    if (!canUseAI) {
+      // 無料プランでAIクレジットがない場合
+      if (currentPlan == SubscriptionType.free) {
+        // リワード広告で獲得可能かチェック
+        final canEarnFromAd = await creditService.canEarnCreditFromAd();
+        debugPrint('🔍 [効果分析] 広告視聴可能: $canEarnFromAd');
+        
+        if (canEarnFromAd) {
+          // ========================================
+          // 📺 Step 3: リワード広告ダイアログ表示
+          // ========================================
+          final shouldShowAd = await _showRewardAdDialog();
+          
+          if (shouldShowAd == true) {
+            // 広告を表示してクレジット獲得
+            final adSuccess = await _showRewardAdAndEarn();
+            
+            if (!adSuccess) {
+              // 広告表示失敗
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('広告の読み込みに失敗しました。しばらくしてからお試しください。'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+              return;
+            }
+            // 広告視聴成功 → 下記のAI生成処理に進む
+          } else {
+            // ユーザーがキャンセル
+            return;
+          }
+        } else {
+          // 今月の広告視聴上限に達している
+          if (mounted) {
+            await _showUpgradeDialog('今月の無料AI利用回数を使い切りました');
+          }
+          return;
+        }
+      } else {
+        // 有料プランで月次上限に達している
+        if (mounted) {
+          await _showUpgradeDialog('今月のAI利用回数を使い切りました');
+        }
+        return;
+      }
+    }
+
+    // ========================================
+    // 🤖 Step 4: AI分析処理(クレジット消費含む)
+    // ========================================
     setState(() {
       _isLoading = true;
       _analysisResult = null;
@@ -1583,6 +2263,26 @@ class _EffectAnalysisTabState extends State<_EffectAnalysisTab>
         recentHistory: recentHistory,
       );
       print('✅ 効果分析完了: ${result['success']}');
+
+      if (result['success'] == true) {
+        // ========================================
+        // ✅ Step 5: AI生成成功 → クレジット消費
+        // ========================================
+        final consumeSuccess = await creditService.consumeAICredit();
+        debugPrint('✅ AIクレジット消費: $consumeSuccess');
+        
+        // 残りクレジット表示
+        if (mounted) {
+          final statusMessage = await creditService.getAIUsageStatus();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('AI分析完了! ($statusMessage)'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
 
       if (mounted) {
         setState(() {
@@ -2547,6 +3247,222 @@ class _EffectAnalysisTabState extends State<_EffectAnalysisTab>
             }),
           ],
         ),
+      ),
+    );
+  }
+
+  /// リワード広告ダイアログ表示
+  Future<bool?> _showRewardAdDialog() async {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.play_circle_outline, color: Colors.blue, size: 28),
+            SizedBox(width: 12),
+            Text('動画視聴でAI機能を利用'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '無料プランでは、動画広告を視聴することでAI機能を1回利用できます。',
+              style: TextStyle(fontSize: 14, height: 1.6),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        '月3回まで動画視聴でAI利用可能',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '※ 動画は約30秒です',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.of(context).pop(true),
+            icon: const Icon(Icons.play_arrow),
+            label: const Text('動画を視聴'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade700,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// リワード広告を表示してクレジット獲得
+  Future<bool> _showRewardAdAndEarn() async {
+    final rewardAdService = RewardAdService();
+    
+    // 広告読み込み待機ダイアログ表示
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('広告を読み込んでいます...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    
+    // 広告を読み込む
+    await rewardAdService.loadRewardedAd();
+    
+    // 読み込み完了まで最大5秒待機
+    for (int i = 0; i < 10; i++) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (rewardAdService.isAdReady()) {
+        break;
+      }
+    }
+    
+    // ローディングダイアログを閉じる
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+    
+    // 広告表示
+    if (rewardAdService.isAdReady()) {
+      final success = await rewardAdService.showRewardedAd();
+      
+      if (success) {
+        // 広告視聴成功メッセージ
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('🎁 AI機能1回分を獲得しました!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  /// アップグレード促進ダイアログ表示
+  Future<void> _showUpgradeDialog(String message) async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.workspace_premium, color: Colors.amber, size: 28),
+            SizedBox(width: 12),
+            Text('プレミアムプランにアップグレード'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'プレミアムプランなら:',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '• 月10回までAI機能が使い放題\n'
+              '• 広告なしで快適に利用\n'
+              '• お気に入りジム無制限\n'
+              '• レビュー投稿可能',
+              style: TextStyle(fontSize: 13, height: 1.6),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                '月額 ¥500',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('後で'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // TODO: サブスクリプション画面へ遷移
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('サブスクリプション機能は準備中です'),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber.shade700,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('アップグレード'),
+          ),
+        ],
       ),
     );
   }
