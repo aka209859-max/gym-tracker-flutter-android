@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/reward_ad_service.dart';
 import '../services/ai_credit_service.dart';
 
@@ -9,7 +8,7 @@ import '../services/ai_credit_service.dart';
 /// 機能:
 /// - 無料ユーザーがAI機能を使用する際に表示
 /// - 動画視聴完了でAIクレジット1回分付与
-/// - 月3回までの制限表示
+/// - CEO戦略: 無料プランは広告を見ないとAI使用不可（無制限視聴可能）
 class RewardAdDialog extends StatefulWidget {
   const RewardAdDialog({super.key});
 
@@ -22,28 +21,13 @@ class _RewardAdDialogState extends State<RewardAdDialog> {
   final AICreditService _creditService = AICreditService();
   
   bool _isLoading = false;
-  int _remainingAds = 3;
 
   @override
   void initState() {
     super.initState();
-    _loadRemainingAds();
-  }
-
-  Future<void> _loadRemainingAds() async {
-    // canEarnCreditFromAdを使って残り回数を計算
-    final canEarn = await _creditService.canEarnCreditFromAd();
-    if (!canEarn) {
-      setState(() {
-        _remainingAds = 0;
-      });
-    } else {
-      // 正確な残り回数を取得するため、SharedPreferencesを直接読む
-      final prefs = await SharedPreferences.getInstance();
-      final earned = prefs.getInt('ai_ad_earned_count') ?? 0;
-      setState(() {
-        _remainingAds = 3 - earned;
-      });
+    // 広告を事前ロード（モバイルのみ）
+    if (!kIsWeb) {
+      _adService.loadRewardedAd();
     }
   }
 
@@ -179,36 +163,34 @@ class _RewardAdDialogState extends State<RewardAdDialog> {
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.blue, width: 1),
             ),
-            child: Column(
+            child: const Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                    const SizedBox(width: 8),
+                    Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                    SizedBox(width: 8),
                     Text(
-                      '今月あと$_remainingAds回視聴できます',
-                      style: const TextStyle(
-                        fontSize: 14,
+                      '無料プランは広告視聴でAI機能を利用できます',
+                      style: TextStyle(
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                         color: Colors.blue,
                       ),
                     ),
                   ],
                 ),
-                if (_remainingAds == 0) ...[
-                  const SizedBox(height: 8),
-                  const Text(
-                    '今月の上限に達しました',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
+                SizedBox(height: 8),
+                Text(
+                  '広告は何度でも視聴可能です',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 16),
           const Text(
-            '💡 無制限にAI機能を使いたい方は、Premiumプランへのアップグレードをご検討ください',
+            '💡 広告なしで無制限にAI機能を使いたい方は、Premiumプランへのアップグレードをご検討ください',
             style: TextStyle(fontSize: 12, color: Colors.grey),
           ),
         ],
@@ -219,7 +201,7 @@ class _RewardAdDialogState extends State<RewardAdDialog> {
           child: const Text('キャンセル'),
         ),
         ElevatedButton(
-          onPressed: _isLoading || _remainingAds == 0 ? null : _watchAd,
+          onPressed: _isLoading ? null : _watchAd,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red[600],
             foregroundColor: Colors.white,

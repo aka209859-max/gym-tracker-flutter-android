@@ -81,7 +81,7 @@ class AICreditService {
     }
   }
   
-  /// 動画視聴でAIクレジットを獲得可能か（月3回まで）
+  /// 動画視聴でAIクレジットを獲得可能か（無料プランは無制限）
   Future<bool> canEarnCreditFromAd() async {
     try {
       final plan = await _subscriptionService.getCurrentPlan();
@@ -93,10 +93,9 @@ class AICreditService {
         return false;
       }
       
-      // 今月の動画視聴回数をチェック
-      final earnedThisMonth = await _getAdEarnedCountThisMonth();
-      print('🔍 [canEarnCreditFromAd] 今月の広告視聴回数: $earnedThisMonth/3');
-      return earnedThisMonth < 3; // CEO戦略: 月3回まで
+      // CEO戦略: 無料プランは無制限に広告視聴可能（広告を見ないとAI使用不可）
+      print('🔍 [canEarnCreditFromAd] 無料プランのため広告視聴可能（無制限）');
+      return true;
     } catch (e) {
       print('❌ [canEarnCreditFromAd] エラー: $e');
       return false;
