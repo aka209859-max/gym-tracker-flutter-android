@@ -21,7 +21,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
   int _monthlyWorkoutDays = 0;
   int _monthlyTotalSets = 0;
   int _currentStreak = 0;
-  Map<String, int> _muscleGroupCount = {};
+  Map<String, double> _monthlyMuscleGroupVolume = {}; // 月間部位別総負荷量（kg）
   List<Map<String, dynamic>> _weeklyData = [];
 
   @override
@@ -141,7 +141,6 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
     final workoutDates = <String>{};
     int totalSets = 0;
     int totalMinutes = 0;
-    final muscleGroups = <String, int>{};
 
     for (final doc in filteredDocs) {
       final data = doc.data();
@@ -178,15 +177,12 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
       } else {
         print('   💪 筋トレのため有酸素時間集計から除外');
       }
-      
-      muscleGroups[muscleGroup] = (muscleGroups[muscleGroup] ?? 0) + 1;
     }
 
     print('\n📊 === 週間統計最終結果 ===');
     print('   トレーニング日数: ${workoutDates.length}日');
     print('   総セット数: $totalSets');
     print('   有酸素時間: $totalMinutes分');
-    print('   部位別: $muscleGroups');
     print('=========================\n');
     
     if (mounted) {
@@ -194,7 +190,6 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
         _weeklyWorkoutDays = workoutDates.length;
         _weeklyTotalSets = totalSets;
         _weeklyTotalMinutes = totalMinutes;
-        _muscleGroupCount = muscleGroups;
       });
     }
   }
@@ -222,6 +217,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
 
     final workoutDates = <String>{};
     int totalSets = 0;
+    final muscleGroupVolume = <String, double>{}; // 部位別総負荷量
 
     for (final doc in filteredDocs) {
       final data = doc.data();
@@ -230,12 +226,37 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
       
       final sets = data['sets'] as List<dynamic>? ?? [];
       totalSets += sets.length;
+      
+      final muscleGroup = data['muscle_group'] as String? ?? '不明';
+      
+      // 総負荷量計算: 重量 × レップ数 × セット数
+      for (final set in sets) {
+        if (set is Map<String, dynamic>) {
+          final weight = (set['weight'] as num?)?.toDouble() ?? 0.0;
+          final reps = (set['reps'] as num?)?.toInt() ?? 0;
+          
+          // 有酸素運動は除外（重量の意味が異なるため）
+          if (muscleGroup != '有酸素' && weight > 0 && reps > 0) {
+            final volume = weight * reps; // 1セットの負荷量
+            muscleGroupVolume[muscleGroup] = (muscleGroupVolume[muscleGroup] ?? 0.0) + volume;
+            
+            print('   💪 $muscleGroup: ${weight}kg × ${reps}回 = ${volume}kg');
+          }
+        }
+      }
     }
+
+    print('\n📊 === 月間部位別総負荷量 ===');
+    muscleGroupVolume.forEach((group, volume) {
+      print('   $group: ${volume.toStringAsFixed(0)}kg');
+    });
+    print('=========================\n');
 
     if (mounted) {
       setState(() {
         _monthlyWorkoutDays = workoutDates.length;
         _monthlyTotalSets = totalSets;
+        _monthlyMuscleGroupVolume = muscleGroupVolume;
       });
     }
   }
@@ -491,7 +512,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
   }
 
   Widget _buildMuscleGroupChart(ThemeData theme) {
-    if (_muscleGroupCount.isEmpty) {
+    if (_monthlyMuscleGroupVolume.isEmpty) {
       return Card(
         elevation: 4,
         child: Padding(
@@ -510,7 +531,8 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
       );
     }
 
-    final total = _muscleGroupCount.values.fold<int>(0, (sum, count) => sum + count);
+    // 最大値を取得（進捗バーの基準）
+    final maxVolume = _monthlyMuscleGroupVolume.values.reduce((a, b) => a > b ? a : b);
 
     return Card(
       elevation: 4,
@@ -524,16 +546,18 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
                 Icon(Icons.pie_chart, color: theme.colorScheme.primary, size: 24),
                 const SizedBox(width: 12),
                 const Text(
-                  '部位別トレーニング（今週）',
+                  '部位別トレーニング（今月）',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-            ..._muscleGroupCount.entries.map((entry) {
-              final percentage = (entry.value / total * 100).round();
+            ..._monthlyMuscleGroupVolume.entries.map((entry) {
+              // 総負荷量をカンマ区切りで表示
+              final volumeText = NumberFormat('#,###').format(entry.value.toInt());
+              
               return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -545,19 +569,22 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                         ),
                         Text(
-                          '${entry.value}回 ($percentage%)',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                          '${volumeText}kg',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    LinearProgressIndicator(
-                      value: entry.value / total,
-                      backgroundColor: Colors.grey[200],
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        _getColorForMuscleGroup(entry.key),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: entry.value / maxVolume,
+                        backgroundColor: Colors.grey[200],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          _getColorForMuscleGroup(entry.key),
+                        ),
+                        minHeight: 10,
                       ),
-                      minHeight: 8,
                     ),
                   ],
                 ),
