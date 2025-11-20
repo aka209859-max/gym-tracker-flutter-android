@@ -10,6 +10,8 @@ import 'personal_training/pt_password_screen.dart';
 import 'messages/messages_screen.dart';
 import 'partner/partner_screen.dart';
 import 'settings/notification_settings_screen.dart';
+import 'settings/terms_of_service_screen.dart';
+import 'settings/tokutei_shoutorihikihou_screen.dart';
 import 'workout_import_preview_screen.dart';
 import 'achievements_screen.dart';
 import 'personal_factors_screen.dart';
@@ -862,6 +864,119 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).pushNamed('/personal-factors');
+              },
+            ),
+            const Divider(height: 20),
+            // 法的情報セクション
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Text(
+                '法的情報',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ),
+            // メニュー項目3: 利用規約
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.description_outlined,
+                  color: Colors.blue.shade700,
+                ),
+              ),
+              title: const Text(
+                '利用規約',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              subtitle: const Text('サービス利用条件・サブスクリプション'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TermsOfServiceScreen(),
+                  ),
+                );
+              },
+            ),
+            // メニュー項目4: 特定商取引法表記
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.gavel,
+                  color: Colors.deepPurple.shade700,
+                ),
+              ),
+              title: const Text(
+                '特定商取引法に基づく表記',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              subtitle: const Text('販売事業者・返金ポリシー'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TokuteiShoutorihikihouScreen(),
+                  ),
+                );
+              },
+            ),
+            // メニュー項目5: プライバシーポリシー
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.privacy_tip_outlined,
+                  color: Colors.green.shade700,
+                ),
+              ),
+              title: const Text(
+                'プライバシーポリシー',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              subtitle: const Text('個人情報の取扱い'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () async {
+                Navigator.of(context).pop();
+                final url = Uri.parse('https://gym-match-e560d.web.app/privacy_policy.html');
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                } else {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('プライバシーポリシーを開けませんでした')),
+                    );
+                  }
+                }
               },
             ),
             const SizedBox(height: 10),
