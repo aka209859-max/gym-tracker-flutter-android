@@ -46,7 +46,7 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<string>ca-app-pub-2887531479031819~6975226631</string>
 	
 	<!-- Privacy - Location (GPS機能用) -->
 	<key>NSLocationWhenInUseUsageDescription</key>

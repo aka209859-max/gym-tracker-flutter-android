@@ -10,14 +10,10 @@ class RewardAdService {
   
   final AICreditService _creditService = AICreditService();
   
-  // AdMob Unit IDs
-  // TODO: 本番広告IDを設定してください
+  // AdMob Unit IDs（iOS本番設定完了✅）
   static const String _rewardAdUnitId = kDebugMode
       ? 'ca-app-pub-3940256099942544/5224354917' // テスト用（開発時）
-      : 'ca-app-pub-XXXXXXXXXXXX/YYYYYYYYYY'; // 本番用（TestFlight/App Store）
-  
-  // 注意: 本番IDが未設定の場合、TestFlightでは広告が表示されません
-  // AdMob管理画面でiOS用リワード広告ユニットIDを取得し、上記に設定してください
+      : 'ca-app-pub-2887531479031819/6163055454'; // 本番用（iOS - AI使用回数+1）
   
   RewardedAd? _rewardedAd;
   bool _isAdLoading = false;

@@ -29,10 +29,10 @@ class AdService {
   /// バナー広告ID取得
   static String get bannerAdUnitId {
     if (Platform.isIOS) {
-      // iOS用テスト広告ID（本番環境では実際のIDに置き換える）
-      return 'ca-app-pub-3940256099942544/2934735716';
+      // iOS本番広告ID（無料プラン用）
+      return 'ca-app-pub-2887531479031819/1682429555';
     } else if (Platform.isAndroid) {
-      // Android用テスト広告ID
+      // Android用テスト広告ID（Android版は未リリース）
       return 'ca-app-pub-3940256099942544/6300978111';
     }
     throw UnsupportedError('Unsupported platform');
@@ -51,7 +51,8 @@ class AdService {
   /// リワード広告ID取得
   static String get rewardedAdUnitId {
     if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/1712485313';
+      // iOS本番リワード広告ID（AI使用回数+1機能）
+      return 'ca-app-pub-2887531479031819/6163055454';
     } else if (Platform.isAndroid) {
       return 'ca-app-pub-3940256099942544/5224354917';
     }
