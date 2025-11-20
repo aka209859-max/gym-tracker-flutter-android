@@ -484,7 +484,6 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
         children: [
           _QuickAccessCard(
             title: '週次レポート',
-            subtitle: '統計分析',
             icon: Icons.bar_chart,
             color: Colors.blue,
             onTap: () {
@@ -499,7 +498,6 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
           const SizedBox(width: 12),
           _QuickAccessCard(
             title: 'PR記録',
-            subtitle: '最高記録',
             icon: Icons.trending_up,
             color: Colors.green,
             onTap: () {
@@ -514,7 +512,6 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
           const SizedBox(width: 12),
           _QuickAccessCard(
             title: '部位別',
-            subtitle: '部位分析',
             icon: Icons.accessibility_new,
             color: Colors.orange,
             onTap: () {
@@ -529,7 +526,6 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
           const SizedBox(width: 12),
           _QuickAccessCard(
             title: 'メモ',
-            subtitle: 'トレーニングメモ',
             icon: Icons.note_add,
             color: Colors.purple,
             onTap: () {
@@ -550,14 +546,12 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
 /// クイックアクセスカード
 class _QuickAccessCard extends StatelessWidget {
   final String title;
-  final String subtitle;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
 
   const _QuickAccessCard({
     required this.title,
-    required this.subtitle,
     required this.icon,
     required this.color,
     required this.onTap,
@@ -586,14 +580,6 @@ class _QuickAccessCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade600,
-                  ),
                 ),
               ],
             ),
