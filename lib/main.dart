@@ -8,7 +8,6 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart';
 import 'services/offline_service.dart';
 import 'screens/home_screen.dart';
-import 'screens/map_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/splash_screen.dart';
 
@@ -265,7 +264,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),  // トレーニング記録画面（筋トレMEMO風）
-    const MapScreen(),  // ジム検索（GPS + リスト表示）
     const ProfileScreen(),  // プロフィール
   ];
 
@@ -301,11 +299,6 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.event_note_outlined),
             selectedIcon: Icon(Icons.event_note),
             label: '記録',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map),
-            label: 'ジムマップ',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
