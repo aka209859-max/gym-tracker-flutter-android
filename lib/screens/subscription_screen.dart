@@ -176,7 +176,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       '🤖 AI機能月30回（混雑度予測・AIコーチ・成長予測合計）',
                       '👥 トレーニングパートナー検索', // 検索条件: 距離・目標・経験・年齢・性別・曜日・時間帯でマッチング
                       '💬 メッセージング機能',
-                      '🏆 優先サポート',
                     ],
                     color: Colors.amber,
                     icon: Icons.emoji_events,

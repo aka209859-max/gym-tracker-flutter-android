@@ -708,7 +708,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 8),
               _buildFeatureItem('🤝 トレーニングパートナーマッチング'),
               _buildFeatureItem('💬 メッセージング機能'),
-              _buildFeatureItem('⭐ 優先サポート'),
             ],
           ),
           actions: [
