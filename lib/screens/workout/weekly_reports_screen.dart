@@ -39,14 +39,7 @@ class _WeeklyReportsScreenState extends State<WeeklyReportsScreen> {
           return Scaffold(
             appBar: AppBar(title: const Text('週次レポート')),
             body: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('デモモードで起動中...'),
-                ],
-              ),
+              child: CircularProgressIndicator(),
             ),
           );
         }

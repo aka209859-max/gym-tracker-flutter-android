@@ -58,14 +58,7 @@ class _BodyPartTrackingScreenState extends State<BodyPartTrackingScreen> {
           return Scaffold(
             appBar: AppBar(title: const Text('部位別トラッキング')),
             body: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('デモモードで起動中...'),
-                ],
-              ),
+              child: CircularProgressIndicator(),
             ),
           );
         }
