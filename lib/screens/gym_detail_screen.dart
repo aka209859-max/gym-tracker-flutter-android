@@ -8,6 +8,7 @@ import '../services/realtime_user_service.dart';
 import '../services/favorites_service.dart';
 import '../services/share_service.dart';
 import '../services/visit_history_service.dart';
+import '../services/crowd_level_service.dart';
 import 'crowd_report_screen.dart';
 import 'reservation_form_screen.dart';
 
@@ -26,14 +27,31 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
   final FavoritesService _favoritesService = FavoritesService();
   final ShareService _shareService = ShareService();
   final VisitHistoryService _visitHistoryService = VisitHistoryService();
+  final CrowdLevelService _crowdLevelService = CrowdLevelService();
   bool _isCheckedIn = false;
   bool _isFavorite = false;
+  int? _currentCrowdLevel; // Google Places API混雑度
 
   @override
   void initState() {
     super.initState();
     _checkUserStatus();
     _checkFavoriteStatus();
+    _loadCrowdLevel();
+  }
+
+  /// 混雑度を読み込む（ユーザー報告 → キャッシュ → Google API）
+  Future<void> _loadCrowdLevel() async {
+    final level = await _crowdLevelService.getCrowdLevel(
+      gymId: widget.gym.id,
+      placeId: widget.gym.id, // Google Places IDを使用
+    );
+    
+    if (mounted && level != null) {
+      setState(() {
+        _currentCrowdLevel = level;
+      });
+    }
   }
 
   Future<void> _checkUserStatus() async {
@@ -260,8 +278,29 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
   Widget _buildCrowdCard() {
     final gym = widget.gym;
     
+    // 混雑度の優先順位: ユーザー報告 > Google API > データなし
+    int? displayLevel;
+    String? dataSource;
+    
+    // ユーザー報告があり、24時間以内ならそれを使用
+    if (gym.currentCrowdLevel > 0 && gym.lastCrowdUpdate != null) {
+      final updateTime = gym.lastCrowdUpdate!;
+      final difference = DateTime.now().difference(updateTime);
+      
+      if (difference.inHours < 24) {
+        displayLevel = gym.currentCrowdLevel;
+        dataSource = 'ユーザー報告';
+      }
+    }
+    
+    // ユーザー報告がなければGoogle APIデータを使用
+    if (displayLevel == null && _currentCrowdLevel != null) {
+      displayLevel = _currentCrowdLevel;
+      dataSource = 'Google統計';
+    }
+    
     // 混雑度データが無い場合：報告ボタンのみ表示
-    if (gym.currentCrowdLevel == 0 || gym.lastCrowdUpdate == null) {
+    if (displayLevel == null) {
       return Card(
         elevation: 4,
         child: Padding(
@@ -332,6 +371,10 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
     final minutesAgo = gym.lastCrowdUpdate != null
         ? DateTime.now().difference(gym.lastCrowdUpdate!).inMinutes
         : null;
+    
+    // 混雑度レベルに応じた色とテキストを取得
+    final crowdColor = _getCrowdLevelColor(displayLevel!);
+    final crowdText = _getCrowdLevelText(displayLevel!);
 
     return Card(
       elevation: 4,
@@ -346,21 +389,35 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                   '現在の混雑度',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                if (minutesAgo != null)
-                  Text(
-                    '$minutesAgo分前更新',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (minutesAgo != null)
+                      Text(
+                        '$minutesAgo分前更新',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    if (dataSource != null)
+                      Text(
+                        '($dataSource)',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey[500],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Color(gym.crowdLevelColor).withValues(alpha: 0.2),
+                color: crowdColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Color(gym.crowdLevelColor),
+                  color: crowdColor,
                   width: 2,
                 ),
               ),
@@ -372,67 +429,18 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                       Icon(
                         Icons.people,
                         size: 32,
-                        color: Color(gym.crowdLevelColor),
+                        color: crowdColor,
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        gym.crowdLevelText,
+                        crowdText,
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Color(gym.crowdLevelColor),
+                          color: crowdColor,
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 12),
-                  // リアルタイムユーザー数表示
-                  StreamBuilder<int>(
-                    stream: _userService.getUserCountStream(gym.id),
-                    builder: (context, snapshot) {
-                      // エラー時は非表示
-                      if (snapshot.hasError) {
-                        return const SizedBox.shrink();
-                      }
-                      
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        );
-                      }
-                      final userCount = snapshot.data ?? 0;
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.person,
-                              size: 18,
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '$userCountがトレーニング中',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
                   ),
                 ],
               ),
@@ -1403,6 +1411,42 @@ GYM MATCH
           ),
         );
       }
+    }
+  }
+
+  /// 混雑度レベルに応じた色を取得
+  Color _getCrowdLevelColor(int level) {
+    switch (level) {
+      case 1:
+        return const Color(0xFF4CAF50); // 緑（空いています）
+      case 2:
+        return const Color(0xFF8BC34A); // 黄緑（やや空き）
+      case 3:
+        return const Color(0xFFFFC107); // 黄色（普通）
+      case 4:
+        return const Color(0xFFFF9800); // オレンジ（やや混雑）
+      case 5:
+        return const Color(0xFFF44336); // 赤（超混雑）
+      default:
+        return Colors.grey;
+    }
+  }
+
+  /// 混雑度レベルに応じたテキストを取得
+  String _getCrowdLevelText(int level) {
+    switch (level) {
+      case 1:
+        return '空いています';
+      case 2:
+        return 'やや空き';
+      case 3:
+        return '普通';
+      case 4:
+        return 'やや混雑';
+      case 5:
+        return '超混雑';
+      default:
+        return '不明';
     }
   }
 }
