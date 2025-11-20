@@ -44,13 +44,14 @@ class CrowdLevelService {
         return cachedLevel;
       }
 
-      // 3. Google Places APIから取得（現在は無効化 - コスト削減）
+      // 3. 注意: Google Places APIからの推定値は既に取得済み
       // 
-      // Google Places APIの混雑度データは高額（$17/1,000リクエスト）のため、
-      // ユーザー報告とキャッシュのみを使用
+      // GooglePlace.estimatedCrowdLevelは検索時に計算済みで、
+      // GymモデルのcurrentCrowdLevelに既に設定されているため、
+      // ここでは追加のAPI呼び出し不要
       if (kDebugMode && placeId != null && placeId.isNotEmpty) {
-        print('ℹ️ Google Places API disabled (cost optimization)');
-        print('ℹ️ Encourage user to report crowd level manually');
+        print('ℹ️ Google Places crowd level already estimated during search (zero cost)');
+        print('ℹ️ To update: Users can report current crowd level manually');
       }
 
       // データなし

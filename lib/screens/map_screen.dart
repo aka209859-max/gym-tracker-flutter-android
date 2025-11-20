@@ -227,8 +227,9 @@ class _MapScreenState extends State<MapScreen> {
                 : 'https://via.placeholder.com/400x300?text=No+Image',
             createdAt: DateTime.now(),
             updatedAt: DateTime.now(),
-            currentCrowdLevel: 3,
-            lastCrowdUpdate: DateTime.now(),
+            // 💡 Google Places APIからの推定混雑度を使用（低コスト）
+            currentCrowdLevel: place.estimatedCrowdLevel ?? 3,
+            lastCrowdUpdate: place.estimatedCrowdLevel != null ? DateTime.now() : null,
             isPartner: false,
           )).toList();
         }

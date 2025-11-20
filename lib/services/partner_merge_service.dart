@@ -370,10 +370,11 @@ class PartnerMergeService {
       updatedAt: partnerData?['updatedAt'] != null 
           ? (partnerData!['updatedAt'] as Timestamp).toDate()
           : DateTime.now(),
-      currentCrowdLevel: partnerData?['currentCrowdLevel'] as int? ?? 3,
+      // 💡 混雑度優先順位: ユーザー報告 > Google推定値
+      currentCrowdLevel: partnerData?['currentCrowdLevel'] as int? ?? place.estimatedCrowdLevel ?? 3,
       lastCrowdUpdate: partnerData?['lastCrowdUpdate'] != null 
           ? (partnerData!['lastCrowdUpdate'] as Timestamp?)?.toDate()
-          : null,
+          : (place.estimatedCrowdLevel != null ? DateTime.now() : null),
       isPartner: isPartner,
       // 🔧 CRITICAL FIX: パートナー関連フィールドはisPartner=trueの場合のみ設定
       partnerBenefit: isPartner && partnerData != null ? partnerData['partnerBenefit'] as String? : null,

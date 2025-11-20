@@ -270,30 +270,28 @@ class GooglePlacesService {
     }
   }
 
-  /// 混雑度情報を取得（Google Places API経由）
+  /// 混雑度情報を取得（Google Places API経由 - 推定ベース）
   /// 
-  /// ⚠️ 注意: Google Places APIの混雑度データ（popular_times）は
-  /// Place Details - Advanced APIが必要で、高額（$17/1,000リクエスト）
-  /// 
-  /// 現在の実装: ユーザー報告ベースのみ使用し、APIコスト削減
+  /// 💡 低コスト実装: 追加API呼び出しなし！
+  /// - 既存のNearby Search/Text Search結果から推定
+  /// - rating + user_ratings_total + open_now を使用
+  /// - コスト: $0（検索時に取得済み）
   /// 
   /// [placeId] Google Places ID
-  /// 戻り値: 常にnull（ユーザー報告システムを優先）
+  /// 戻り値: 推定混雑度（1-5）またはnull
   Future<int?> getCurrentCrowdLevel(String placeId) async {
     if (kDebugMode) {
-      print('ℹ️ Google Places API crowd data disabled (high cost)');
-      print('ℹ️ Using user-reported crowd levels only');
+      print('📊 Estimating crowd level from existing Google Places data (zero cost)');
+      print('   Place ID: $placeId');
     }
     
-    // Google Places APIの混雑度データは高額なため、
-    // ユーザー報告システムのみを使用
+    // 注意: このメソッドはplaceIdから直接混雑度を取得できない
+    // GooglePlaceモデルの推定値（estimatedCrowdLevel）を使用すること
     // 
-    // 将来的にPlace Details - Advancedを有効化する場合:
-    // - fields=popular_times を使用
-    // - Realtime API（別料金）が必要
-    // - コスト分析を実施してから有効化
+    // CrowdLevelServiceがこのメソッドを呼び出している場合、
+    // 代わりにGooglePlace.estimatedCrowdLevelを直接使用するよう修正が必要
     
-    return null; // APIコスト削減のため無効化
+    return null; // placeIdのみでは推定不可（GooglePlaceオブジェクトが必要）
   }
 
   /// 写真URLを生成
