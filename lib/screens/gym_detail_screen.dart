@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/gym.dart';
 import '../models/gym_announcement.dart';
+import '../models/review.dart';
 import '../services/realtime_user_service.dart';
 import '../services/favorites_service.dart';
 import '../services/share_service.dart';
@@ -924,21 +925,166 @@ GYM MATCH
                 ),
                 TextButton(
                   onPressed: () {
-                    // TODO: レビュー一覧画面
+                    // TODO: レビュー一覧画面への遷移
                   },
                   child: const Text('すべて見る'),
                 ),
               ],
             ),
             const Divider(),
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'レビュー機能は準備中です',
-                  style: TextStyle(color: Colors.grey),
+            const SizedBox(height: 8),
+            
+            // レビュー投稿ボタン
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => GymReviewScreen(gym: widget.gym),
+                    ),
+                  );
+                  if (result == true && mounted) {
+                    setState(() {}); // レビュー投稿後に画面を更新
+                  }
+                },
+                icon: const Icon(Icons.rate_review),
+                label: const Text('レビューを投稿'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber[700],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Firestoreからレビューを表示
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('reviews')
+                  .where('gymId', isEqualTo: widget.gym.gymId ?? widget.gym.id)
+                  .orderBy('createdAt', descending: true)
+                  .limit(3)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(24),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+                
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        'レビューの読み込みに失敗しました',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ),
+                  );
+                }
+                
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        'まだレビューがありません\n最初のレビューを投稿してください！',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ),
+                  );
+                }
+                
+                // レビューを表示
+                final reviews = snapshot.data!.docs;
+                return Column(
+                  children: reviews.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final userName = data['userName'] ?? 'ユーザー';
+                    final overallRating = (data['overallRating'] ?? 0).toDouble();
+                    final comment = data['comment'] ?? '';
+                    final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+                    
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: Colors.blue[100],
+                                child: Text(
+                                  userName[0].toUpperCase(),
+                                  style: TextStyle(color: Colors.blue[700]),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      userName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        ...List.generate(5, (index) {
+                                          return Icon(
+                                            index < overallRating
+                                                ? Icons.star
+                                                : Icons.star_border,
+                                            size: 16,
+                                            color: Colors.amber,
+                                          );
+                                        }),
+                                        const SizedBox(width: 8),
+                                        if (createdAt != null)
+                                          Text(
+                                            '${createdAt.year}/${createdAt.month}/${createdAt.day}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (comment.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              comment,
+                              style: const TextStyle(fontSize: 14),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
             ),
           ],
         ),
