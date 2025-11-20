@@ -76,7 +76,7 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
 
       final review = Review(
         id: '',
-        gymId: widget.gym.placeId ?? widget.gym.id,
+        gymId: widget.gym.gymId ?? widget.gym.id,
         userId: user.uid,
         userName: userName,
         userPhotoUrl: user.photoURL ?? '',
@@ -213,9 +213,9 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  if (widget.gym.vicinity != null)
+                                  if (widget.gym.address.isNotEmpty)
                                     Text(
-                                      widget.gym.vicinity!,
+                                      widget.gym.address,
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey[600],
