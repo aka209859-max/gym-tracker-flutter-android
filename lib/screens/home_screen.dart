@@ -263,11 +263,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         }
       }
       
-      // 🆕 日数計算
+      // 🆕 日数計算（バグ修正: 最低値を1に設定）
       int totalDaysFromStart = 0;
       if (firstWorkoutDate != null) {
-        // 初回記録から今日までの日数
-        totalDaysFromStart = now.difference(firstWorkoutDate).inDays;
+        // 初回記録から今日までの日数（+1で最低値1を保証）
+        totalDaysFromStart = now.difference(firstWorkoutDate).inDays + 1;
         print('📅 初回ワークアウト: ${firstWorkoutDate.year}/${firstWorkoutDate.month}/${firstWorkoutDate.day}');
         print('📅 経過日数: $totalDaysFromStart日');
       }
@@ -573,10 +573,39 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             // 月間サマリー統計
             _buildMonthlySummary(theme),
             
-            const SizedBox(height: 80), // 下部ナビゲーション用のスペース
+            const SizedBox(height: 80), // FAB用のスペース確保
           ],
         ),
       ),
+      // FloatingActionButton（画面右下固定）
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddWorkoutScreen(),
+            ),
+          );
+          
+          // 保存が成功した場合、データを再読み込み
+          if (result == true) {
+            _loadWorkoutsForSelectedDay();
+            _loadStatistics(); // 統計データも即座に更新
+          }
+        },
+        icon: const Icon(Icons.add, size: 24),
+        label: const Text(
+          'トレーニング記録',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: Colors.white,
+        elevation: 6.0,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -590,7 +619,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           
           const SizedBox(height: 12),
           
-          // 統計カード（タップで統計ダッシュボードへ）
+          // 統計カード（タブ切替式・タップで統計ダッシュボードへ）
           GestureDetector(
             onTap: () {
               Navigator.push(
@@ -600,35 +629,61 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
               );
             },
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildMiniStatCard(
-                    title: '7日間',
-                    value: _last7DaysVolume.toStringAsFixed(2),
-                    unit: 't',
-                    theme: theme,
-                  ),
+            child: DefaultTabController(
+              length: 3,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildMiniStatCard(
-                    title: '合計負荷量',
-                    value: _currentMonthVolume.toStringAsFixed(2),
-                    unit: 't',
-                    theme: theme,
-                  ),
+                child: Column(
+                  children: [
+                    TabBar(
+                      labelColor: theme.colorScheme.primary,
+                      unselectedLabelColor: Colors.grey,
+                      indicatorColor: theme.colorScheme.primary,
+                      labelStyle: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      tabs: const [
+                        Tab(text: '7日間'),
+                        Tab(text: '月間'),
+                        Tab(text: '総負荷量'),
+                      ],
+                    ),
+                    SizedBox(
+                      height: 80,
+                      child: TabBarView(
+                        children: [
+                          _buildStatTabContent(
+                            value: _last7DaysVolume.toStringAsFixed(2),
+                            unit: 't',
+                            theme: theme,
+                          ),
+                          _buildStatTabContent(
+                            value: _currentMonthVolume.toStringAsFixed(2),
+                            unit: 't',
+                            theme: theme,
+                          ),
+                          _buildStatTabContent(
+                            value: _totalVolume.toStringAsFixed(2),
+                            unit: 't',
+                            theme: theme,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildMiniStatCard(
-                    title: '総負荷量',
-                    value: _totalVolume.toStringAsFixed(2),
-                    unit: 't',
-                    theme: theme,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
           
@@ -652,6 +707,40 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // タブコンテンツ（統計値表示）
+  Widget _buildStatTabContent({
+    required String value,
+    required String unit,
+    required ThemeData theme,
+  }) {
+    return Center(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            unit,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -885,45 +974,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          // メインアクション: トレーニング記録（フル幅）
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddWorkoutScreen(),
-                  ),
-                );
-                
-                // 保存が成功した場合、データを再読み込み
-                if (result == true) {
-                  _loadWorkoutsForSelectedDay();
-                  _loadStatistics(); // 統計データも即座に更新
-                }
-              },
-              icon: const Icon(Icons.add, size: 24),
-              label: const Text(
-                'トレーニング記録',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 2,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          
           // サブアクション: テンプレート・RM計算・AIコーチ（3分割）
           Row(
             children: [
@@ -1018,7 +1068,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
           const SizedBox(height: 8),
           
-          // 統計ダッシュボードへのボタン
+          // 統計ダッシュボードへのボタン（削除予定: 統計カードがクリッカブルなため冗長）
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -1291,6 +1341,61 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildMonthlySummary(ThemeData theme) {
+    // エンプティステート判定（データなし時）
+    if (_totalDaysFromStart == 0 && _monthlyActiveDays == 0) {
+      return Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.fitness_center,
+                  size: 64,
+                  color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'さあ、最初の記録を始めましょう！',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'トレーニングを記録して、\n進捗を可視化しましょう',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildWorkoutHistory(theme),
+        ],
+      );
+    }
+    
+    // 通常表示（データあり時）
     return Column(
       children: [
         Container(
