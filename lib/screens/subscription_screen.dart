@@ -138,10 +138,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   _buildBillingPeriodToggle(),
                   const SizedBox(height: 24),
                   
-                  // プレミアムプラン
+                  // Premium プラン
                   _buildPlanCard(
                     type: SubscriptionType.premium,
-                    name: 'プレミアムプラン',
+                    name: 'Premium',
                     price: _getPriceForPlan(SubscriptionType.premium),
                     priceUnit: _isYearlySelected ? '年額' : '月額',
                     monthlyEquivalent: _isYearlySelected ? '月換算 ¥400' : null,
@@ -162,17 +162,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   ),
                   const SizedBox(height: 16),
                   
-                  // プロプラン
+                  // Pro プラン
                   _buildPlanCard(
                     type: SubscriptionType.pro,
-                    name: 'プロプラン',
+                    name: 'Pro',
                     price: _getPriceForPlan(SubscriptionType.pro),
                     priceUnit: _isYearlySelected ? '年額' : '月額',
                     monthlyEquivalent: _isYearlySelected ? '月換算 ¥667' : null,
                     discount: _isYearlySelected ? '32% OFF' : null,
                     savings: _isYearlySelected ? '¥3,760お得！' : null,
                     features: [
-                      '✨ プレミアムプランの全機能',
+                      '✨ Premiumプランの全機能',
                       '🤖 AI機能月30回（混雑度予測・AIコーチ・成長予測合計）',
                       '👥 トレーニングパートナー検索', // 検索条件: 距離・目標・経験・年齢・性別・曜日・時間帯でマッチング
                       '💬 メッセージング機能',
