@@ -222,7 +222,28 @@ class SubscriptionService {
     }
   }
   
-  /// AI追加購入（5回パック: ¥100）
+  /// AI追加パック（¥300で5回分）を1回消費
+  Future<bool> consumeAddonAIUsage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentAddon = await getAddonAIUsage();
+      
+      if (currentAddon <= 0) {
+        print('❌ AI追加パック残回数なし');
+        return false;
+      }
+      
+      // 1回消費
+      await prefs.setInt('ai_addon_count', currentAddon - 1);
+      print('✅ AI追加パック消費: -1 (残り: ${currentAddon - 1}回)');
+      return true;
+    } catch (e) {
+      print('❌ AI追加パック消費エラー: $e');
+      return false;
+    }
+  }
+  
+  /// AI追加購入（5回パック: ¥300）
   Future<bool> purchaseAIAddon() async {
     try {
       final prefs = await SharedPreferences.getInstance();

@@ -193,6 +193,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   
                   const SizedBox(height: 24),
                   
+                  // AI追加パック購入カード（全ユーザー対象）
+                  _buildAIAddonCard(),
+                  
+                  const SizedBox(height: 24),
+                  
                   // 利用規約とプライバシーポリシー（Apple審査必須）
                   _buildLegalLinksCard(),
                 ],
@@ -793,6 +798,125 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 color: Colors.grey[600],
               ),
               textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// AI追加パック購入カード（全ユーザー対象）
+  Widget _buildAIAddonCard() {
+    return Card(
+      elevation: 2,
+      color: Colors.purple.withValues(alpha: 0.05),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.psychology,
+                    color: Colors.purple,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'AI追加パック',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.purple,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'AIコーチ・成長予測・効果分析を5回追加',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.purple, size: 20),
+                const SizedBox(width: 8),
+                const Text(
+                  '無料ユーザーでも購入可能',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.purple, size: 20),
+                const SizedBox(width: 8),
+                const Text(
+                  '広告なしでAI機能を5回利用',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  '¥300',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.purple,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    // AI追加パック購入画面へ遷移
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AIAddonPurchaseScreen(),
+                      ),
+                    );
+                    if (result == true && mounted) {
+                      // 購入成功時、プラン情報を再読み込み
+                      await _loadCurrentPlan();
+                    }
+                  },
+                  icon: const Icon(Icons.shopping_cart),
+                  label: const Text('購入する'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

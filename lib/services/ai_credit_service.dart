@@ -22,7 +22,14 @@ class AICreditService {
         return remaining > 0;
       }
       
-      // 無料プランはクレジット残高をチェック
+      // 無料プラン: まずAI追加パック（¥300）の残回数をチェック
+      final addonUsage = await _subscriptionService.getAddonAIUsage();
+      print('🔍 [canUseAI] AI追加パック残回数: $addonUsage');
+      if (addonUsage > 0) {
+        return true; // AI追加パックがあれば広告なしで利用可能
+      }
+      
+      // AI追加パックなし: クレジット残高をチェック
       final credits = await getAICredits();
       print('🔍 [canUseAI] 無料プラン AIクレジット: $credits');
       return credits > 0;
@@ -55,7 +62,17 @@ class AICreditService {
       return await _subscriptionService.incrementAIUsage();
     }
     
-    // 無料プランはクレジット消費
+    // 無料プラン: まずAI追加パック（¥300）から消費
+    final addonUsage = await _subscriptionService.getAddonAIUsage();
+    if (addonUsage > 0) {
+      final success = await _subscriptionService.consumeAddonAIUsage();
+      if (success) {
+        print('✅ AI追加パック消費: -1 (残り: ${addonUsage - 1})');
+        return true;
+      }
+    }
+    
+    // AI追加パックなし: クレジット消費
     final credits = await getAICredits();
     if (credits <= 0) {
       return false;
@@ -72,8 +89,12 @@ class AICreditService {
     final plan = await _subscriptionService.getCurrentPlan();
     
     if (plan == SubscriptionType.free) {
-      // 無料プランはクレジット残高
+      // 無料プラン: AI追加パック + クレジット残高
+      final addonUsage = await _subscriptionService.getAddonAIUsage();
       final credits = await getAICredits();
+      if (addonUsage > 0) {
+        return 'AI追加パック: $addonUsage回 | AIクレジット: $credits回';
+      }
       return 'AIクレジット: $credits回';
     } else {
       // 有料プランは月次制限
