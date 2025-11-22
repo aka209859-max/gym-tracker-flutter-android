@@ -829,7 +829,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         final product = _availableProducts.firstWhere(
           (p) => p.identifier == productId,
         );
-        return product.priceString;
+        // 価格が日本円（¥で始まる）の場合のみ使用、それ以外はデフォルト価格
+        if (product.priceString.startsWith('¥') || product.priceString.startsWith('￥')) {
+          return product.priceString;
+        }
+        // ドル表示の場合はデフォルト価格を使用
       } catch (e) {
         // 商品が見つからない場合はデフォルト価格
       }
@@ -853,8 +857,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         title: Text('プランを${newPlan == SubscriptionType.free ? '変更' : 'アップグレード'}しますか？'),
         content: Text(
           '${_subscriptionService.getPlanName(newPlan)}に変更します。\n\n'
-          '料金: ${_subscriptionService.getPlanPrice(newPlan)}\n\n'
-          '※Web版ではプレビュー機能です。アプリ版で実際の課金が適用されます。',
+          '料金: ${_subscriptionService.getPlanPrice(newPlan)}',
         ),
         actions: [
           TextButton(

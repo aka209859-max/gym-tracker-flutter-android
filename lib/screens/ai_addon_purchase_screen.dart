@@ -42,6 +42,36 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
   }
 
   Future<void> _purchaseAddon() async {
+    // 購入確認ダイアログを表示
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('AI追加パックを購入しますか？'),
+        content: const Text(
+          'AI追加パック（5回分）\n'
+          '料金: ¥300\n\n'
+          '今月のAI機能使用回数を5回追加します。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('キャンセル'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('購入する'),
+          ),
+        ],
+      ),
+    );
+
+    // キャンセルされた場合は処理を中断
+    if (confirmed != true) return;
+
     setState(() {
       _isPurchasing = true;
     });
