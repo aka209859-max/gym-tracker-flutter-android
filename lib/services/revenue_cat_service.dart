@@ -29,8 +29,8 @@ class RevenueCatService {
   static const String premiumAnnualProductId = 'com.nexa.gymmatch.premium.annual';  // ¥4,800 (20% OFF)
   static const String proAnnualProductId = 'com.nexa.gymmatch.pro.annual';          // ¥8,000 (32% OFF)
   
-  // 追加課金
-  static const String aiAdditionalPackProductId = 'com.nexa.gymmatch.ai_pack_5';
+  // 追加課金（消耗型 - Consumable）
+  static const String aiAdditionalPackProductId = 'com.nexa.gymmatch.ai_pack_5_v2';
   
   // Entitlement IDs (RevenueCatで設定する権限ID)
   static const String premiumEntitlementId = 'premium';
