@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/subscription_service.dart';
 import '../services/revenue_cat_service.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -727,14 +728,19 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 Expanded(
                   child: TextButton.icon(
                     onPressed: () async {
-                      // TODO: 実際の利用規約URLに置き換える
                       const url = 'https://www.nexa.co.jp/gym-match/terms';
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('利用規約URL: $url'),
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
+                      final uri = Uri.parse(url);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      } else {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('利用規約を開けませんでした'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
                     },
                     icon: const Icon(Icons.description, size: 20),
                     label: const Text(
@@ -753,14 +759,19 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 Expanded(
                   child: TextButton.icon(
                     onPressed: () async {
-                      // TODO: 実際のプライバシーポリシーURLに置き換える
                       const url = 'https://www.nexa.co.jp/gym-match/privacy';
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('プライバシーポリシーURL: $url'),
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
+                      final uri = Uri.parse(url);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      } else {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('プライバシーポリシーを開けませんでした'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
                     },
                     icon: const Icon(Icons.privacy_tip, size: 20),
                     label: const Text(
