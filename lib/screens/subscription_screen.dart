@@ -71,6 +71,20 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       appBar: AppBar(
         title: const Text('プラン管理'),
         centerTitle: true,
+        actions: [
+          // 購入復元ボタン（iOS専用 - Apple審査対応）
+          if (defaultTargetPlatform == TargetPlatform.iOS)
+            TextButton(
+              onPressed: _restorePurchases,
+              child: const Text(
+                'Restore',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -88,21 +102,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     _buildAIAddonCard(),
                   if (_currentPlan != SubscriptionType.free)
                     const SizedBox(height: 16),
-                  
-                  // 購入復元ボタン（アプリ内課金のみ）
-                  if (defaultTargetPlatform == TargetPlatform.iOS ||
-                      defaultTargetPlatform == TargetPlatform.android)
-                    Center(
-                      child: TextButton.icon(
-                        onPressed: _restorePurchases,
-                        icon: const Icon(Icons.restore),
-                        label: const Text('購入履歴を復元'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.blue,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 16),
                   
                   // プラン選択セクション
                   const Text(
@@ -190,6 +189,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   
                   // 注意事項
                   _buildNoticeCard(),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // 利用規約とプライバシーポリシー（Apple審査必須）
+                  _buildLegalLinksCard(),
                 ],
               ),
             ),
@@ -691,6 +695,93 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 color: Colors.grey[700],
                 height: 1.6,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 利用規約とプライバシーポリシーへのリンクカード（Apple審査必須）
+  Widget _buildLegalLinksCard() {
+    return Card(
+      elevation: 0,
+      color: Colors.grey.withValues(alpha: 0.05),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const Text(
+              'Legal Information',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // 利用規約リンク
+                Expanded(
+                  child: TextButton.icon(
+                    onPressed: () async {
+                      // TODO: 実際の利用規約URLに置き換える
+                      const url = 'https://www.nexa.co.jp/gym-match/terms';
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('利用規約URL: $url'),
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.description, size: 20),
+                    label: const Text(
+                      'Terms of Use',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue[700],
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(width: 8),
+                
+                // プライバシーポリシーリンク
+                Expanded(
+                  child: TextButton.icon(
+                    onPressed: () async {
+                      // TODO: 実際のプライバシーポリシーURLに置き換える
+                      const url = 'https://www.nexa.co.jp/gym-match/privacy';
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('プライバシーポリシーURL: $url'),
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.privacy_tip, size: 20),
+                    label: const Text(
+                      'Privacy Policy',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue[700],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'By subscribing, you agree to our Terms of Use and Privacy Policy',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
