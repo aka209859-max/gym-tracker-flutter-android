@@ -38,7 +38,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       // RevenueCatから最新のサブスクリプション状態を同期
       final plan = await _revenueCatService.syncSubscriptionStatus();
       
-      // 利用可能な商品を取得（iOS/Android課金用）
+      // 利用可能な商品を取得（アプリ内課金用）
       // 🔄 キャッシュを無効化して最新の商品情報を取得（年額プラン対応）
       if (defaultTargetPlatform == TargetPlatform.iOS ||
           defaultTargetPlatform == TargetPlatform.android) {
@@ -89,7 +89,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   if (_currentPlan != SubscriptionType.free)
                     const SizedBox(height: 16),
                   
-                  // 購入復元ボタン（iOS/Androidのみ）
+                  // 購入復元ボタン（アプリ内課金のみ）
                   if (defaultTargetPlatform == TargetPlatform.iOS ||
                       defaultTargetPlatform == TargetPlatform.android)
                     Center(
@@ -700,7 +700,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   /// プランの価格を取得（RevenueCatから実際の価格、またはデフォルト価格）
   String _getPriceForPlan(SubscriptionType plan) {
-    // iOS/Android課金の場合、RevenueCatから取得した実際の価格を使用
+    // アプリ内課金の場合、RevenueCatから取得した実際の価格を使用
     if (_availableProducts.isNotEmpty) {
       String productId;
       
@@ -736,7 +736,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     }
   }
 
-  /// プラン変更処理（iOS/Android課金統合版）
+  /// プラン変更処理（アプリ内課金版）
   Future<void> _changePlan(SubscriptionType newPlan) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -745,7 +745,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         content: Text(
           '${_subscriptionService.getPlanName(newPlan)}に変更します。\n\n'
           '料金: ${_subscriptionService.getPlanPrice(newPlan)}\n\n'
-          '※Web版ではプレビュー機能です。iOS/Android版で実際の課金が適用されます。',
+          '※Web版ではプレビュー機能です。アプリ版で実際の課金が適用されます。',
         ),
         actions: [
           TextButton(
@@ -775,7 +775,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         return;
       }
       
-      // iOS/Androidの場合、RevenueCatで購入処理
+      // アプリ内課金の場合、RevenueCatで購入処理
       if (defaultTargetPlatform == TargetPlatform.iOS ||
           defaultTargetPlatform == TargetPlatform.android) {
         await _purchaseWithRevenueCat(newPlan);

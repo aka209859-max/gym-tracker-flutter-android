@@ -14,13 +14,11 @@ class AdMobService {
 
   final SubscriptionService _subscriptionService = SubscriptionService();
   
-  // AdMob広告ユニットID（本番用は要変更）
+  // iOS AdMob広告ユニットID
   // テスト広告ID（開発中）
-  static const String _androidBannerAdUnitId = 'ca-app-pub-3940256099942544/6300978111';
   static const String _iosBannerAdUnitId = 'ca-app-pub-3940256099942544/2934735716';
   
-  // 本番用広告ID（App Store/Play Store承認後に差し替え）
-  // static const String _androidBannerAdUnitId = 'ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY';
+  // 本番用広告ID（App Store承認後に差し替え）
   // static const String _iosBannerAdUnitId = 'ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY';
   
   BannerAd? _bannerAd;
@@ -58,14 +56,9 @@ class AdMobService {
     }
   }
 
-  /// バナー広告ユニットIDを取得
+  /// バナー広告ユニットIDを取得（iOS専用）
   String get bannerAdUnitId {
-    if (Platform.isAndroid) {
-      return _androidBannerAdUnitId;
-    } else if (Platform.isIOS) {
-      return _iosBannerAdUnitId;
-    }
-    return '';
+    return _iosBannerAdUnitId;
   }
 
   /// バナー広告を読み込む（無料プランのみ）

@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 /// Production-safe ログ出力クラス
 /// 
 /// 特徴:
-/// - すべてのプラットフォーム（Web/iOS/Android）で動作
+/// - すべてのプラットフォームで動作
 /// - Release Buildでも確実に出力される（developer.log使用）
 /// - プラットフォーム分岐不要
 class ConsoleLogger {

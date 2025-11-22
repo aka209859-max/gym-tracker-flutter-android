@@ -26,36 +26,20 @@ class AdService {
     print('✅ AdMob initialized successfully');
   }
 
-  /// バナー広告ID取得
+  /// バナー広告ID取得（iOS専用）
   static String get bannerAdUnitId {
-    if (Platform.isIOS) {
-      // iOS本番広告ID（無料プラン用）
-      return 'ca-app-pub-2887531479031819/1682429555';
-    } else if (Platform.isAndroid) {
-      // Android用テスト広告ID（Android版は未リリース）
-      return 'ca-app-pub-3940256099942544/6300978111';
-    }
-    throw UnsupportedError('Unsupported platform');
+    // iOS本番広告ID（無料プラン用）
+    return 'ca-app-pub-2887531479031819/1682429555';
   }
 
-  /// インタースティシャル広告ID取得
+  /// インタースティシャル広告ID取得（iOS専用）
   static String get interstitialAdUnitId {
-    if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/4411468910';
-    } else if (Platform.isAndroid) {
-      return 'ca-app-pub-3940256099942544/1033173712';
-    }
-    throw UnsupportedError('Unsupported platform');
+    return 'ca-app-pub-3940256099942544/4411468910';
   }
 
-  /// リワード広告ID取得
+  /// リワード広告ID取得（iOS専用）
   static String get rewardedAdUnitId {
-    if (Platform.isIOS) {
-      // iOS本番リワード広告ID（AI使用回数+1機能）
-      return 'ca-app-pub-2887531479031819/6163055454';
-    } else if (Platform.isAndroid) {
-      return 'ca-app-pub-3940256099942544/5224354917';
-    }
-    throw UnsupportedError('Unsupported platform');
+    // iOS本番リワード広告ID（AI使用回数+1機能）
+    return 'ca-app-pub-2887531479031819/6163055454';
   }
 }

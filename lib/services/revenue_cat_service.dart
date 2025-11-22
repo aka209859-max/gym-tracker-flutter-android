@@ -17,9 +17,8 @@ class RevenueCatService {
   factory RevenueCatService() => _instance;
   RevenueCatService._internal();
   
-  // RevenueCat API Keys (App Store Connect設定後に入力)
+  // RevenueCat API Key (iOS専用)
   static const String _appleApiKey = 'appl_QCxDcuCpNzWsfVJBzIQmBtszjmm';
-  static const String _googleApiKey = 'YOUR_REVENUECAT_GOOGLE_API_KEY';
   
   // Product IDs (App Store Connectで登録する商品ID)
   // 月額プラン
@@ -54,28 +53,20 @@ class RevenueCatService {
         debugPrint('🚀 RevenueCat初期化開始...');
       }
       
-      // プラットフォームごとのAPIキー設定
-      PurchasesConfiguration configuration;
-      if (defaultTargetPlatform == TargetPlatform.iOS) {
-        configuration = PurchasesConfiguration(_appleApiKey);
-      } else if (defaultTargetPlatform == TargetPlatform.android) {
-        configuration = PurchasesConfiguration(_googleApiKey);
-      } else {
+      // iOS専用のAPIキー設定
+      if (defaultTargetPlatform != TargetPlatform.iOS) {
         if (kDebugMode) {
-          debugPrint('⚠️ Web/Desktop platform - RevenueCat not available');
+          debugPrint('⚠️ iOS platform only - RevenueCat not available');
         }
         return;
       }
       
       // Firebase AuthのユーザーIDを設定
       final firebaseUser = FirebaseAuth.instance.currentUser;
+      PurchasesConfiguration configuration = PurchasesConfiguration(_appleApiKey);
+      
       if (firebaseUser != null) {
-        // purchases_flutter 8.5.0ではconfiguration作成時にappUserIDを指定
-        if (defaultTargetPlatform == TargetPlatform.iOS) {
-          configuration = PurchasesConfiguration(_appleApiKey)..appUserID = firebaseUser.uid;
-        } else {
-          configuration = PurchasesConfiguration(_googleApiKey)..appUserID = firebaseUser.uid;
-        }
+        configuration = PurchasesConfiguration(_appleApiKey)..appUserID = firebaseUser.uid;
         if (kDebugMode) {
           debugPrint('👤 Firebase User ID: ${firebaseUser.uid}');
         }

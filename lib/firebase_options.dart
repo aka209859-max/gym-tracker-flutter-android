@@ -20,25 +20,16 @@ class DefaultFirebaseOptions {
       return web;
     }
     switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-        return android;
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
         return macos;
+      case TargetPlatform.android:
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
       case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
       default:
         throw UnsupportedError(
-          'DefaultFirebaseOptions are not supported for this platform.',
+          'DefaultFirebaseOptions are only configured for iOS, macOS, and Web platforms.',
         );
     }
   }
@@ -54,14 +45,14 @@ class DefaultFirebaseOptions {
     measurementId: 'G-DXGP9WX0Z8',
   );
 
-  // Android Platform Configuration (GYM MATCH Production)
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDYwD-_fz9m4vSQsbdXuQpKtbHguIl4LaM',
-    appId: '1:506175392633:android:78f4e12b34567890fda8',
-    messagingSenderId: '506175392633',
-    projectId: 'gym-match-e560d',
-    storageBucket: 'gym-match-e560d.firebasestorage.app',
-  );
+  // Android Platform Configuration - Not supported (iOS専用アプリ)
+  // static const FirebaseOptions android = FirebaseOptions(
+  //   apiKey: 'AIzaSyDYwD-_fz9m4vSQsbdXuQpKtbHguIl4LaM',
+  //   appId: '1:506175392633:android:78f4e12b34567890fda8',
+  //   messagingSenderId: '506175392633',
+  //   projectId: 'gym-match-e560d',
+  //   storageBucket: 'gym-match-e560d.firebasestorage.app',
+  // );
 
   // iOS Platform Configuration (GYM MATCH Production - 正式設定)
   static const FirebaseOptions ios = FirebaseOptions(
