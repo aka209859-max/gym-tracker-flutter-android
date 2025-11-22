@@ -352,4 +352,62 @@ class RevenueCatService {
   Future<String> getAIUsageStatus() async {
     return await _localSubscriptionService.getAIUsageStatus();
   }
+  
+  /// AI追加パックを購入（消耗型アイテム）
+  Future<bool> purchaseAIAddon() async {
+    try {
+      if (!_isInitialized) {
+        throw Exception('RevenueCat not initialized');
+      }
+      
+      if (kDebugMode) {
+        debugPrint('🛒 AI追加パック購入開始: $aiAdditionalPackProductId');
+      }
+      
+      // 商品を取得
+      final offerings = await Purchases.getOfferings();
+      if (offerings.current == null) {
+        throw Exception('No offerings available');
+      }
+      
+      // Product IDに対応するPackageを検索
+      final package = offerings.current!.availablePackages.firstWhere(
+        (pkg) => pkg.storeProduct.identifier == aiAdditionalPackProductId,
+        orElse: () => throw Exception('AI addon product not found: $aiAdditionalPackProductId'),
+      );
+      
+      // 購入実行
+      final customerInfo = await Purchases.purchasePackage(package);
+      
+      if (kDebugMode) {
+        debugPrint('✅ AI追加パック購入完了');
+      }
+      
+      // ローカルサービスでAI回数を追加
+      await _localSubscriptionService.purchaseAIAddon();
+      
+      return true;
+      
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ AI追加パック購入エラー: ${e.code} - ${e.message}');
+      }
+      
+      // ユーザーキャンセルは正常系として扱う
+      if (e.code == '1' || e.code == 'purchase_cancelled') {
+        if (kDebugMode) {
+          debugPrint('ℹ️ ユーザーが購入をキャンセルしました');
+        }
+        return false;
+      }
+      
+      rethrow;
+      
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ 予期しないAI追加パック購入エラー: $e');
+      }
+      rethrow;
+    }
+  }
 }

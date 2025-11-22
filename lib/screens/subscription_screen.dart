@@ -851,13 +851,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   /// プラン変更処理（アプリ内課金版）
   Future<void> _changePlan(SubscriptionType newPlan) async {
+    // 年額/月額に応じた価格を取得
+    final price = _getPriceForPlan(newPlan);
+    final billingPeriod = _isYearlySelected ? '年額' : '月額';
+    
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('プランを${newPlan == SubscriptionType.free ? '変更' : 'アップグレード'}しますか？'),
         content: Text(
           '${_subscriptionService.getPlanName(newPlan)}に変更します。\n\n'
-          '料金: ${_subscriptionService.getPlanPrice(newPlan)}',
+          '料金: $price ($billingPeriod)',
         ),
         actions: [
           TextButton(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/subscription_service.dart';
+import '../services/revenue_cat_service.dart';
 
 /// 💰 AI追加購入画面
 /// 
@@ -13,6 +14,7 @@ class AIAddonPurchaseScreen extends StatefulWidget {
 
 class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
   final SubscriptionService _subscriptionService = SubscriptionService();
+  final RevenueCatService _revenueCatService = RevenueCatService();
   bool _isPurchasing = false;
   
   int _currentUsage = 0;
@@ -77,11 +79,8 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
     });
 
     try {
-      // 実際のアプリ内課金処理はここに実装
-      // RevenueCatやApp Store/Google Playとの連携
-      
-      // デモモード: 直接追加
-      final success = await _subscriptionService.purchaseAIAddon();
+      // RevenueCatを使ってApp Store課金処理を実行
+      final success = await _revenueCatService.purchaseAIAddon();
       
       if (success && mounted) {
         // 使用状況を再読み込み
