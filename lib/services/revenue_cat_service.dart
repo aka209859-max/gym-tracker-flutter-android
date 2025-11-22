@@ -370,11 +370,34 @@ class RevenueCatService {
         throw Exception('No offerings available');
       }
       
+      // デバッグ: 利用可能な商品をログ出力
+      if (kDebugMode) {
+        debugPrint('📦 利用可能な商品一覧:');
+        for (var pkg in offerings.current!.availablePackages) {
+          debugPrint('  - ${pkg.storeProduct.identifier}: ${pkg.storeProduct.title} (${pkg.storeProduct.priceString})');
+        }
+      }
+      
       // Product IDに対応するPackageを検索
-      final package = offerings.current!.availablePackages.firstWhere(
-        (pkg) => pkg.storeProduct.identifier == aiAdditionalPackProductId,
-        orElse: () => throw Exception('AI addon product not found: $aiAdditionalPackProductId'),
-      );
+      Package? package;
+      try {
+        package = offerings.current!.availablePackages.firstWhere(
+          (pkg) => pkg.storeProduct.identifier == aiAdditionalPackProductId,
+        );
+      } catch (e) {
+        // 商品が見つからない場合、詳細なエラーメッセージ
+        final availableIds = offerings.current!.availablePackages
+            .map((pkg) => pkg.storeProduct.identifier)
+            .join(', ');
+        throw Exception(
+          'AI追加パック商品が見つかりません。\n'
+          '探している商品ID: $aiAdditionalPackProductId\n'
+          '利用可能な商品ID: $availableIds\n\n'
+          '対処方法:\n'
+          '1. App Store Connectで商品を作成してください\n'
+          '2. RevenueCat ConsoleのOfferingsに商品を追加してください'
+        );
+      }
       
       // 購入実行
       final customerInfo = await Purchases.purchasePackage(package);

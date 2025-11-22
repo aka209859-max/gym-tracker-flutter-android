@@ -137,10 +137,35 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
     } catch (e) {
       print('❌ 購入処理エラー: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('エラーが発生しました: $e'),
-            backgroundColor: Colors.red,
+        // エラー内容を判定してユーザーフレンドリーなメッセージを表示
+        String errorMessage = '購入処理に失敗しました。';
+        
+        if (e.toString().contains('product not found') || 
+            e.toString().contains('商品が見つかりません')) {
+          errorMessage = 'この商品は現在利用できません。\n'
+                        '後ほど再度お試しください。';
+        } else if (e.toString().contains('cancelled') || 
+                   e.toString().contains('キャンセル')) {
+          errorMessage = '購入がキャンセルされました。';
+        }
+        
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.warning, color: Colors.orange, size: 32),
+                SizedBox(width: 12),
+                Text('購入エラー'),
+              ],
+            ),
+            content: Text(errorMessage),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('閉じる'),
+              ),
+            ],
           ),
         );
       }
