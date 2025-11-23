@@ -36,28 +36,8 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
     });
   }
 
-  Future<void> _changePlan(SubscriptionType plan) async {
-    final success = await _subscriptionService.changePlan(plan);
-    
-    if (!mounted) return;
-    
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('✅ ${_subscriptionService.getPlanName(plan)}に変更しました'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      await _loadCurrentStatus(); // 状態を再読み込み
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ プラン変更に失敗しました'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+  // _changePlan関数は削除（Apple審査対応）
+  // プラン変更はRevenueCat経由のみ許可
 
   Future<void> _resetAIUsage() async {
     try {
@@ -173,37 +153,42 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
                 
                 const SizedBox(height: 24),
                 
-                // プラン変更ボタン
-                const Text(
-                  'プラン変更',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                // ⚠️ プラン変更機能は削除（Apple審査対応）
+                Card(
+                  color: Colors.red.shade50,
+                  child: const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.block, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text(
+                              '⚠️ プラン変更機能を無効化',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          'Apple審査対応のため、開発者メニューからのプラン変更機能は削除されました。\n\n'
+                          'プラン変更はRevenueCat経由の正規課金のみ有効です。\n\n'
+                          'テストには「TestFlightサンドボックス課金」を使用してください。',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                
-                _buildPlanButton(
-                  SubscriptionType.free,
-                  '無料プランに変更',
-                  Colors.grey,
-                  Icons.free_breakfast,
-                ),
-                const SizedBox(height: 8),
-                
-                _buildPlanButton(
-                  SubscriptionType.premium,
-                  'プレミアムプランに変更',
-                  Colors.blue,
-                  Icons.star,
-                ),
-                const SizedBox(height: 8),
-                
-                _buildPlanButton(
-                  SubscriptionType.pro,
-                  'Proプランに変更',
-                  Colors.deepPurple,
-                  Icons.workspace_premium,
                 ),
                 
                 const SizedBox(height: 32),
@@ -297,27 +282,8 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
     );
   }
 
-  Widget _buildPlanButton(
-    SubscriptionType plan,
-    String label,
-    Color color,
-    IconData icon,
-  ) {
-    final isCurrentPlan = _currentPlan == plan;
-    
-    return ElevatedButton.icon(
-      onPressed: isCurrentPlan ? null : () => _changePlan(plan),
-      icon: Icon(icon),
-      label: Text(
-        isCurrentPlan ? '$label（現在のプラン）' : label,
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isCurrentPlan ? Colors.grey : color,
-        minimumSize: const Size.fromHeight(48),
-        disabledBackgroundColor: Colors.grey.shade300,
-      ),
-    );
-  }
+  // _buildPlanButton関数は削除（Apple審査対応）
+  // プラン変更機能を完全に無効化しました
 
   Widget _getPlanBadge(SubscriptionType plan) {
     final color = switch (plan) {

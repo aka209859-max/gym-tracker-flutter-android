@@ -47,22 +47,9 @@ class SubscriptionService {
         }
       }
       
-      // 2. SharedPreferencesから取得（デバッグビルドのみ - 開発者メニュー用）
-      // リリースビルドではSharedPreferencesのテストデータを無視
-      if (kDebugMode) {
-        final prefs = await SharedPreferences.getInstance();
-        final planString = prefs.getString(_subscriptionTypeKey);
-        
-        if (planString != null) {
-          print('🔧 デバッグモード: SharedPreferencesからプラン取得 ($planString)');
-          return SubscriptionType.values.firstWhere(
-            (e) => e.toString() == planString,
-            orElse: () => SubscriptionType.free,
-          );
-        }
-      }
-      
-      // 3. デフォルト: Freeプラン
+      // 2. デフォルト: Freeプラン
+      // SharedPreferencesからのプラン取得機能は完全削除（Apple審査対応）
+      // プラン情報はRevenueCat→Firestoreの経路のみ有効
       return SubscriptionType.free;
     } catch (e) {
       print('❌ プラン取得エラー: $e');
@@ -70,21 +57,43 @@ class SubscriptionService {
     }
   }
   
-  /// プランを変更
+  /// プランを変更（Firestoreに保存 - RevenueCat購入完了時のみ使用）
+  /// ⚠️ この関数は直接呼び出し禁止！RevenueCatServiceからのみ呼び出すこと
   Future<void> setPlan(SubscriptionType plan) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_subscriptionTypeKey, plan.toString());
-    await prefs.setBool(_subscriptionKey, plan != SubscriptionType.free);
-    print('✅ プラン変更: $plan');
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && !user.isAnonymous) {
+        // Firestoreに保存（RevenueCat購入情報の同期用）
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .set({
+          'isPremium': plan != SubscriptionType.free,
+          'premiumType': plan.toString().split('.').last,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+        
+        if (kDebugMode) {
+          print('✅ Firestoreにプラン保存: $plan');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ プラン保存エラー: $e');
+      }
+    }
   }
   
   /// プランを変更（ブール値を返す）
+  /// ⚠️ この関数は直接呼び出し禁止！RevenueCatServiceからのみ呼び出すこと
   Future<bool> changePlan(SubscriptionType plan) async {
     try {
       await setPlan(plan);
       return true;
     } catch (e) {
-      print('❌ プラン変更エラー: $e');
+      if (kDebugMode) {
+        print('❌ プラン変更エラー: $e');
+      }
       return false;
     }
   }
