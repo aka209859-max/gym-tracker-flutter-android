@@ -260,9 +260,9 @@ class _PartnerSearchScreenNewState extends State<PartnerSearchScreenNew> {
   Widget _buildSearchResults() {
     return StreamBuilder<List<TrainingPartner>>(
       stream: _partnerService.searchPartners(
-        location: _selectedLocation == 'すべて' ? null : _selectedLocation,
-        experienceLevel: _selectedExperienceLevel == 'すべて' ? null : _selectedExperienceLevel,
-        goal: _selectedGoal == 'すべて' ? null : _selectedGoal,
+        location: (_selectedLocation == 'すべて' || _selectedLocation.isEmpty) ? null : _selectedLocation,
+        experienceLevel: (_selectedExperienceLevel == 'すべて' || _selectedExperienceLevel.isEmpty) ? null : _selectedExperienceLevel,
+        goal: (_selectedGoal == 'すべて' || _selectedGoal.isEmpty) ? null : _selectedGoal,
       ),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -272,7 +272,22 @@ class _PartnerSearchScreenNewState extends State<PartnerSearchScreenNew> {
               children: [
                 const Icon(Icons.error, size: 64, color: Colors.red),
                 const SizedBox(height: 16),
-                Text('エラーが発生しました: ${snapshot.error}'),
+                Text('エラーが発生しました'),
+                const SizedBox(height: 8),
+                Text(
+                  '${snapshot.error}',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _hasSearched = false;
+                    });
+                  },
+                  child: const Text('戻る'),
+                ),
               ],
             ),
           );

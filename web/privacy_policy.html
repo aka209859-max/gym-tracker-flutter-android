@@ -59,6 +59,12 @@
             padding-top: 20px;
             border-top: 1px solid #ddd;
         }
+        .highlight {
+            background: #FFF9C4;
+            padding: 15px;
+            border-left: 4px solid #FBC02D;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -89,7 +95,7 @@
             <h3>1.3 位置情報</h3>
             <ul>
                 <li>GPS位置情報（ジム検索機能で使用）</li>
-                <li>おおよその位置情報（広告配信の最適化）</li>
+                <li>おおよその位置情報（都道府県レベル）</li>
             </ul>
 
             <h3>1.4 利用状況データ</h3>
@@ -98,12 +104,26 @@
                 <li>クラッシュレポート</li>
                 <li>パフォーマンスデータ</li>
             </ul>
+
+            <h3>1.5 トレーニングパートナー機能で収集する情報</h3>
+            <div class="highlight">
+                <strong>新機能追加に伴う情報収集</strong>
+            </div>
+            <ul>
+                <li><strong>プロフィール情報:</strong> 名前、自己紹介文、プロフィール画像、所在地（都道府県レベル）、経験レベル、トレーニング目標</li>
+                <li><strong>メッセージ内容:</strong> 友達承認済みユーザー間の1対1チャットメッセージ</li>
+                <li><strong>友達リクエスト情報:</strong> 送信者、受信者、リクエスト状態（承認・拒否・保留）</li>
+                <li><strong>ブロック・通報情報:</strong> ブロックしたユーザー、通報されたコンテンツ</li>
+            </ul>
         </div>
 
         <div class="section">
             <h2>2. 情報の利用目的</h2>
             <ul>
                 <li>本アプリの提供・運営・改善</li>
+                <li>トレーニングパートナーの検索・マッチング機能の提供</li>
+                <li>ユーザー間のメッセージング機能の提供</li>
+                <li>不適切なコンテンツの監視と安全性の確保</li>
                 <li>ユーザーサポート対応</li>
                 <li>不正利用の防止</li>
                 <li>広告配信の最適化</li>
@@ -113,10 +133,25 @@
         </div>
 
         <div class="section">
-            <h2>3. 第三者提供</h2>
+            <h2>3. 情報の共有範囲</h2>
+            
+            <h3>3.1 公開情報</h3>
+            <ul>
+                <li><strong>プロフィール情報（公開）:</strong> 名前、自己紹介、プロフィール画像、所在地（都道府県）、経験レベル、目標は、パートナー検索機能を使用する他のユーザーに表示されます</li>
+            </ul>
+
+            <h3>3.2 非公開情報</h3>
+            <ul>
+                <li><strong>メッセージ:</strong> 友達承認済みのユーザー間でのみ送受信可能で、第三者には開示されません</li>
+                <li><strong>位置情報:</strong> 精密なGPS座標は収集・保存せず、おおよその地域（都道府県レベル）のみ使用します</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>4. 第三者提供</h2>
             <p>当社は、以下の第三者サービスを利用しており、これらのサービスプロバイダーと情報を共有する場合があります：</p>
             
-            <h3>3.1 認証・データベース</h3>
+            <h3>4.1 認証・データベース</h3>
             <ul>
                 <li><strong>Firebase（Google LLC）</strong>
                     <ul>
@@ -127,7 +162,7 @@
                 </li>
             </ul>
 
-            <h3>3.2 広告配信</h3>
+            <h3>4.2 広告配信</h3>
             <ul>
                 <li><strong>Google AdMob（Google LLC）</strong>
                     <ul>
@@ -138,7 +173,7 @@
                 </li>
             </ul>
 
-            <h3>3.3 収益化・サブスクリプション</h3>
+            <h3>4.3 収益化・サブスクリプション</h3>
             <ul>
                 <li><strong>RevenueCat（RevenueCat Inc.）</strong>
                     <ul>
@@ -148,7 +183,7 @@
                 </li>
             </ul>
 
-            <h3>3.4 AI機能</h3>
+            <h3>4.4 AI機能</h3>
             <ul>
                 <li><strong>Google Gemini API（Google LLC）</strong>
                     <ul>
@@ -158,7 +193,7 @@
                 </li>
             </ul>
 
-            <h3>3.5 地図・位置情報</h3>
+            <h3>4.5 地図・位置情報</h3>
             <ul>
                 <li><strong>Google Maps API（Google LLC）</strong>
                     <ul>
@@ -170,79 +205,92 @@
         </div>
 
         <div class="section">
-            <h2>4. データの保存期間</h2>
+            <h2>5. ユーザーの権利と安全対策</h2>
+            
+            <h3>5.1 基本的権利</h3>
             <ul>
-                <li><strong>トレーニング記録</strong>: アプリアンインストールまで</li>
-                <li><strong>匿名ユーザーID</strong>: アプリアンインストールまで</li>
-                <li><strong>広告識別子</strong>: 広告配信のために必要な期間</li>
-                <li><strong>クラッシュレポート</strong>: 90日間</li>
+                <li><strong>データアクセス権:</strong> 保存されているデータの開示請求</li>
+                <li><strong>データ削除権:</strong> アプリアンインストールによる全データ削除</li>
+                <li><strong>広告識別子のリセット:</strong> デバイス設定からいつでも可能</li>
+                <li><strong>位置情報の無効化:</strong> アプリ設定またはデバイス設定から可能</li>
+            </ul>
+
+            <h3>5.2 トレーニングパートナー機能の安全対策</h3>
+            <ul>
+                <li><strong>ブロック機能:</strong> 任意のユーザーをブロックし、連絡を遮断できます</li>
+                <li><strong>通報機能:</strong> 不適切なメッセージやプロフィールを運営者に通報できます</li>
+                <li><strong>プロフィール編集:</strong> いつでもプロフィール情報を編集・削除できます</li>
+                <li><strong>友達リクエスト拒否:</strong> 望まない友達リクエストを拒否できます</li>
+                <li><strong>承認制メッセージング:</strong> 友達承認済みユーザー間でのみメッセージ送受信可能</li>
             </ul>
         </div>
 
         <div class="section">
-            <h2>5. データの安全性</h2>
+            <h2>6. データの保存期間</h2>
+            <ul>
+                <li><strong>トレーニング記録:</strong> アプリアンインストールまで</li>
+                <li><strong>プロフィール情報:</strong> アカウント削除まで保存</li>
+                <li><strong>メッセージ履歴:</strong> ユーザーが削除するまで保存</li>
+                <li><strong>通報記録:</strong> 調査完了後6ヶ月間保存</li>
+                <li><strong>匿名ユーザーID:</strong> アプリアンインストールまで</li>
+                <li><strong>広告識別子:</strong> 広告配信のために必要な期間</li>
+                <li><strong>クラッシュレポート:</strong> 90日間</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>7. データの安全性</h2>
             <p>開発者は、お客様の個人情報を適切に管理し、以下のセキュリティ対策を実施しています：</p>
             <ul>
                 <li>SSL/TLS暗号化通信</li>
                 <li>Firebase Security Rulesによるアクセス制御</li>
+                <li>友達承認制による不正アクセス防止</li>
                 <li>定期的なセキュリティ監査</li>
                 <li>アクセスログの記録・監視</li>
             </ul>
         </div>
 
         <div class="section">
-            <h2>6. ユーザーの権利</h2>
-            <p>ユーザーは以下の権利を有します：</p>
-            <ul>
-                <li><strong>データアクセス権</strong>: 保存されているデータの開示請求</li>
-                <li><strong>データ削除権</strong>: アプリアンインストールによる全データ削除</li>
-                <li><strong>広告識別子のリセット</strong>: デバイス設定からいつでも可能</li>
-                <li><strong>位置情報の無効化</strong>: アプリ設定またはデバイス設定から可能</li>
-            </ul>
+            <h2>8. 子供のプライバシー</h2>
+            <p>本アプリは16歳未満のお子様から個人情報を意図的に収集することはありません。匿名認証を使用しており、個人を特定する情報は収集していません。トレーニングパートナー機能は16歳以上を対象としています。</p>
         </div>
 
         <div class="section">
-            <h2>7. 子供のプライバシー</h2>
-            <p>本アプリは13歳未満のお子様から個人情報を意図的に収集することはありません。匿名認証を使用しており、個人を特定する情報は収集していません。</p>
-        </div>
-
-        <div class="section">
-            <h2>8. Cookie・トラッキング技術</h2>
+            <h2>9. Cookie・トラッキング技術</h2>
             <p>本アプリは以下の技術を使用します：</p>
             <ul>
-                <li><strong>広告識別子（IDFA/AAID）</strong>: 広告配信の最適化</li>
-                <li><strong>Firebase Analytics</strong>: アプリ利用状況の分析</li>
-                <li><strong>Google AdMob SDK</strong>: 広告配信</li>
+                <li><strong>広告識別子（IDFA）:</strong> 広告配信の最適化</li>
+                <li><strong>Firebase Analytics:</strong> アプリ利用状況の分析</li>
+                <li><strong>Google AdMob SDK:</strong> 広告配信</li>
             </ul>
-            <p>ユーザーは、デバイス設定から広告識別子の追跡を制限できます：</p>
+            <p>ユーザーは、iOS設定から広告識別子の追跡を制限できます：</p>
             <ul>
-                <li><strong>iOS</strong>: 設定 → プライバシーとセキュリティ → トラッキング</li>
-                <li><strong>Android</strong>: 設定 → Google → 広告 → 広告のカスタマイズをオプトアウト</li>
+                <li><strong>設定方法:</strong> 設定 → プライバシーとセキュリティ → トラッキング</li>
             </ul>
         </div>
 
         <div class="section">
-            <h2>9. 国際データ転送</h2>
+            <h2>10. 国際データ転送</h2>
             <p>お客様の個人情報は、Firebase（米国）、Google Cloud Platform（米国）のサーバーに保存される場合があります。開発者は、適切なデータ保護措置を講じています。</p>
         </div>
 
         <div class="section">
-            <h2>10. プライバシーポリシーの変更</h2>
+            <h2>11. プライバシーポリシーの変更</h2>
             <p>開発者は、本ポリシーを随時変更することがあります。重要な変更がある場合は、アプリ内で通知します。</p>
         </div>
 
         <div class="section">
-            <h2>11. 外部リンク</h2>
+            <h2>12. 外部リンク</h2>
             <p>本アプリには外部サイトへのリンクが含まれる場合があります。開発者は、外部サイトのプライバシー慣行について責任を負いません。</p>
         </div>
 
         <div class="section">
-            <h2>12. 法的義務</h2>
+            <h2>13. 法的義務</h2>
             <p>開発者は、法令に基づく開示要求、裁判所命令、または公的機関からの要請がある場合、お客様の個人情報を開示することがあります。</p>
         </div>
 
         <div class="contact">
-            <h2>13. お問い合わせ</h2>
+            <h2>14. お問い合わせ</h2>
             <p>本ポリシーに関するご質問・ご意見は、以下までお問い合わせください：</p>
             <p>
                 <strong>開発者: 井上元</strong><br>
@@ -253,8 +301,8 @@
 
         <div class="last-updated">
             <strong>制定日:</strong> 2025年11月18日<br>
-            <strong>最終更新日:</strong> 2025年11月18日<br>
-            <strong>施行日:</strong> 2025年11月18日
+            <strong>最終更新日:</strong> 2025年11月22日<br>
+            <strong>施行日:</strong> 2025年11月22日
         </div>
     </div>
 </body>

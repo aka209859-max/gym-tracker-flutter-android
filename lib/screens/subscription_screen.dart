@@ -74,7 +74,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         centerTitle: true,
         actions: [
           // 購入復元ボタン（iOS専用 - Apple審査対応）
-          if (defaultTargetPlatform == TargetPlatform.iOS)
+          // Web previewでも表示（テスト用）
+          if (defaultTargetPlatform == TargetPlatform.iOS || kIsWeb)
             TextButton(
               onPressed: _restorePurchases,
               child: const Text(

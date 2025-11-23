@@ -29,14 +29,14 @@ class TrainingPartner {
   /// Firestoreから取得
   factory TrainingPartner.fromFirestore(Map<String, dynamic> data) {
     return TrainingPartner(
-      userId: data['user_id'] as String,
-      displayName: data['display_name'] as String,
-      profileImageUrl: data['profile_image_url'] as String?,
-      bio: data['bio'] as String?,
-      location: data['location'] as String?,
-      experienceLevel: data['experience_level'] as String?,
-      goals: List<String>.from(data['goals'] ?? []),
-      preferredExercises: List<String>.from(data['preferred_exercises'] ?? []),
+      userId: data['user_id']?.toString() ?? '',
+      displayName: data['display_name']?.toString() ?? '名前未設定',
+      profileImageUrl: data['profile_image_url']?.toString(),
+      bio: data['bio']?.toString(),
+      location: data['location']?.toString(),
+      experienceLevel: data['experience_level']?.toString(),
+      goals: data['goals'] != null ? List<String>.from(data['goals']) : [],
+      preferredExercises: data['preferred_exercises'] != null ? List<String>.from(data['preferred_exercises']) : [],
       createdAt: (data['created_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updated_at'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
