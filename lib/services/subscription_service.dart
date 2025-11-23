@@ -128,9 +128,9 @@ class SubscriptionService {
   /// プラン説明を取得
   String getPlanDescription(SubscriptionType plan) {
     return switch (plan) {
-      SubscriptionType.free => 'ジム検索 + トレーニング記録',
-      SubscriptionType.premium => 'AI機能（月10回） + お気に入り無制限 + レビュー投稿',
-      SubscriptionType.pro => 'AI機能（月30回） + パートナー検索 + メッセージング',
+      SubscriptionType.free => 'ジム検索 + AI混雑度予測 + トレーニング記録',
+      SubscriptionType.premium => 'AI機能月10回（AIコーチ・成長予測・効果分析） + お気に入り無制限 + レビュー投稿',
+      SubscriptionType.pro => 'AI機能月30回（AIコーチ・成長予測・効果分析） + パートナー検索 + メッセージング',
     };
   }
   
