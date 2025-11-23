@@ -1,0 +1,53 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.4'
+          channel: 'stable'
+      
+      - name: Install dependencies
+        run: flutter pub get
+      
+      - name: Build Flutter Web
+        run: |
+          flutter build web --release \
+            --dart-define=flutter.inspector.structuredErrors=false \
+            --dart-define=debugShowCheckedModeBanner=false
+      
+      - name: Copy HTML files to build output
+        run: |
+          echo "📄 Copying HTML files from web/ to build/web/"
+          cp -v web/privacy_policy.html build/web/privacy_policy.html
+          cp -v web/terms.html build/web/terms.html
+          cp -v web/terms_of_service.html build/web/terms_of_service.html
+          cp -v web/tokutei_shoutorihikihou.html build/web/tokutei_shoutorihikihou.html
+          echo "✅ HTML files copied successfully"
+          
+          echo "🔍 Verifying HTML files in build output:"
+          ls -la build/web/*.html
+          
+          echo "🔍 Checking privacy_policy.html date:"
+          grep "最終更新日" build/web/privacy_policy.html || echo "Date not found"
+      
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_GYM_MATCH_E560D }}'
+          channelId: live
+          projectId: gym-match-e560d
