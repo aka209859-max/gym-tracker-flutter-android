@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -42,22 +43,27 @@ class SubscriptionService {
             }
           }
         } catch (firestoreError) {
-          print('⚠️ Firestore取得エラー（SharedPreferencesにフォールバック）: $firestoreError');
+          print('⚠️ Firestore取得エラー: $firestoreError');
         }
       }
       
-      // 2. SharedPreferencesから取得（フォールバック）
-      final prefs = await SharedPreferences.getInstance();
-      final planString = prefs.getString(_subscriptionTypeKey);
-      
-      if (planString == null) {
-        return SubscriptionType.free;
+      // 2. SharedPreferencesから取得（デバッグビルドのみ - 開発者メニュー用）
+      // リリースビルドではSharedPreferencesのテストデータを無視
+      if (kDebugMode) {
+        final prefs = await SharedPreferences.getInstance();
+        final planString = prefs.getString(_subscriptionTypeKey);
+        
+        if (planString != null) {
+          print('🔧 デバッグモード: SharedPreferencesからプラン取得 ($planString)');
+          return SubscriptionType.values.firstWhere(
+            (e) => e.toString() == planString,
+            orElse: () => SubscriptionType.free,
+          );
+        }
       }
       
-      return SubscriptionType.values.firstWhere(
-        (e) => e.toString() == planString,
-        orElse: () => SubscriptionType.free,
-      );
+      // 3. デフォルト: Freeプラン
+      return SubscriptionType.free;
     } catch (e) {
       print('❌ プラン取得エラー: $e');
       return SubscriptionType.free;
