@@ -734,14 +734,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 Expanded(
                   child: TextButton.icon(
                     onPressed: () async {
-                      // Web版では相対パス、iOS/Androidでは完全URL
+                      // Web版は相対パス、iOS版は完全URL
                       final url = kIsWeb 
                           ? '/terms.html'
                           : 'https://gym-match-e560d.web.app/terms.html';
                       final uri = Uri.parse(url);
                       if (await canLaunchUrl(uri)) {
-                        // Web版では同じウィンドウで開く（LaunchMode.platformDefault）
-                        // iOS/Androidでは外部ブラウザで開く
+                        // Web版は同じウィンドウ、iOS版は外部Safari
                         final mode = kIsWeb 
                             ? LaunchMode.platformDefault 
                             : LaunchMode.externalApplication;
@@ -773,14 +772,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 Expanded(
                   child: TextButton.icon(
                     onPressed: () async {
-                      // Web版では相対パス、iOS/Androidでは完全URL
+                      // Web版は相対パス、iOS版は完全URL
                       final url = kIsWeb 
                           ? '/privacy_policy.html'
                           : 'https://gym-match-e560d.web.app/privacy_policy.html';
                       final uri = Uri.parse(url);
                       if (await canLaunchUrl(uri)) {
-                        // Web版では同じウィンドウで開く（LaunchMode.platformDefault）
-                        // iOS/Androidでは外部ブラウザで開く
+                        // Web版は同じウィンドウ、iOS版は外部Safari
                         final mode = kIsWeb 
                             ? LaunchMode.platformDefault 
                             : LaunchMode.externalApplication;

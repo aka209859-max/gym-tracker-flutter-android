@@ -45,15 +45,6 @@ class DefaultFirebaseOptions {
     measurementId: 'G-DXGP9WX0Z8',
   );
 
-  // Android Platform Configuration - Not supported (iOS専用アプリ)
-  // static const FirebaseOptions android = FirebaseOptions(
-  //   apiKey: 'AIzaSyDYwD-_fz9m4vSQsbdXuQpKtbHguIl4LaM',
-  //   appId: '1:506175392633:android:78f4e12b34567890fda8',
-  //   messagingSenderId: '506175392633',
-  //   projectId: 'gym-match-e560d',
-  //   storageBucket: 'gym-match-e560d.firebasestorage.app',
-  // );
-
   // iOS Platform Configuration (GYM MATCH Production - 正式設定)
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAFVfcWzXDTtc9Rk3Zr5OGRx63FXpMAHqY',
