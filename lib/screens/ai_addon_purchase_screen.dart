@@ -426,7 +426,7 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
               const SizedBox(height: 4),
               
               Text(
-                '1回あたり: ¥${(100 / aiCount).round()}',
+                '1回あたり: ¥${(300 / aiCount).round()}',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey[500],
