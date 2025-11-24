@@ -140,9 +140,30 @@ class _MapScreenState extends State<MapScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('位置情報を取得できませんでした。東京駅周辺のジムを表示しています。'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '位置情報を取得できませんでした',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    kIsWeb 
+                      ? 'ブラウザで位置情報を許可してください'
+                      : '端末の位置情報設定を確認してください',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    '東京駅周辺のジムを表示しています',
+                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ),
               backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 3),
+              duration: const Duration(seconds: 5),
               action: SnackBarAction(
                 label: '再試行',
                 textColor: Colors.white,
