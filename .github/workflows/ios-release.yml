@@ -22,6 +22,7 @@ jobs:
       
       - name: Install dependencies
         run: |
+        　flutter clean
           flutter pub get
           cd ios
           pod repo remove trunk 2>/dev/null || true
