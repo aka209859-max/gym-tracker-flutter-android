@@ -70,6 +70,8 @@ dependencies:
   
   # AdMob Integration (Free plan monetization)
   google_mobile_ads: 5.3.1  # Google AdMob ads integration for monetization
+  
+app_tracking_transparency: ^2.0.6
 
 dev_dependencies:
   flutter_test:
