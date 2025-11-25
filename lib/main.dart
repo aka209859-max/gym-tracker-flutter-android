@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'firebase_options.dart';
 import 'services/offline_service.dart';
 import 'screens/home_screen.dart';
@@ -88,6 +89,17 @@ void main() async {
   
   // 🧪 デバッグ: 無料プランでテスト（SharedPreferencesを完全リセット）
   await _resetToFreePlanForTesting();
+
+  if (!kIsWeb) {
+    try {
+      // ダイアログ表示まで少し待機（起動直後のクラッシュ防止）
+      await Future.delayed(const Duration(milliseconds: 1000));
+      final status = await AppTrackingTransparency.requestTrackingAuthorization();
+      print('📱 ATTステータス: $status');
+    } catch (e) {
+      print('❌ ATTリクエストエラー: $e');
+    }
+  }
   
   // 📱 AdMob初期化（広告表示）
   try {
