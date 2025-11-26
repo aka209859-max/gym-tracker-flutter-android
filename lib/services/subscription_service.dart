@@ -20,7 +20,9 @@ class SubscriptionService {
     try {
       // 1. Firestoreから取得を試行（ログインユーザー）
       final user = FirebaseAuth.instance.currentUser;
-      if (user != null && !user.isAnonymous) {
+      if (user != null) {
+        // 🔧 FIX: 匿名ユーザーも含めてFirestoreから取得
+        // GYM MATCHは匿名ログインが基本仕様のため、匿名チェック削除
         try {
           final userDoc = await FirebaseFirestore.instance
               .collection('users')
@@ -34,10 +36,10 @@ class SubscriptionService {
             
             if (isPremium) {
               if (premiumType == 'pro') {
-                print('✅ Firestoreからプラン取得: プロプラン');
+                print('✅ Firestoreからプラン取得: プロプラン (UID: ${user.uid}, 匿名: ${user.isAnonymous})');
                 return SubscriptionType.pro;
               } else if (premiumType == 'premium') {
-                print('✅ Firestoreからプラン取得: プレミアムプラン');
+                print('✅ Firestoreからプラン取得: プレミアムプラン (UID: ${user.uid}, 匿名: ${user.isAnonymous})');
                 return SubscriptionType.premium;
               }
             }
@@ -62,8 +64,9 @@ class SubscriptionService {
   Future<void> setPlan(SubscriptionType plan) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user != null && !user.isAnonymous) {
-        // Firestoreに保存（RevenueCat購入情報の同期用）
+      if (user != null) {
+        // 🔧 FIX: 匿名ユーザーも含めてFirestoreに保存
+        // GYM MATCHは匿名ログインが基本仕様のため、匿名チェック削除
         await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
@@ -74,7 +77,11 @@ class SubscriptionService {
         }, SetOptions(merge: true));
         
         if (kDebugMode) {
-          print('✅ Firestoreにプラン保存: $plan');
+          print('✅ Firestoreにプラン保存: $plan (UID: ${user.uid}, 匿名: ${user.isAnonymous})');
+        }
+      } else {
+        if (kDebugMode) {
+          print('⚠️ ユーザーが未ログイン - Firestore保存スキップ');
         }
       }
     } catch (e) {
