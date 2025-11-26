@@ -28,13 +28,27 @@ class AdService {
 
   /// バナー広告ID取得（iOS専用）
   static String get bannerAdUnitId {
+    // デバッグモード時はテスト広告を表示
+    if (kDebugMode) {
+      return 'ca-app-pub-3940256099942544/2934735716'; // Googleテスト用バナー広告ID
+    }
+    
     // iOS本番広告ID（無料プラン用）
+    // AdMobコンソールで作成した実際のバナー広告ユニットIDに置き換えてください
     return 'ca-app-pub-2887531479031819/1682429555';
   }
 
   /// インタースティシャル広告ID取得（iOS専用）
   static String get interstitialAdUnitId {
-    return 'ca-app-pub-3940256099942544/4411468910';
+    // デバッグモード時はテスト広告を表示
+    if (kDebugMode) {
+      return 'ca-app-pub-3940256099942544/4411468910'; // Googleテスト用インタースティシャル広告ID
+    }
+    
+    // iOS本番インタースティシャル広告ID
+    // AdMobコンソールで作成した実際のインタースティシャル広告ユニットIDに置き換えてください
+    // 現在は未作成のため、テストIDを使用
+    return 'ca-app-pub-3940256099942544/4411468910'; // TODO: 本番IDに要変更
   }
 
   /// リワード広告ID取得（iOS専用）
