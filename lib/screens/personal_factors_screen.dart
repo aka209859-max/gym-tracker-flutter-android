@@ -175,6 +175,16 @@ class _PersonalFactorsScreenState extends State<PersonalFactorsScreen> {
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    
+                    // キーボードを閉じるボタン
+                    OutlinedButton(
+                      onPressed: () => FocusScope.of(context).unfocus(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.all(12),
+                      ),
+                      child: const Text('⌨️ キーボードを閉じる'),
+                    ),
                     const SizedBox(height: 16),
                     
                     // 科学的根拠フッター

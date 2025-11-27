@@ -210,6 +210,17 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                             ),
                             child: const Text('記録を保存', style: TextStyle(fontSize: 16)),
                           ),
+                          
+                          const SizedBox(height: 12),
+                          
+                          OutlinedButton.icon(
+                            onPressed: () => FocusScope.of(context).unfocus(),
+                            icon: const Icon(Icons.keyboard_hide),
+                            label: const Text('キーボードを閉じる'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
                         ],
                       ),
                     ),

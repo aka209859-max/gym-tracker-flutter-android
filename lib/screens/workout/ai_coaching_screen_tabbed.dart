@@ -334,6 +334,10 @@ class _AIMenuTabState extends State<_AIMenuTab>
 
           // メニュー生成ボタン
           _buildGenerateButton(),
+          const SizedBox(height: 8),
+          
+          // キーボードを閉じるボタン
+          _buildDismissKeyboardButton(),
           const SizedBox(height: 24),
 
           // 生成結果表示
@@ -468,6 +472,14 @@ class _AIMenuTabState extends State<_AIMenuTab>
           foregroundColor: Colors.white,
         ),
       ),
+    );
+  }
+
+  /// キーボードを閉じるボタン
+  Widget _buildDismissKeyboardButton() {
+    return OutlinedButton(
+      onPressed: () => FocusScope.of(context).unfocus(),
+      child: const Text('⌨️ キーボードを閉じる'),
     );
   }
 
@@ -1367,6 +1379,13 @@ class _GrowthPredictionTabState extends State<_GrowthPredictionTab>
 
             // 予測実行ボタン
             _buildPredictButton(),
+            const SizedBox(height: 8),
+            
+            // キーボードを閉じるボタン
+            OutlinedButton(
+              onPressed: () => FocusScope.of(context).unfocus(),
+              child: const Text('⌨️ キーボードを閉じる'),
+            ),
             const SizedBox(height: 32),
 
             // 予測結果
@@ -2502,6 +2521,13 @@ class _EffectAnalysisTabState extends State<_EffectAnalysisTab>
 
             // 分析実行ボタン
             _buildAnalyzeButton(),
+            const SizedBox(height: 8),
+            
+            // キーボードを閉じるボタン
+            OutlinedButton(
+              onPressed: () => FocusScope.of(context).unfocus(),
+              child: const Text('⌨️ キーボードを閉じる'),
+            ),
             const SizedBox(height: 32),
 
             // 分析結果

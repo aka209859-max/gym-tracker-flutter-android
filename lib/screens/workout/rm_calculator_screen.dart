@@ -175,6 +175,20 @@ class _OneRMCalculatorTabState extends State<_OneRMCalculatorTab> {
             ),
           ),
           
+          const SizedBox(height: 12),
+          
+          OutlinedButton.icon(
+            onPressed: () => FocusScope.of(context).unfocus(),
+            icon: const Icon(Icons.keyboard_hide),
+            label: const Text('キーボードを閉じる'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          
           const SizedBox(height: 32),
           
           if (_rmResults != null) ...[
@@ -744,6 +758,20 @@ class _PlateCalculatorTabState extends State<_PlateCalculatorTab> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          OutlinedButton.icon(
+            onPressed: () => FocusScope.of(context).unfocus(),
+            icon: const Icon(Icons.keyboard_hide),
+            label: const Text('キーボードを閉じる'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
