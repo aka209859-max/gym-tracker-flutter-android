@@ -15,11 +15,10 @@ class AdMobService {
   final SubscriptionService _subscriptionService = SubscriptionService();
   
   // iOS AdMob広告ユニットID
-  // テスト広告ID（開発中）
-  static const String _iosBannerAdUnitId = 'ca-app-pub-3940256099942544/2934735716';
-  
-  // 本番用広告ID（App Store承認後に差し替え）
-  // static const String _iosBannerAdUnitId = 'ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY';
+  // ✅ 修正: kReleaseMode を使用してリリースビルドでは必ず本番広告を表示
+  static const String _iosBannerAdUnitId = kReleaseMode
+      ? 'ca-app-pub-2887531479031819/1682429555' // 本番用（TestFlight、App Store）
+      : 'ca-app-pub-3940256099942544/2934735716'; // テスト用（開発中）
   
   BannerAd? _bannerAd;
   bool _isAdLoaded = false;
