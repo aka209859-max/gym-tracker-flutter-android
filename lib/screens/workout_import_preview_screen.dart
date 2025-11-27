@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:provider/provider.dart';
-import '../providers/navigation_provider.dart';
+// ✅ 修正: NavigationProvider削除（使用しない）
 
 /// トレーニングデータインポートプレビュー画面
 /// 
@@ -195,7 +194,10 @@ class _WorkoutImportPreviewScreenState
       if (mounted) {
         debugPrint('✅ [IMPORT] 成功 - SnackBar表示 + 画面遷移');
         
-        // 成功メッセージ
+        // ✅ 修正: 単純なpop()でプロフィール画面に戻る（黒い画面問題解決）
+        Navigator.of(context).pop();
+        
+        // 成功メッセージ（pop後に表示）
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -206,21 +208,8 @@ class _WorkoutImportPreviewScreenState
             duration: const Duration(seconds: 3),
           ),
         );
-
-        debugPrint('🔙 [IMPORT] プレビュー画面を閉じて元の画面に戻ります');
         
-        // 安全な画面遷移: まず現在の画面（プレビュー）を閉じる
-        Navigator.of(context).pop();
-        
-        // 少し遅延を入れて、次の画面遷移を実行
-        await Future.delayed(const Duration(milliseconds: 100));
-        
-        if (mounted) {
-          // ホーム画面に遷移（NavigationProvider使用）
-          final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
-          navigationProvider.selectTab(0); // ホーム画面に戻る
-          debugPrint('✅ [IMPORT] ホーム画面に遷移完了');
-        }
+        debugPrint('✅ [IMPORT] プロフィール画面に戻りました');
       }
     } catch (e, stackTrace) {
       debugPrint('❌❌❌ [IMPORT] データ取り込みエラー: $e');

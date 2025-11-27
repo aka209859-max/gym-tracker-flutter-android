@@ -30,7 +30,7 @@ class _GrowthPredictionScreenState extends State<GrowthPredictionScreen> {
 
   // 予測結果
   Map<String, dynamic>? _predictionResult;
-  bool _isLoading = true;  // 初期状態でローディング中
+  bool _isLoading = false;  // ✅ 修正: 初期状態はローディングなし
 
   // レベル選択肢
   final List<String> _levels = ['初心者', '中級者', '上級者'];
@@ -48,10 +48,8 @@ class _GrowthPredictionScreenState extends State<GrowthPredictionScreen> {
   @override
   void initState() {
     super.initState();
-    // 画面表示時に自動で予測実行
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _executePrediction();
-    });
+    // ✅ 修正: 自動実行を削除（ユーザーが実行ボタンを押したときのみAI機能を使用）
+    // 問題：画面起動時に入力前のデータで1回消費していた
   }
 
   @override
@@ -255,6 +253,10 @@ class _GrowthPredictionScreenState extends State<GrowthPredictionScreen> {
                 prefixIcon: Icon(Icons.fitness_center),
               ),
               keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              onEditingComplete: () {
+                FocusScope.of(context).unfocus();
+              },
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return '1RMを入力してください';

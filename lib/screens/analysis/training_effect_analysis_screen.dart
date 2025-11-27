@@ -40,15 +40,13 @@ class _TrainingEffectAnalysisScreenState
 
   // 分析結果
   Map<String, dynamic>? _analysisResult;
-  bool _isLoading = true;  // 初期状態でローディング中
+  bool _isLoading = false;  // ✅ 修正: 初期状態はローディングなし
 
   @override
   void initState() {
     super.initState();
-    // 画面表示時に自動で分析実行
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _executeAnalysis();
-    });
+    // ✅ 修正: 自動実行を削除（ユーザーが実行ボタンを押したときのみAI機能を使用）
+    // 問題：画面起動時に入力前のデータで1回消費していた
   }
 
   // 選択肢
