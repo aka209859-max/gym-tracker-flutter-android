@@ -947,12 +947,13 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
               onPressed: _stopRestTimer,
               tooltip: 'タイマー停止',
             ),
-          ] else
+          ] else ...[
             IconButton(
               icon: const Icon(Icons.timer),
               onPressed: _showRestTimerSettings,
               tooltip: '休憩時間設定',
             ),
+          ],
         ],
         ),
         body: SingleChildScrollView(
@@ -1185,12 +1186,12 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                   ),
                 ),
               ),
-            ],
-          ],
-        ),
-      ),
-      ),
-    );
+            ], // if (_sets.isNotEmpty) の閉じ
+          ], // Column children の閉じ
+        ), // Column
+      ), // SingleChildScrollView
+      ), // Scaffold
+    ); // GestureDetector
   }
 
   Widget _buildExerciseGroup(String exerciseName, List<WorkoutSet> sets) {
@@ -1605,9 +1606,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
             ],
           ),
         ],
-        ), // Column
-        ), // SingleChildScrollView
-      ), // Scaffold
-    ); // GestureDetector
+      ),
+    );
   }
 }
