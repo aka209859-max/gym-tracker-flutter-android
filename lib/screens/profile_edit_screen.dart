@@ -173,12 +173,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // 🔓 テスト用：Pro権限チェックを無効化
-    // final currentPlan = await _subscriptionService.getCurrentPlan();
-    // if (currentPlan != SubscriptionType.pro) {
-    //   _showUpgradeDialog();
-    //   return;
-    // }
+    // ✅ 本番実装：Proプラン権限チェック
+    final currentPlan = await _subscriptionService.getCurrentPlan();
+    if (currentPlan != SubscriptionType.pro) {
+      _showUpgradeDialog();
+      return;
+    }
 
     setState(() {
       _isLoading = true;

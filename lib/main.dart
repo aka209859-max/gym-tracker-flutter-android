@@ -84,11 +84,11 @@ void main() async {
   }
   
   // 🔥 マスターユーザー権限設定（CEO専用）
-  // NOTE: テスト用に一時的にコメントアウト（無料プランでテスト）
+  // ✅ 本番環境：マスターユーザー機能を無効化（RevenueCat課金のみ有効）
   // await _setMasterUserPrivileges();
   
-  // 🧪 デバッグ: 無料プランでテスト（SharedPreferencesを完全リセット）
-  await _resetToFreePlanForTesting();
+  // ✅ 本番環境：無料プランリセットを無効化
+  // await _resetToFreePlanForTesting();
 
   if (!kIsWeb) {
     try {

@@ -361,8 +361,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileHeader(BuildContext context) {
-    // 🔓 テスト用：全ユーザーに編集権限を付与
-    final bool isProUser = true; // _currentPlan == SubscriptionType.pro;
+    // ✅ 本番実装：Proプランのみ編集権限
+    final bool isProUser = _currentPlan == SubscriptionType.pro;
     
     return Card(
       child: Padding(
