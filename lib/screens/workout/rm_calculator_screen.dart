@@ -156,7 +156,10 @@ class _OneRMCalculatorTabState extends State<_OneRMCalculatorTab> {
           const SizedBox(height: 24),
           
           ElevatedButton(
-            onPressed: _calculateRM,
+            onPressed: () {
+              FocusScope.of(context).unfocus();
+              _calculateRM();
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.white,
@@ -171,20 +174,6 @@ class _OneRMCalculatorTabState extends State<_OneRMCalculatorTab> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 12),
-          
-          OutlinedButton.icon(
-            onPressed: () => FocusScope.of(context).unfocus(),
-            icon: const Icon(Icons.keyboard_hide),
-            label: const Text('キーボードを閉じる'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
@@ -743,7 +732,10 @@ class _PlateCalculatorTabState extends State<_PlateCalculatorTab> {
           
           // 計算ボタン（大きく）
           ElevatedButton(
-            onPressed: _calculatePlates,
+            onPressed: () {
+              FocusScope.of(context).unfocus();
+              _calculatePlates();
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.primary,
               foregroundColor: Colors.white,
@@ -758,20 +750,6 @@ class _PlateCalculatorTabState extends State<_PlateCalculatorTab> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 12),
-          
-          OutlinedButton.icon(
-            onPressed: () => FocusScope.of(context).unfocus(),
-            icon: const Icon(Icons.keyboard_hide),
-            label: const Text('キーボードを閉じる'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),

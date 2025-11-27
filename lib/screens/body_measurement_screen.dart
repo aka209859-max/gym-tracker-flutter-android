@@ -202,24 +202,16 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                           
                           // 保存ボタン
                           ElevatedButton(
-                            onPressed: _saveMeasurement,
+                            onPressed: () {
+                              FocusScope.of(context).unfocus();
+                              _saveMeasurement();
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: theme.colorScheme.primary,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
                             child: const Text('記録を保存', style: TextStyle(fontSize: 16)),
-                          ),
-                          
-                          const SizedBox(height: 12),
-                          
-                          OutlinedButton.icon(
-                            onPressed: () => FocusScope.of(context).unfocus(),
-                            icon: const Icon(Icons.keyboard_hide),
-                            label: const Text('キーボードを閉じる'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
                           ),
                         ],
                       ),

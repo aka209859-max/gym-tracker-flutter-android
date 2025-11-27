@@ -164,7 +164,10 @@ class _PersonalFactorsScreenState extends State<PersonalFactorsScreen> {
                     
                     // 保存ボタン
                     ElevatedButton(
-                      onPressed: _saveProfile,
+                      onPressed: () {
+                        FocusScope.of(context).unfocus();
+                        _saveProfile();
+                      },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.all(16),
                         backgroundColor: Colors.blue[700],
@@ -174,16 +177,6 @@ class _PersonalFactorsScreenState extends State<PersonalFactorsScreen> {
                         '💾 保存して PFM を更新',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    
-                    // キーボードを閉じるボタン
-                    OutlinedButton(
-                      onPressed: () => FocusScope.of(context).unfocus(),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.all(12),
-                      ),
-                      child: const Text('⌨️ キーボードを閉じる'),
                     ),
                     const SizedBox(height: 16),
                     
