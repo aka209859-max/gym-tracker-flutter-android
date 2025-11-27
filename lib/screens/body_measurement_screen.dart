@@ -132,11 +132,11 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-        title: const Text('体重・体脂肪率'),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: Colors.white,
-      ),
-      body: _isLoading
+          title: const Text('体重・体脂肪率'),
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: Colors.white,
+        ),
+        body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -228,6 +228,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                 ],
               ),
             ),
+      ),
     );
   }
 
@@ -356,7 +357,6 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
             },
           ),
         ],
-      ),
       ),
     );
   }

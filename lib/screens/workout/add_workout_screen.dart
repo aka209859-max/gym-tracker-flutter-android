@@ -928,10 +928,10 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: AppBar(
-        title: const Text('トレーニング記録'),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: Colors.white,
-        actions: [
+          title: const Text('トレーニング記録'),
+          backgroundColor: theme.colorScheme.primary,
+          foregroundColor: Colors.white,
+          actions: [
           if (_isResting) ...[
             Center(
               child: Padding(
@@ -954,8 +954,8 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
               tooltip: '休憩時間設定',
             ),
         ],
-      ),
-      body: SingleChildScrollView(
+        ),
+        body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1188,6 +1188,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
             ],
           ],
         ),
+      ),
       ),
     );
   }
@@ -1604,8 +1605,9 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
             ],
           ),
         ],
-      ),
-      ),
-    );
+        ), // Column
+        ), // SingleChildScrollView
+      ), // Scaffold
+    ); // GestureDetector
   }
 }
