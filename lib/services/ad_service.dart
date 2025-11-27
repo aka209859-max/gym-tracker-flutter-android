@@ -28,27 +28,27 @@ class AdService {
 
   /// バナー広告ID取得（iOS専用）
   static String get bannerAdUnitId {
-    // デバッグモード時はテスト広告を表示
-    if (kDebugMode) {
-      return 'ca-app-pub-3940256099942544/2934735716'; // Googleテスト用バナー広告ID
+    // ✅ 修正: kReleaseMode を使用してリリースビルドでは必ず本番広告を表示
+    if (kReleaseMode) {
+      // iOS本番広告ID（TestFlight、App Store）
+      return 'ca-app-pub-2887531479031819/1682429555';
     }
     
-    // iOS本番広告ID（無料プラン用）
-    // AdMobコンソールで作成した実際のバナー広告ユニットIDに置き換えてください
-    return 'ca-app-pub-2887531479031819/1682429555';
+    // デバッグビルドのみテスト広告を表示
+    return 'ca-app-pub-3940256099942544/2934735716'; // Googleテスト用バナー広告ID
   }
 
   /// インタースティシャル広告ID取得（iOS専用）
   static String get interstitialAdUnitId {
-    // デバッグモード時はテスト広告を表示
-    if (kDebugMode) {
-      return 'ca-app-pub-3940256099942544/4411468910'; // Googleテスト用インタースティシャル広告ID
+    // ✅ 修正: kReleaseMode を使用
+    if (kReleaseMode) {
+      // iOS本番インタースティシャル広告ID
+      // 現在は未使用のため、テストIDを使用
+      return 'ca-app-pub-3940256099942544/4411468910'; // TODO: 本番IDに要変更
     }
     
-    // iOS本番インタースティシャル広告ID
-    // AdMobコンソールで作成した実際のインタースティシャル広告ユニットIDに置き換えてください
-    // 現在は未作成のため、テストIDを使用
-    return 'ca-app-pub-3940256099942544/4411468910'; // TODO: 本番IDに要変更
+    // デバッグビルドのみテスト広告を表示
+    return 'ca-app-pub-3940256099942544/4411468910'; // Googleテスト用インタースティシャル広告ID
   }
 
   /// リワード広告ID取得（iOS専用）

@@ -11,9 +11,10 @@ class RewardAdService {
   final AICreditService _creditService = AICreditService();
   
   // AdMob Unit IDs（iOS本番設定完了✅）
-  static const String _rewardAdUnitId = kDebugMode
-      ? 'ca-app-pub-3940256099942544/5224354917' // テスト用（開発時）
-      : 'ca-app-pub-2887531479031819/6163055454'; // 本番用（iOS - AI使用回数+1）
+  // ✅ 修正: kReleaseMode を使用してリリースビルドでは必ず本番広告を表示
+  static const String _rewardAdUnitId = kReleaseMode
+      ? 'ca-app-pub-2887531479031819/6163055454' // 本番用（iOS - AI使用回数+1）
+      : 'ca-app-pub-3940256099942544/5224354917'; // テスト用（開発時）
   
   RewardedAd? _rewardedAd;
   bool _isAdLoading = false;
