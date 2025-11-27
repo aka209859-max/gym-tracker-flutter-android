@@ -130,6 +130,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.translucent,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('体重・体脂肪率'),

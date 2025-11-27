@@ -127,6 +127,7 @@ class _PersonalFactorsScreenState extends State<PersonalFactorsScreen> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.translucent,
       child: Scaffold(
         appBar: AppBar(
         title: const Text('🔬 個人要因設定'),

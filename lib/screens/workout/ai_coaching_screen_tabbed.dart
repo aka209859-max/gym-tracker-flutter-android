@@ -191,6 +191,7 @@ class _AICoachingScreenTabbedState extends State<AICoachingScreenTabbed>
   Widget _buildMainContent(User user) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.translucent,
       child: Scaffold(
         appBar: AppBar(
         title: const Row(

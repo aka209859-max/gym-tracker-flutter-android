@@ -93,6 +93,7 @@ class _OneRMCalculatorTabState extends State<_OneRMCalculatorTab> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.translucent,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -486,6 +487,7 @@ class _PlateCalculatorTabState extends State<_PlateCalculatorTab> {
     
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.translucent,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
