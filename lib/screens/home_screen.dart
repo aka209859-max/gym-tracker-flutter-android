@@ -24,6 +24,8 @@ import '../models/user_profile.dart';
 import '../widgets/workout_share_card.dart';
 import '../widgets/workout_share_image.dart';
 import '../providers/navigation_provider.dart';
+import '../services/admob_service.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -60,6 +62,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   DateTimeRange? _dateRangeFilter;
   List<Map<String, dynamic>> _filteredWorkouts = [];
   
+  // 📱 AdMob広告関連
+  final AdMobService _adMobService = AdMobService();
+  BannerAd? _bannerAd;
+  bool _isAdLoaded = false;
+  
   // Task 16: バッジシステム
   final AchievementService _achievementService = AchievementService();
   Map<String, int> _badgeStats = {'total': 0, 'unlocked': 0, 'locked': 0};
@@ -94,6 +101,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _loadActiveGoals();
       _loadStatistics(); // 統計データを読み込む
     });
+    
+    // 📱 バナー広告をロード
+    _loadBannerAd();
+  }
+  
+  /// バナー広告を読み込む
+  Future<void> _loadBannerAd() async {
+    await _adMobService.loadBannerAd(
+      onAdLoaded: (ad) {
+        if (mounted) {
+          setState(() {
+            _bannerAd = ad;
+            _isAdLoaded = true;
+          });
+        }
+      },
+      onAdFailedToLoad: (ad, error) {
+        debugPrint('バナー広告読み込み失敗: $error');
+      },
+    );
   }
 
   @override
@@ -171,6 +198,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
+    _bannerAd?.dispose();  // 📱 バナー広告を破棄
     super.dispose();
   }
   
@@ -603,6 +631,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             
             // 月間サマリー統計
             _buildMonthlySummary(theme),
+            
+            // 📱 バナー広告表示（無料プランのみ）
+            if (_isAdLoaded && _bannerAd != null)
+              Container(
+                margin: const EdgeInsets.only(top: 16, bottom: 16),
+                alignment: Alignment.center,
+                width: _bannerAd!.size.width.toDouble(),
+                height: _bannerAd!.size.height.toDouble(),
+                child: AdWidget(ad: _bannerAd!),
+              ),
             
             const SizedBox(height: 80), // FAB用のスペース確保
           ],
