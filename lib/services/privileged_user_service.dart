@@ -29,7 +29,10 @@ class PrivilegedUserService {
           .get();
 
       if (doc.exists) {
-        return PrivilegedUserInfo.fromFirestore(doc.data()!, doc.id);
+        final data = doc.data();
+        if (data != null) {
+          return PrivilegedUserInfo.fromFirestore(data, doc.id);
+        }
       }
 
       // 開発者UIDチェック
@@ -145,8 +148,11 @@ class PrivilegedUserService {
       if (!inviteDoc.exists) {
         throw Exception('無効な招待コードです');
       }
-
-      final inviteData = inviteDoc.data()!;
+      
+      final inviteData = inviteDoc.data();
+      if (inviteData == null) {
+        throw Exception('招待コードのデータが見つかりません');
+      }
       
       // 既に使用済みチェック
       if (inviteData['is_used'] == true) {

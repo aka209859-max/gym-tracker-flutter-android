@@ -21,8 +21,11 @@ class TrainingPartnerService {
         .get();
 
     if (!doc.exists) return null;
+    
+    final data = doc.data();
+    if (data == null) return null;
 
-    return TrainingPartner.fromFirestore(doc.data()!);
+    return TrainingPartner.fromFirestore(data);
   }
 
   /// プロフィールを作成・更新
@@ -99,8 +102,11 @@ class TrainingPartnerService {
         .get();
 
     if (!doc.exists) return null;
+    
+    final data = doc.data();
+    if (data == null) return null;
 
-    return TrainingPartner.fromFirestore(doc.data()!);
+    return TrainingPartner.fromFirestore(data);
   }
 
   /// ブロック済みユーザーリストを取得

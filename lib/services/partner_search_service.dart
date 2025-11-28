@@ -18,8 +18,11 @@ class PartnerSearchService {
     try {
       final doc = await _firestore.collection('partner_profiles').doc(userId).get();
       if (!doc.exists) return null;
+      
+      final data = doc.data();
+      if (data == null) return null;
 
-      return PartnerProfile.fromFirestore(doc.data()!, userId);
+      return PartnerProfile.fromFirestore(data, userId);
     } catch (e) {
       throw Exception('プロフィール取得エラー: $e');
     }
@@ -331,8 +334,11 @@ class PartnerSearchService {
     try {
       final doc = await _firestore.collection('partner_profiles').doc(userId).get();
       if (!doc.exists) return null;
+      
+      final data = doc.data();
+      if (data == null) return null;
 
-      return PartnerProfile.fromFirestore(doc.data()!, userId);
+      return PartnerProfile.fromFirestore(data, userId);
     } catch (e) {
       throw Exception('プロフィール取得エラー: $e');
     }

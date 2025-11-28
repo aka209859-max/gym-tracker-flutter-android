@@ -538,7 +538,10 @@ class _SimpleWorkoutDetailScreenState extends State<SimpleWorkoutDetailScreen> {
         throw Exception('ワークアウトが見つかりません');
       }
       
-      final data = doc.data()!;
+      final data = doc.data();
+      if (data == null) {
+        throw Exception('ワークアウトデータが空です');
+      }
       
       // 🔍 デバッグ: データ構造を確認
       print('🔍 Firestore data keys: ${data.keys.toList()}');
@@ -633,15 +636,18 @@ class _SimpleWorkoutDetailScreenState extends State<SimpleWorkoutDetailScreen> {
         // 画面を再読み込み
         final updatedDoc = await docRef.get();
         if (updatedDoc.exists) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SimpleWorkoutDetailScreen(
-                workoutId: widget.workoutId,
-                workoutData: updatedDoc.data()! as Map<String, dynamic>,
+          final updatedData = updatedDoc.data();
+          if (updatedData != null) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SimpleWorkoutDetailScreen(
+                  workoutId: widget.workoutId,
+                  workoutData: updatedData as Map<String, dynamic>,
+                ),
               ),
-            ),
-          );
+            );
+          }
         }
       }
     }
@@ -689,15 +695,18 @@ class _SimpleWorkoutDetailScreenState extends State<SimpleWorkoutDetailScreen> {
         // 画面を再読み込み
         final updatedDoc = await docRef.get();
         if (updatedDoc.exists) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SimpleWorkoutDetailScreen(
-                workoutId: widget.workoutId,
-                workoutData: updatedDoc.data()! as Map<String, dynamic>,
+          final updatedData = updatedDoc.data();
+          if (updatedData != null) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SimpleWorkoutDetailScreen(
+                  workoutId: widget.workoutId,
+                  workoutData: updatedData as Map<String, dynamic>,
+                ),
               ),
-            ),
-          );
+            );
+          }
         }
       }
     }
