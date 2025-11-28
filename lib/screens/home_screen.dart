@@ -458,11 +458,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
       print('📊 全記録件数: ${querySnapshot.docs.length}');
 
-      // 選択した日の開始時刻と終了時刻を取得
-      final startOfDay = DateTime(_selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
-      final endOfDay = startOfDay.add(const Duration(days: 1));
+      // 選択した日（年・月・日のみ）
+      final selectedDate = DateTime(_selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
 
-      print('🕐 フィルタ範囲: $startOfDay 〜 $endOfDay');
+      print('🕐 選択日: $selectedDate (${selectedDate.year}/${selectedDate.month}/${selectedDate.day})');
 
       // メモリ内でフィルタリング
       final allWorkouts = querySnapshot.docs.map((doc) {
@@ -477,11 +476,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         };
       }).toList();
 
-      // 選択した日のデータだけをフィルタ
+      print('📊 全ワークアウト詳細:');
+      for (var i = 0; i < allWorkouts.length; i++) {
+        final workout = allWorkouts[i];
+        final workoutDate = workout['date'] as DateTime;
+        final normalizedDate = DateTime(workoutDate.year, workoutDate.month, workoutDate.day);
+        print('   [$i] date=${workoutDate.toIso8601String()}, normalized=${normalizedDate.year}/${normalizedDate.month}/${normalizedDate.day}, muscle=${workout['muscle_group']}');
+      }
+
+      // 選択した日のデータだけをフィルタ（時刻を無視して年月日のみで比較）
       final filteredWorkouts = allWorkouts.where((workout) {
         final workoutDate = workout['date'] as DateTime;
-        return workoutDate.isAfter(startOfDay.subtract(const Duration(seconds: 1))) &&
-               workoutDate.isBefore(endOfDay);
+        // 時刻を無視して日付のみで比較
+        final normalizedWorkoutDate = DateTime(workoutDate.year, workoutDate.month, workoutDate.day);
+        final isMatch = normalizedWorkoutDate.isAtSameMomentAs(selectedDate);
+        
+        if (!isMatch) {
+          print('   ⚠️ 除外: ${workoutDate.toIso8601String()} (normalized: ${normalizedWorkoutDate.year}/${normalizedWorkoutDate.month}/${normalizedWorkoutDate.day})');
+        }
+        
+        return isMatch;
       }).toList();
 
       // 日付で降順ソート
