@@ -11,10 +11,11 @@ class RewardAdService {
   final AICreditService _creditService = AICreditService();
   
   // AdMob Unit IDs（iOS本番設定完了✅）
-  // ✅ 修正: kReleaseMode を使用してリリースビルドでは必ず本番広告を表示
-  static const String _rewardAdUnitId = kReleaseMode
-      ? 'ca-app-pub-2887531479031819/6163055454' // 本番用（iOS - AI使用回数+1）
-      : 'ca-app-pub-3940256099942544/5224354917'; // テスト用（開発時）
+  // ✅ 本番広告ID（常に本番IDを使用 - 収益化のため）
+  static const String _rewardAdUnitId = 'ca-app-pub-2887531479031819/6163055454'; // 本番用（iOS - AI使用回数+1）
+  
+  // ❌ テスト広告は削除（収益化のため常に本番広告を表示）
+  // static const String _testRewardAdUnitId = 'ca-app-pub-3940256099942544/5224354917';
   
   RewardedAd? _rewardedAd;
   bool _isAdLoading = false;
@@ -24,21 +25,19 @@ class RewardAdService {
   Future<void> initialize() async {
     // Web環境ではAdMobをスキップ
     if (kIsWeb) {
-      if (kDebugMode) {
-        debugPrint('🌐 Web環境のためAdMob初期化をスキップ');
-      }
+      debugPrint('🌐 Web環境のためAdMob初期化をスキップ');
       return;
     }
     
     try {
+      debugPrint('🎬 リワード広告初期化開始...');
+      debugPrint('🎬 リワード広告ID: $_rewardAdUnitId');
+      debugPrint('🎬 ビルドモード: ${kReleaseMode ? "Release" : "Debug"}');
+      
       await MobileAds.instance.initialize();
-      if (kDebugMode) {
-        debugPrint('✅ AdMob SDK initialized');
-      }
+      debugPrint('✅ リワード広告SDK初期化成功');
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ AdMob initialization error: $e');
-      }
+      debugPrint('❌ リワード広告初期化エラー: $e');
     }
   }
   
@@ -56,9 +55,8 @@ class RewardAdService {
         request: const AdRequest(),
         rewardedAdLoadCallback: RewardedAdLoadCallback(
           onAdLoaded: (ad) {
-            if (kDebugMode) {
-              debugPrint('✅ Rewarded ad loaded');
-            }
+            debugPrint('✅ リワード広告読み込み成功');
+            debugPrint('   広告ID: $_rewardAdUnitId');
             _rewardedAd = ad;
             _isAdReady = true;
             _isAdLoading = false;
@@ -67,13 +65,12 @@ class RewardAdService {
             _setupAdCallbacks(ad);
           },
           onAdFailedToLoad: (error) {
-            if (kDebugMode) {
-              debugPrint('❌ [AdMob] リワード広告読み込み失敗');
-              debugPrint('   エラーコード: ${error.code}');
-              debugPrint('   エラー内容: ${error.message}');
-              debugPrint('   ドメイン: ${error.domain}');
-              debugPrint('   レスポンス情報: ${error.responseInfo}');
-            }
+            debugPrint('❌ [AdMob] リワード広告読み込み失敗');
+            debugPrint('   広告ID: $_rewardAdUnitId');
+            debugPrint('   エラーコード: ${error.code}');
+            debugPrint('   エラー内容: ${error.message}');
+            debugPrint('   ドメイン: ${error.domain}');
+            debugPrint('   レスポンス情報: ${error.responseInfo}');
             _isAdLoading = false;
             _isAdReady = false;
           },

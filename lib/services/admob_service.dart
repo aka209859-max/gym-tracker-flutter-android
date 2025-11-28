@@ -15,10 +15,11 @@ class AdMobService {
   final SubscriptionService _subscriptionService = SubscriptionService();
   
   // iOS AdMob広告ユニットID
-  // ✅ 修正: kReleaseMode を使用してリリースビルドでは必ず本番広告を表示
-  static const String _iosBannerAdUnitId = kReleaseMode
-      ? 'ca-app-pub-2887531479031819/1682429555' // 本番用（TestFlight、App Store）
-      : 'ca-app-pub-3940256099942544/2934735716'; // テスト用（開発中）
+  // ✅ 本番広告ID（常に本番IDを使用）
+  static const String _iosBannerAdUnitId = 'ca-app-pub-2887531479031819/1682429555'; // 本番用（iOS）
+  
+  // ❌ テスト広告は削除（収益化のため常に本番広告を表示）
+  // static const String _testBannerAdUnitId = 'ca-app-pub-3940256099942544/2934735716';
   
   BannerAd? _bannerAd;
   bool _isAdLoaded = false;
@@ -30,28 +31,22 @@ class AdMobService {
 
     // Web環境ではAdMobをスキップ（MissingPluginException防止）
     if (kIsWeb) {
-      if (kDebugMode) {
-        debugPrint('🌐 Web環境のためAdMob初期化をスキップ');
-      }
+      debugPrint('🌐 Web環境のためAdMob初期化をスキップ');
       _isInitialized = true;
       return;
     }
 
     try {
-      if (kDebugMode) {
-        debugPrint('📱 AdMob初期化開始...');
-      }
+      debugPrint('📱 AdMob初期化開始...');
+      debugPrint('📱 バナー広告ID: $_iosBannerAdUnitId');
+      debugPrint('📱 ビルドモード: ${kReleaseMode ? "Release" : "Debug"}');
 
       await MobileAds.instance.initialize();
       _isInitialized = true;
 
-      if (kDebugMode) {
-        debugPrint('✅ AdMob初期化成功');
-      }
+      debugPrint('✅ AdMob初期化成功');
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('❌ AdMob初期化エラー: $e');
-      }
+      debugPrint('❌ AdMob初期化エラー: $e');
     }
   }
 
@@ -95,20 +90,18 @@ class AdMobService {
         request: const AdRequest(),
         listener: BannerAdListener(
           onAdLoaded: (Ad ad) {
-            if (kDebugMode) {
-              debugPrint('✅ バナー広告読み込み成功');
-            }
+            debugPrint('✅ バナー広告読み込み成功');
+            debugPrint('   広告ID: $bannerAdUnitId');
             _isAdLoaded = true;
             onAdLoaded(ad as BannerAd);
           },
           onAdFailedToLoad: (Ad ad, LoadAdError error) {
-            if (kDebugMode) {
-              debugPrint('❌ [AdMob] バナー広告読み込み失敗');
-              debugPrint('   エラーコード: ${error.code}');
-              debugPrint('   エラー内容: ${error.message}');
-              debugPrint('   ドメイン: ${error.domain}');
-              debugPrint('   レスポンス情報: ${error.responseInfo}');
-            }
+            debugPrint('❌ [AdMob] バナー広告読み込み失敗');
+            debugPrint('   広告ID: $bannerAdUnitId');
+            debugPrint('   エラーコード: ${error.code}');
+            debugPrint('   エラー内容: ${error.message}');
+            debugPrint('   ドメイン: ${error.domain}');
+            debugPrint('   レスポンス情報: ${error.responseInfo}');
             _isAdLoaded = false;
             ad.dispose();
             if (onAdFailedToLoad != null) {
