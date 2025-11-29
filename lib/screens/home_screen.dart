@@ -26,6 +26,8 @@ import '../widgets/workout_share_image.dart';
 import '../providers/navigation_provider.dart';
 import '../services/admob_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../services/paywall_trigger_service.dart';
+import '../widgets/paywall_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -100,10 +102,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _loadBadgeStats();
       _loadActiveGoals();
       _loadStatistics(); // 統計データを読み込む
+      
+      // 🎯 Day 7ペイウォールトリガーチェック
+      _checkDay7Paywall();
     });
     
     // 📱 バナー広告をロード
     _loadBannerAd();
+  }
+  
+  /// Day 7ペイウォールをチェックして表示
+  Future<void> _checkDay7Paywall() async {
+    // initState完了後に遅延実行（UIが安定してから表示）
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    if (!mounted) return;
+    
+    final paywallService = PaywallTriggerService();
+    final shouldShow = await paywallService.shouldShowDay7Paywall();
+    
+    if (shouldShow && mounted) {
+      await PaywallDialog.show(context, PaywallType.day7Achievement);
+      await paywallService.markDay7PaywallShown();
+    }
   }
   
   /// バナー広告を読み込む
