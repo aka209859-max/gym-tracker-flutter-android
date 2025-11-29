@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/subscription_service.dart';
+import '../services/reward_ad_service.dart';
+import '../services/ai_credit_service.dart';
 import '../screens/subscription_screen.dart';
 import '../screens/ai_addon_purchase_screen.dart';
 
@@ -90,6 +92,10 @@ class PaywallDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            
+            // オプション0: 動画視聴で1回分ゲット（NEW!）
+            _buildRewardAdOption(context),
+            const SizedBox(height: 12),
             
             // オプション1: AI追加パック（お得！）
             _buildOptionCard(
@@ -527,6 +533,66 @@ class PaywallDialog extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// リワード広告オプション（動画視聴で1回分ゲット）
+  Widget _buildRewardAdOption(BuildContext context) {
+    final rewardAdService = RewardAdService();
+    final aiCreditService = AICreditService();
+    
+    return _buildOptionCard(
+      context,
+      title: '動画を見て1回分ゲット',
+      subtitle: '30秒の動画視聴でAI機能1回追加',
+      badge: '無料!',
+      badgeColor: Colors.blue,
+      icon: Icons.play_circle_fill,
+      onTap: () async {
+        // 広告がまだ準備できていない場合はロード試行
+        if (!rewardAdService.isAdReady()) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('広告を準備中です...しばらくお待ちください'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          await rewardAdService.loadRewardedAd();
+          return;
+        }
+        
+        // リワード広告を表示
+        final success = await rewardAdService.showRewardedAd();
+        
+        if (success) {
+          // 成功時の処理
+          if (!context.mounted) return;
+          Navigator.of(context).pop();
+          
+          // AI残回数取得
+          final status = await aiCreditService.getAIUsageStatus();
+          
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '🎁 AI機能1回分を獲得しました！(残り${status['remaining']}回)',
+              ),
+              duration: const Duration(seconds: 3),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          // 失敗時の処理
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('広告の表示に失敗しました。もう一度お試しください。'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      },
     );
   }
 
