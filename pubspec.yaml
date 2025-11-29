@@ -72,6 +72,10 @@ dependencies:
   google_mobile_ads: 5.3.1  # Google AdMob ads integration for monetization
   
   app_tracking_transparency: ^2.0.6
+  
+  # Push Notifications (Local notifications for training reminders)
+  flutter_local_notifications: ^18.0.1  # Local push notifications
+  timezone: ^0.9.4  # Timezone support for scheduled notifications
 
 dev_dependencies:
   flutter_test:

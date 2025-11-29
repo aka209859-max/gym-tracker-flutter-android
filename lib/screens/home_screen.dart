@@ -31,6 +31,7 @@ import '../widgets/paywall_dialog.dart';
 import '../services/ai_credit_service.dart';
 import '../services/subscription_service.dart';
 
+import '../services/reminder_service.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -86,6 +87,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final FatigueManagementService _fatigueService = FatigueManagementService();
   final AdvancedFatigueService _advancedFatigueService = AdvancedFatigueService();
   
+  // 🔔 リマインダーシステム
+  final ReminderService _reminderService = ReminderService();
+  bool _show48HourReminder = false;
+  bool _show7DayInactiveReminder = false;
+  
   // 詳細セクションの表示/非表示状態
   bool _isAdvancedSectionsExpanded = false;
   
@@ -107,6 +113,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       
       // 🎯 Day 7ペイウォールトリガーチェック
       _checkDay7Paywall();
+      
+      // 🔔 リマインダーチェック
+      _checkReminders();
     });
     
     // 📱 バナー広告をロード
@@ -127,6 +136,130 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       await PaywallDialog.show(context, PaywallType.day7Achievement);
       await paywallService.markDay7PaywallShown();
     }
+  }
+  
+  /// 🔔 リマインダーをチェック
+  Future<void> _checkReminders() async {
+    await Future.delayed(const Duration(milliseconds: 800));
+    
+    if (!mounted) return;
+    
+    // 7日連続達成リマインダーをチェック（ダイアログ）
+    final shouldShow7DayStreak = await _reminderService.shouldShow7DayStreakReminder();
+    if (shouldShow7DayStreak && mounted) {
+      await _show7DayStreakDialog();
+      await _reminderService.markStreak7DayReminderShown();
+      return; // ダイアログ表示したら他のリマインダーは表示しない
+    }
+    
+    // 48時間経過リマインダーをチェック（カード表示）
+    final shouldShow48Hour = await _reminderService.shouldShow48HourReminder();
+    
+    // 7日間未記録リマインダーをチェック（カード表示）
+    final shouldShow7DayInactive = await _reminderService.shouldShow7DayInactiveReminder();
+    
+    if (mounted) {
+      setState(() {
+        _show48HourReminder = shouldShow48Hour;
+        _show7DayInactiveReminder = shouldShow7DayInactive;
+      });
+      
+      // 7日間未記録リマインダーを表示済みとしてマーク
+      if (shouldShow7DayInactive) {
+        await _reminderService.markInactive7DayReminderShown();
+      }
+    }
+  }
+  
+  /// 7日連続達成ダイアログを表示
+  Future<void> _show7DayStreakDialog() async {
+    await showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.orange.shade50,
+                Colors.deepOrange.shade50,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 🎉 アイコン
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.celebration,
+                  size: 48,
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // タイトル
+              const Text(
+                '7日連続達成！',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(height: 12),
+              
+              // メッセージ
+              const Text(
+                'おめでとうございます！\n7日間連続でトレーニングを記録しました。\nこの調子で続けましょう！💪',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // 閉じるボタン
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'ありがとう！',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
   
   /// バナー広告を読み込む
@@ -629,6 +762,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             
             const SizedBox(height: 16),
             
+            // 🔔 リマインダーカード
+            if (_show48HourReminder)
+              _build48HourReminderCard(theme),
+            if (_show7DayInactiveReminder)
+              _build7DayInactiveReminderCard(theme),
+            
             // トグルボタン（疲労管理・目標・アクションの表示/非表示切替）
             _buildAdvancedSectionsToggle(theme),
             
@@ -1040,6 +1179,152 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
         );
       },
+    );
+  }
+  
+  /// 🔔 48時間経過リマインダーカード
+  Widget _build48HourReminderCard(ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade50, Colors.lightBlue.shade100],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade100,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.fitness_center,
+              color: Colors.blue,
+              size: 32,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'トレーニングのお知らせ 💪',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  '前回のトレーニングから2日経過しました。\n今日もトレーニングしませんか？',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.black87,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 20),
+            onPressed: () {
+              setState(() {
+                _show48HourReminder = false;
+              });
+            },
+            color: Colors.grey,
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// 🔔 7日間未記録リマインダーカード
+  Widget _build7DayInactiveReminderCard(ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.amber.shade50, Colors.orange.shade100],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orange.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade100,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.restart_alt,
+              color: Colors.orange,
+              size: 32,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'お久しぶりです 🏋️',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'しばらくトレーニングを記録していませんね。\nまた始めませんか？',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.black87,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 20),
+            onPressed: () {
+              setState(() {
+                _show7DayInactiveReminder = false;
+              });
+            },
+            color: Colors.grey,
+          ),
+        ],
+      ),
     );
   }
   
