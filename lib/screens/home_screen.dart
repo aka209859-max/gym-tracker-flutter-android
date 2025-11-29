@@ -32,6 +32,8 @@ import '../services/ai_credit_service.dart';
 import '../services/subscription_service.dart';
 
 import '../services/reminder_service.dart';
+import '../services/habit_formation_service.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -92,6 +94,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   bool _show48HourReminder = false;
   bool _show7DayInactiveReminder = false;
   
+  // 🔥 習慣形成システム
+  final HabitFormationService _habitService = HabitFormationService();
+  int _currentStreak = 0;
+  Map<String, int> _weeklyProgress = {'current': 0, 'goal': 3};
+  List<Map<String, dynamic>> _topTrainingDays = [];
+  
   // 詳細セクションの表示/非表示状態
   bool _isAdvancedSectionsExpanded = false;
   
@@ -116,6 +124,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       
       // 🔔 リマインダーチェック
       _checkReminders();
+      
+      // 🔥 習慣形成データ読み込み
+      _loadHabitData();
     });
     
     // 📱 バナー広告をロード
@@ -240,6 +251,135 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'ありがとう！',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  /// 🔥 習慣形成データを読み込む
+  Future<void> _loadHabitData() async {
+    await Future.delayed(const Duration(milliseconds: 1000));
+    
+    if (!mounted) return;
+    
+    // 連続トレーニング日数を取得
+    final streak = await _habitService.getCurrentStreak();
+    
+    // 今週の進捗を取得
+    final weeklyProgress = await _habitService.getWeeklyProgress();
+    
+    // 最もトレーニングしている曜日TOP3を取得
+    final topDays = await _habitService.getTopTrainingDays();
+    
+    if (mounted) {
+      setState(() {
+        _currentStreak = streak;
+        _weeklyProgress = weeklyProgress;
+        _topTrainingDays = topDays;
+      });
+      
+      // マイルストーン達成チェック
+      await _checkMilestone();
+    }
+  }
+  
+  /// マイルストーン達成をチェックして表示
+  Future<void> _checkMilestone() async {
+    if (!mounted) return;
+    
+    final milestone = await _habitService.checkMilestone();
+    if (milestone != null && mounted) {
+      await _showMilestoneDialog(milestone);
+      await _habitService.markMilestoneShown(milestone);
+    }
+  }
+  
+  /// マイルストーン達成ダイアログを表示
+  Future<void> _showMilestoneDialog(HabitMilestone milestone) async {
+    await showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.purple.shade50,
+                Colors.deepPurple.shade50,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 🏆 トロフィーアイコン
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.emoji_events,
+                  size: 48,
+                  color: Colors.amber,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // タイトル
+              Text(
+                milestone.message,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.purple,
+                ),
+              ),
+              const SizedBox(height: 12),
+              
+              // メッセージ
+              const Text(
+                'すごい！マイルストーン達成です！\nこの調子で続けていきましょう！💪',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // 閉じるボタン
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -768,6 +908,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             if (_show7DayInactiveReminder)
               _build7DayInactiveReminderCard(theme),
             
+            // 🔥 習慣形成サポートカード
+            if (_currentStreak > 0 || _weeklyProgress['current']! > 0)
+              _buildHabitFormationCard(theme),
+            
             // トグルボタン（疲労管理・目標・アクションの表示/非表示切替）
             _buildAdvancedSectionsToggle(theme),
             
@@ -823,6 +967,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             await _loadWorkoutsForSelectedDay();
             await _loadWorkoutDates(); // カレンダーのマーカーも更新
             await _loadStatistics(); // 統計データも即座に更新
+            await _loadHabitData(); // 🔥 習慣形成データも更新
           }
         },
         icon: const Icon(Icons.add, size: 24),
@@ -1323,6 +1468,220 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             },
             color: Colors.grey,
           ),
+        ],
+      ),
+    );
+  }
+  
+  /// 🔥 習慣形成サポートカード
+  Widget _buildHabitFormationCard(ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.green.shade50, Colors.teal.shade100],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.local_fire_department,
+                  color: Colors.orange,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  '🔥 あなたの習慣',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // 連続記録ストリーク
+          if (_currentStreak > 0) ...[
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade100,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.local_fire_department,
+                        size: 16,
+                        color: Colors.deepOrange,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '連続 $_currentStreak 日',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepOrange,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '${_currentStreak}日連続記録中！',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+          
+          // 週間進捗
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '今週のトレーニング',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          '${_weeklyProgress['current']}',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                        Text(
+                          ' / ${_weeklyProgress['goal']}回',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // 進捗バー
+              Expanded(
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: (_weeklyProgress['current']! /
+                                _weeklyProgress['goal']!)
+                            .clamp(0.0, 1.0),
+                        backgroundColor: Colors.green.shade100,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.green.shade600,
+                        ),
+                        minHeight: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${((_weeklyProgress['current']! / _weeklyProgress['goal']!) * 100).clamp(0, 100).toInt()}% 達成',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+          // よくトレーニングする曜日
+          if (_topTrainingDays.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Divider(height: 1, color: Colors.green),
+            const SizedBox(height: 12),
+            const Text(
+              '💡 あなたのトレーニングパターン',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: _topTrainingDays.take(3).map((day) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.green.shade200,
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    '${day['weekday']} (${day['count']}回)',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
         ],
       ),
     );
