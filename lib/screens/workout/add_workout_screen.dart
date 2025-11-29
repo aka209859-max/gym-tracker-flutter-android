@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../debug_log_screen.dart';
 
 // SetType enum
 enum SetType {
@@ -883,11 +884,11 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           now.minute,
         );
 
-        print('💾 [DEBUG] ワークアウト保存開始');
-        print('   User ID: ${user.uid}');
-        print('   筋肉グループ: $_selectedMuscleGroup');
-        print('   日付: $_selectedDate');
-        print('   セット数: ${_sets.length}');
+        DebugLogger.instance.log('💾 ワークアウト保存開始');
+        DebugLogger.instance.log('   User ID: ${user.uid}');
+        DebugLogger.instance.log('   筋肉グループ: $_selectedMuscleGroup');
+        DebugLogger.instance.log('   日付: $_selectedDate');
+        DebugLogger.instance.log('   セット数: ${_sets.length}');
         
         final workoutDoc = await FirebaseFirestore.instance.collection('workout_logs').add({
           'user_id': user.uid,
@@ -907,7 +908,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           'created_at': FieldValue.serverTimestamp(),
         });
         
-        print('✅ [DEBUG] ワークアウト保存成功: Document ID = ${workoutDoc.id}');
+        DebugLogger.instance.log('✅ ワークアウト保存成功: Document ID = ${workoutDoc.id}');
 
         if (_memoController.text.isNotEmpty) {
           await FirebaseFirestore.instance.collection('workout_notes').add({
@@ -930,9 +931,9 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         );
       }
     } catch (e, stackTrace) {
-      print('❌ [DEBUG] ワークアウト保存エラー');
-      print('   エラー: $e');
-      print('   スタックトレース: $stackTrace');
+      DebugLogger.instance.log('❌ ワークアウト保存エラー');
+      DebugLogger.instance.log('   エラー: $e');
+      DebugLogger.instance.log('   スタックトレース: $stackTrace');
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

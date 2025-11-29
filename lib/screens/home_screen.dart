@@ -33,6 +33,7 @@ import '../services/subscription_service.dart';
 
 import '../services/reminder_service.dart';
 import '../services/habit_formation_service.dart';
+import 'debug_log_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -774,25 +775,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         return;
       }
 
-      print('👤 [DEBUG] User ID: ${user.uid}');
-      print('📧 [DEBUG] User Email: ${user.email}');
+      DebugLogger.instance.log('👤 User ID: ${user.uid}');
+      DebugLogger.instance.log('📧 User Email: ${user.email}');
 
       // シンプルなクエリ（インデックス不要）
-      print('🔍 [DEBUG] ユーザーの全記録を取得中...');
+      DebugLogger.instance.log('🔍 ユーザーの全記録を取得中...');
 
       final querySnapshot = await FirebaseFirestore.instance
           .collection('workout_logs')
           .where('user_id', isEqualTo: user.uid)
           .get(const GetOptions(source: Source.server));
 
-      print('📊 [DEBUG] 全記録件数: ${querySnapshot.docs.length}');
+      DebugLogger.instance.log('📊 全記録件数: ${querySnapshot.docs.length}');
       
       if (querySnapshot.docs.isEmpty) {
-        print('⚠️ [DEBUG] このユーザーの記録が見つかりません');
-        print('   考えられる原因:');
-        print('   1. まだトレーニングを記録していない');
-        print('   2. Firestoreセキュリティルールで読み込みが拒否されている');
-        print('   3. 異なるユーザーアカウントでログインしている');
+        DebugLogger.instance.log('⚠️ このユーザーの記録が見つかりません');
+        DebugLogger.instance.log('   考えられる原因:');
+        DebugLogger.instance.log('   1. まだトレーニングを記録していない');
+        DebugLogger.instance.log('   2. Firestoreセキュリティルールで読み込みが拒否されている');
+        DebugLogger.instance.log('   3. 異なるユーザーアカウントでログインしている');
       }
 
       // 選択した日（年・月・日のみ）
@@ -5234,6 +5235,37 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).pushNamed('/personal-factors');
+              },
+            ),
+            // メニュー項目3: デバッグログ（🔧開発者向け）
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.bug_report,
+                  color: Colors.orange.shade700,
+                ),
+              ),
+              title: const Text(
+                'デバッグログ',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              subtitle: const Text('アプリの動作ログを確認（問題調査用）'),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const DebugLogScreen(),
+                  ),
+                );
               },
             ),
             const SizedBox(height: 10),
