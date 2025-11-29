@@ -883,6 +883,12 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           now.minute,
         );
 
+        print('💾 [DEBUG] ワークアウト保存開始');
+        print('   User ID: ${user.uid}');
+        print('   筋肉グループ: $_selectedMuscleGroup');
+        print('   日付: $_selectedDate');
+        print('   セット数: ${_sets.length}');
+        
         final workoutDoc = await FirebaseFirestore.instance.collection('workout_logs').add({
           'user_id': user.uid,
           'muscle_group': _selectedMuscleGroup,
@@ -900,6 +906,8 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           }).toList(),
           'created_at': FieldValue.serverTimestamp(),
         });
+        
+        print('✅ [DEBUG] ワークアウト保存成功: Document ID = ${workoutDoc.id}');
 
         if (_memoController.text.isNotEmpty) {
           await FirebaseFirestore.instance.collection('workout_notes').add({
@@ -921,10 +929,18 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           const SnackBar(content: Text('トレーニングを保存しました')),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ [DEBUG] ワークアウト保存エラー');
+      print('   エラー: $e');
+      print('   スタックトレース: $stackTrace');
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('保存エラー: $e')),
+          SnackBar(
+            content: Text('保存エラー: $e'),
+            duration: const Duration(seconds: 5),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }

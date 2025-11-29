@@ -774,17 +774,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         return;
       }
 
-      print('👤 User ID: ${user.uid}');
+      print('👤 [DEBUG] User ID: ${user.uid}');
+      print('📧 [DEBUG] User Email: ${user.email}');
 
       // シンプルなクエリ（インデックス不要）
-      print('🔍 ユーザーの全記録を取得中...');
+      print('🔍 [DEBUG] ユーザーの全記録を取得中...');
 
       final querySnapshot = await FirebaseFirestore.instance
           .collection('workout_logs')
           .where('user_id', isEqualTo: user.uid)
           .get(const GetOptions(source: Source.server));
 
-      print('📊 全記録件数: ${querySnapshot.docs.length}');
+      print('📊 [DEBUG] 全記録件数: ${querySnapshot.docs.length}');
+      
+      if (querySnapshot.docs.isEmpty) {
+        print('⚠️ [DEBUG] このユーザーの記録が見つかりません');
+        print('   考えられる原因:');
+        print('   1. まだトレーニングを記録していない');
+        print('   2. Firestoreセキュリティルールで読み込みが拒否されている');
+        print('   3. 異なるユーザーアカウントでログインしている');
+      }
 
       // 選択した日（年・月・日のみ）
       final selectedDate = DateTime(_selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
@@ -1975,166 +1984,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
             ],
           ),
-          
-          const SizedBox(height: 12),
-          
-          // AI科学的コーチング（統合版）
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.deepPurple.shade50, Colors.purple.shade50],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.deepPurple.shade200, width: 2),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.auto_awesome, color: Colors.deepPurple.shade700, size: 22),
-                    const SizedBox(width: 8),
-                    Text(
-                      '🔬 AI科学的コーチング（統合版）',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.deepPurple.shade900,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '40本以上の論文に基づく科学的トレーニング支援',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                // AI残回数表示
-                FutureBuilder<int>(
-                  future: AICreditService().getAICredits().then((credits) async {
-                    final plan = await SubscriptionService().getCurrentPlan();
-                    if (plan != SubscriptionType.free) {
-                      return await SubscriptionService().getRemainingAIUsage();
-                    }
-                    return credits;
-                  }),
-                  builder: (context, snapshot) {
-                    final remainingCredits = snapshot.data ?? 0;
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: remainingCredits > 0
-                            ? Colors.green.shade50
-                            : Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: remainingCredits > 0
-                              ? Colors.green.shade200
-                              : Colors.orange.shade200,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            remainingCredits > 0
-                                ? Icons.check_circle
-                                : Icons.warning,
-                            size: 14,
-                            color: remainingCredits > 0
-                                ? Colors.green.shade700
-                                : Colors.orange.shade700,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'AI残回数: $remainingCredits回/月',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: remainingCredits > 0
-                                  ? Colors.green.shade900
-                                  : Colors.orange.shade900,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AICoachingScreenTabbed(initialTabIndex: 1),
-                            ),
-                          );
-                        },
-                        icon: Icon(Icons.timeline, size: 18, color: Colors.deepPurple.shade700),
-                        label: Text(
-                          '成長予測',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.deepPurple.shade700,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          side: BorderSide(color: Colors.deepPurple.shade300, width: 1.5),
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AICoachingScreenTabbed(initialTabIndex: 2),
-                            ),
-                          );
-                        },
-                        icon: Icon(Icons.analytics, size: 18, color: Colors.orange.shade700),
-                        label: Text(
-                          '効果分析',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange.shade700,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          side: BorderSide(color: Colors.orange.shade300, width: 1.5),
-                          backgroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+
         ],
       ),
     );
