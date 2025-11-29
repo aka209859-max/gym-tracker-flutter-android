@@ -569,12 +569,10 @@ class PaywallDialog extends StatelessWidget {
           if (!context.mounted) return;
           Navigator.of(context).pop();
           
-          // AI残回数取得
-          final status = await aiCreditService.getAIUsageStatus();
+          // AI残回数を取得
+          final remaining = await aiCreditService.getAICredits();
           
           if (!context.mounted) return;
-          
-          final remaining = status['remaining'] as int? ?? 0;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
