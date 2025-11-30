@@ -369,6 +369,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           _restSeconds--;
         } else {
           _stopRestTimer();
+          _notifyRestComplete(); // タイマー終了通知
         }
       });
     });
@@ -381,28 +382,128 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
       _restSeconds = 0;
     });
   }
+  
+  // タイマー終了時の通知（音声 + バイブレーション + ダイアログ）
+  Future<void> _notifyRestComplete() async {
+    // バイブレーション
+    try {
+      // Vibration.vibrate(duration: 1000); // 1秒間バイブレーション
+    } catch (e) {
+      print('❌ バイブレーションエラー: $e');
+    }
+    
+    // 音声通知（システムサウンド）
+    // iOSではデフォルトで通知音が鳴ります
+    
+    // ダイアログ表示
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.alarm, color: Colors.green, size: 32),
+              SizedBox(width: 12),
+              Text('休憩終了！'),
+            ],
+          ),
+          content: const Text(
+            '次のセットに進みましょう！',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      );
+      
+      // 3秒後に自動的にダイアログを閉じる
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted && Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+      });
+    }
+  }
 
   void _showRestTimerSettings() {
-    showDialog(
+    int tempSelectedDuration = _selectedRestDuration;
+    
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('休憩時間を設定'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: _restDurations.map((duration) {
-            return RadioListTile<int>(
-              title: Text('${duration}秒'),
-              value: duration,
-              groupValue: _selectedRestDuration,
-              onChanged: (value) {
-                setState(() => _selectedRestDuration = value!);
-                Navigator.pop(context);
-              },
-            );
-          }).toList(),
-        ),
-      ),
+      builder: (BuildContext context) {
+        return Container(
+          height: 300,
+          color: Colors.white,
+          child: Column(
+            children: [
+              // ヘッダー
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('キャンセル', style: TextStyle(color: Colors.red)),
+                    ),
+                    const Text(
+                      '休憩時間を設定',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() => _selectedRestDuration = tempSelectedDuration);
+                        Navigator.pop(context);
+                        _startRestTimer(); // 設定後すぐにタイマー開始
+                      },
+                      child: const Text('開始', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ),
+              // ピッカービュー
+              Expanded(
+                child: CupertinoPicker(
+                  itemExtent: 40,
+                  scrollController: FixedExtentScrollController(
+                    initialItem: _generateTimeList().indexOf(tempSelectedDuration),
+                  ),
+                  onSelectedItemChanged: (index) {
+                    tempSelectedDuration = _generateTimeList()[index];
+                  },
+                  children: _generateTimeList().map((seconds) {
+                    final minutes = seconds ~/ 60;
+                    final remainingSeconds = seconds % 60;
+                    final displayText = minutes > 0
+                        ? '$minutes分${remainingSeconds > 0 ? ' $remainingSeconds秒' : ''}'
+                        : '$seconds秒';
+                    return Center(
+                      child: Text(
+                        displayText,
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
+  }
+  
+  // ピッカー用の時間リストを生成（30秒～180秒、15秒刻み）
+  List<int> _generateTimeList() {
+    return List.generate(11, (index) => 30 + (index * 15));
   }
 
   // 🆕 過去5回分の履歴を表示して選択するダイアログ
@@ -961,24 +1062,43 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           actions: [
           if (_isResting) ...[
             Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(
-                  '休憩 $_restSeconds秒',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade700,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.timer, size: 18, color: Colors.white),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$_restSeconds秒',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.stop),
+              icon: const Icon(Icons.stop_circle),
               onPressed: _stopRestTimer,
               tooltip: 'タイマー停止',
             ),
           ] else ...[
-            IconButton(
-              icon: const Icon(Icons.timer),
+            TextButton.icon(
+              icon: const Icon(Icons.timer, color: Colors.white),
+              label: const Text(
+                'タイマー',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
               onPressed: _showRestTimerSettings,
-              tooltip: '休憩時間設定',
             ),
           ],
         ],
@@ -1617,7 +1737,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           
           const SizedBox(height: 8),
           
-          // 補助トグル ＋ 完了ボタン
+          // 補助トグル ＋ セット完了チェック
           Row(
             children: [
               // 補助トグル
@@ -1643,25 +1763,24 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
               ),
               const SizedBox(width: 8),
               
-              // インターバル開始ボタン
+              // セット完了チェック（インターバルはAppBarから開始）
               Expanded(
-                child: ElevatedButton.icon(
+                child: OutlinedButton.icon(
                   onPressed: () {
                     setState(() {
                       set.isCompleted = !set.isCompleted;
-                      if (set.isCompleted && !_isResting) {
-                        _startRestTimer();
-                      }
                     });
                   },
                   icon: Icon(
                     set.isCompleted ? Icons.check_circle : Icons.check_circle_outline,
                     size: 18,
                   ),
-                  label: const Text('インターバル開始'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: set.isCompleted ? Colors.green : Colors.grey.shade300,
-                    foregroundColor: set.isCompleted ? Colors.white : Colors.black,
+                  label: Text(set.isCompleted ? '完了' : '未完了'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: set.isCompleted ? Colors.green : Colors.grey,
+                    side: BorderSide(
+                      color: set.isCompleted ? Colors.green : Colors.grey,
+                    ),
                   ),
                 ),
               ),
@@ -1676,26 +1795,15 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
   String _formatLastWorkoutData(Map<String, dynamic>? lastData) {
     if (lastData == null) return '';
     
-    final sets = lastData['sets'] as List<dynamic>?;
-    if (sets == null || sets.isEmpty) return '前回データなし';
+    final weight = (lastData['weight'] ?? 0).toDouble();
+    final reps = (lastData['reps'] ?? 0).toInt();
     
-    // 最も重い重量を取得
-    double maxWeight = 0;
-    int maxReps = 0;
-    for (var set in sets) {
-      final weight = (set['weight'] ?? 0).toDouble();
-      final reps = (set['reps'] ?? 0).toInt();
-      if (weight > maxWeight) {
-        maxWeight = weight;
-        maxReps = reps;
-      }
-    }
-    
-    final date = lastData['date'] as Timestamp?;
+    final date = lastData['date'] as DateTime?;
     final dateStr = date != null 
-        ? '${date.toDate().month}/${date.toDate().day}'
+        ? '${date.month}/${date.day}'
         : '不明';
     
-    return '$dateStr: ${maxWeight}kg × ${maxReps}回 × ${sets.length}セット';
+    // シンプルに前回の1セットのみ表示（前々回は表示しない）
+    return '前回 $dateStr: ${weight}kg × ${reps}回';
   }
 }
