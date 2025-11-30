@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart'; // SystemSound用
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:vibration/vibration.dart'; // バイブレーション用
 import '../debug_log_screen.dart';
 
 // SetType enum
@@ -385,44 +387,87 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
   
   // タイマー終了時の通知（音声 + バイブレーション + ダイアログ）
   Future<void> _notifyRestComplete() async {
-    // バイブレーション
+    print('🔔 タイマー終了通知開始');
+    
+    // 1. システムサウンドを再生（イヤホン対応）
     try {
-      // Vibration.vibrate(duration: 1000); // 1秒間バイブレーション
+      // iOSの通知音を再生（イヤホンに自動的にルーティングされる）
+      await SystemSound.play(SystemSoundType.alert);
+      print('✅ システムサウンド再生成功');
+      
+      // 追加で0.5秒後にもう一度鳴らす（より目立つように）
+      await Future.delayed(const Duration(milliseconds: 500));
+      await SystemSound.play(SystemSoundType.alert);
+      print('✅ システムサウンド再生成功（2回目）');
+    } catch (e) {
+      print('❌ サウンド再生エラー: $e');
+    }
+    
+    // 2. バイブレーション（デバイスがサポートしている場合）
+    try {
+      // デバイスがバイブレーション機能を持っているか確認
+      if (await Vibration.hasVibrator() ?? false) {
+        // 短く3回振動（パターン: 振動-休止-振動-休止-振動）
+        await Vibration.vibrate(
+          pattern: [0, 200, 100, 200, 100, 200], // [待機, 振動, 休止, 振動, 休止, 振動]
+        );
+        print('✅ バイブレーション成功');
+      }
     } catch (e) {
       print('❌ バイブレーションエラー: $e');
     }
     
-    // 音声通知（システムサウンド）
-    // iOSではデフォルトで通知音が鳴ります
-    
-    // ダイアログ表示
+    // 3. ダイアログ表示
     if (mounted) {
       showDialog(
         context: context,
         barrierDismissible: true,
         builder: (context) => AlertDialog(
+          backgroundColor: Colors.green.shade50,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: Colors.green.shade400, width: 2),
+          ),
           title: const Row(
             children: [
               Icon(Icons.alarm, color: Colors.green, size: 32),
               SizedBox(width: 12),
-              Text('休憩終了！'),
+              Text(
+                '休憩終了！',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
             ],
           ),
           content: const Text(
-            '次のセットに進みましょう！',
-            style: TextStyle(fontSize: 16),
+            '次のセットに進みましょう！💪',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
           ),
           actions: [
-            TextButton(
+            ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'OK',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
       );
       
-      // 3秒後に自動的にダイアログを閉じる
-      Future.delayed(const Duration(seconds: 3), () {
+      // 5秒後に自動的にダイアログを閉じる
+      Future.delayed(const Duration(seconds: 5), () {
         if (mounted && Navigator.canPop(context)) {
           Navigator.pop(context);
         }
