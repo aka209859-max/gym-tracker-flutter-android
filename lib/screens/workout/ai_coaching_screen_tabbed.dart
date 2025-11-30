@@ -851,10 +851,10 @@ class _AIMenuTabState extends State<_AIMenuTab>
     // ========================================
     // 🎯 Step 2: AI利用可能性チェック
     // ========================================
-    final canUseAI = await creditService.canUseAI();
-    debugPrint('🔍 [AI生成] AI使用可能: $canUseAI');
+    final canUseAIResult = await creditService.canUseAI();
+    debugPrint('🔍 [AI生成] AI使用可能: ${canUseAIResult.canUse}');
     
-    if (!canUseAI) {
+    if (!canUseAIResult.canUse) {
       // 無料プランでAIクレジットがない場合
       if (currentPlan == SubscriptionType.free) {
         // リワード広告で獲得可能かチェック
@@ -1335,10 +1335,10 @@ class _GrowthPredictionTabState extends State<_GrowthPredictionTab>
     // ========================================
     // 🎯 Step 2: AI利用可能性チェック
     // ========================================
-    final canUseAI = await creditService.canUseAI();
-    debugPrint('🔍 [成長予測] AI使用可能: $canUseAI');
+    final canUseAIResult = await creditService.canUseAI();
+    debugPrint('🔍 [成長予測] AI使用可能: ${canUseAIResult.canUse}');
     
-    if (!canUseAI) {
+    if (!canUseAIResult.canUse) {
       // 無料プランでAIクレジットがない場合
       if (currentPlan == SubscriptionType.free) {
         // リワード広告で獲得可能かチェック
@@ -2384,10 +2384,10 @@ class _EffectAnalysisTabState extends State<_EffectAnalysisTab>
     // ========================================
     // 🎯 Step 2: AI利用可能性チェック
     // ========================================
-    final canUseAI = await creditService.canUseAI();
-    debugPrint('🔍 [効果分析] AI使用可能: $canUseAI');
+    final canUseAIResult = await creditService.canUseAI();
+    debugPrint('🔍 [効果分析] AI使用可能: ${canUseAIResult.canUse}');
     
-    if (!canUseAI) {
+    if (!canUseAIResult.canUse) {
       // 無料プランでAIクレジットがない場合
       if (currentPlan == SubscriptionType.free) {
         // リワード広告で獲得可能かチェック

@@ -1917,7 +1917,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               final result = await Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const AiCoachingScreenTabbed(),
+                                  builder: (context) => AiCoachingScreenTabbed(),
                                 ),
                               );
                               
@@ -1988,8 +1988,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final aiCreditService = AICreditService();
     final subscriptionService = SubscriptionService();
     
-    final remaining = await aiCreditService.getRemainingCredits();
-    final planName = await subscriptionService.getCurrentPlanName();
+    final remaining = await aiCreditService.getAICredits();
+    final currentPlan = await subscriptionService.getCurrentPlan();
+    final planName = subscriptionService.getPlanName(currentPlan);
     
     return {
       'remaining': remaining,
