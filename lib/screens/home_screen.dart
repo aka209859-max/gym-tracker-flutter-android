@@ -33,6 +33,7 @@ import '../services/subscription_service.dart';
 
 import '../services/reminder_service.dart';
 import '../services/habit_formation_service.dart';
+import '../services/crowd_alert_service.dart';
 import 'debug_log_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -98,6 +99,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   // 🔥 習慣形成システム
   final HabitFormationService _habitService = HabitFormationService();
   int _currentStreak = 0;
+  
+  // 🔔 混雑度アラートシステム（Premium/Pro限定）
+  final CrowdAlertService _crowdAlertService = CrowdAlertService();
   Map<String, int> _weeklyProgress = {'current': 0, 'goal': 3};
   List<Map<String, dynamic>> _topTrainingDays = [];
   
@@ -132,6 +136,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     
     // 📱 バナー広告をロード
     _loadBannerAd();
+    
+    // 🔔 混雑度アラート監視開始（Premium/Pro限定）
+    _startCrowdAlertMonitoring();
+  }
+  
+  /// 混雑度アラート監視を開始
+  Future<void> _startCrowdAlertMonitoring() async {
+    try {
+      final user = firebase_auth.FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await _crowdAlertService.startMonitoring(user.uid);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ 混雑度アラート監視開始エラー: $e');
+      }
+    }
   }
   
   /// Day 7ペイウォールをチェックして表示
@@ -496,6 +517,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     _bannerAd?.dispose();  // 📱 バナー広告を破棄
+    
+    // 🔔 混雑度アラート監視を停止
+    final user = firebase_auth.FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _crowdAlertService.stopMonitoring(user.uid);
+    }
+    
     super.dispose();
   }
   

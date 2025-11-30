@@ -209,4 +209,52 @@ class NotificationService {
     // 今回のログイン時刻を記録
     await updateLastLoginTime();
   }
+  
+  /// 混雑度アラート通知を表示（Premium/Pro限定）
+  Future<void> showCrowdAlert({
+    required String gymName,
+    required int crowdLevel,
+  }) async {
+    const androidDetails = AndroidNotificationDetails(
+      'crowd_alert',
+      '混雑度アラート',
+      channelDescription: 'お気に入りジムの混雑度アラート',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+    );
+    
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+    
+    final levelText = _getCrowdLevelText(crowdLevel);
+    
+    await _notifications.show(
+      DateTime.now().millisecondsSinceEpoch % 100000, // 一意のID
+      '🟢 $gymName が空いています！',
+      '$levelText - 今がチャンス！',
+      details,
+    );
+  }
+  
+  String _getCrowdLevelText(int level) {
+    switch (level) {
+      case 1:
+        return '空いています';
+      case 2:
+        return 'やや空き';
+      case 3:
+        return '普通';
+      default:
+        return '空いています';
+    }
+  }
 }
