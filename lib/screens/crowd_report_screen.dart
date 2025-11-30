@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/gym.dart';
 import '../providers/gym_provider.dart';
+import '../services/crowd_report_incentive_service.dart';
 
 /// 混雑度報告画面
 class CrowdReportScreen extends StatefulWidget {
@@ -16,6 +18,38 @@ class CrowdReportScreen extends StatefulWidget {
 class _CrowdReportScreenState extends State<CrowdReportScreen> {
   int _selectedCrowdLevel = 3;
   final TextEditingController _commentController = TextEditingController();
+  
+  // 🎁 インセンティブ機能追加
+  final CrowdReportIncentiveService _incentiveService = CrowdReportIncentiveService();
+  int _userReportCount = 0;
+  NextMilestone? _nextMilestone;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserReportStatus();
+  }
+  
+  /// ユーザーの報告状況を読み込み
+  Future<void> _loadUserReportStatus() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final count = await _incentiveService.getUserReportCount(user.uid);
+        final next = await _incentiveService.getNextMilestone(user.uid);
+        
+        if (mounted) {
+          setState(() {
+            _userReportCount = count;
+            _nextMilestone = next;
+          });
+        }
+      }
+    } catch (e) {
+      print('❌ 報告状況読み込みエラー: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -34,6 +68,10 @@ class _CrowdReportScreenState extends State<CrowdReportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 🎁 報酬進捗カード
+            if (_nextMilestone != null) _buildRewardProgressCard(),
+            if (_nextMilestone != null) const SizedBox(height: 16),
+            
             // ジム情報カード
             Card(
               child: Padding(
@@ -198,26 +236,137 @@ class _CrowdReportScreenState extends State<CrowdReportScreen> {
     );
   }
 
-  void _submitReport() {
-    // プロバイダー経由で混雑度を更新
-    Provider.of<GymProvider>(context, listen: false)
-        .updateCrowdLevel(widget.gym.id, _selectedCrowdLevel);
-
-    // 成功メッセージ
+  /// 混雑度報告を送信（インセンティブ統合）
+  Future<void> _submitReport() async {
+    if (_isLoading) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      // 1. プロバイダー経由で混雑度を更新（既存処理）
+      Provider.of<GymProvider>(context, listen: false)
+          .updateCrowdLevel(widget.gym.id, _selectedCrowdLevel);
+      
+      // 2. 🎁 インセンティブ報酬を付与
+      final result = await _incentiveService.submitCrowdReport(
+        gymId: widget.gym.id,
+        crowdLevel: _selectedCrowdLevel,
+      );
+      
+      if (mounted) {
+        if (result.success) {
+          // 3. マイルストーン報酬ダイアログ表示
+          if (result.milestone != null) {
+            await _showMilestoneRewardDialog(result.milestone!);
+          } else {
+            // 通常報酬のみ表示
+            _showRewardSnackBar(result);
+          }
+          
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('エラーが発生しました'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+  
+  /// 報酬スナックバー表示
+  void _showRewardSnackBar(ReportRewardResult result) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('混雑度を報告しました！'),
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '✅ ${result.message}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text('🎁 AI 1回分をプレゼント！（報告${result.reportCount}回目）'),
+                ],
+              ),
+            ),
+          ],
+        ),
         backgroundColor: Colors.green,
-        action: SnackBarAction(
-          label: 'OK',
-          textColor: Colors.white,
-          onPressed: () {},
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+  
+  /// マイルストーン報酬ダイアログ表示
+  Future<void> _showMilestoneRewardDialog(MilestoneReward milestone) async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.celebration,
+              size: 80,
+              color: Colors.orange,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              milestone.title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              milestone.description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              ),
+              child: const Text('ありがとう！'),
+            ),
+          ],
         ),
       ),
     );
-
-    // 画面を閉じる
-    Navigator.pop(context);
   }
 
   String _getCrowdLevelText(int level) {
@@ -269,5 +418,67 @@ class _CrowdReportScreenState extends State<CrowdReportScreen> {
       default:
         return const Color(0xFF9E9E9E); // Grey
     }
+  }
+  
+  /// 報酬進捗カード
+  Widget _buildRewardProgressCard() {
+    if (_nextMilestone == null) return const SizedBox.shrink();
+    
+    final progress = _userReportCount / _nextMilestone!.target;
+    
+    return Card(
+      color: Colors.orange.withAlpha(20),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.emoji_events, color: Colors.orange),
+                const SizedBox(width: 8),
+                Text(
+                  '次の報酬まであと${_nextMilestone!.remaining}回！',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            LinearProgressIndicator(
+              value: progress,
+              backgroundColor: Colors.grey[300],
+              valueColor: const AlwaysStoppedAnimation(Colors.orange),
+              minHeight: 8,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '報告回数: $_userReportCount回',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                Text(
+                  '目標: ${_nextMilestone!.target}回',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '報酬: ${_nextMilestone!.reward}',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.orange,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
