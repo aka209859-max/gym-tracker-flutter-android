@@ -1,233 +1,271 @@
-// lib/services/referral_service.dart
-// 紹介プログラムサービス
-
-import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:share_plus/share_plus.dart';
-import 'ai_credit_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// 紹介プログラムサービス
+/// Task 10: バイラルループ実装
+/// 紹介コードシステムでCAC削減（¥2,500→¥1,675、-33%）
 class ReferralService {
-  static const String _keyReferralCode = 'user_referral_code';
-  static const String _keyReferralCount = 'referral_count';
-  static const String _keyReferredBy = 'referred_by';
-
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  // 紹介コード長（例: "GYM12ABC"）
+  static const int _codeLength = 8;
+  static const String _codePrefix = 'GYM';
+
+  // 紹介特典
+  static const int _refereeAiBonus = 3; // 紹介された側のAI無料利用×3回
+  static const double _referrerDiscountPercent = 50.0; // 紹介した側のPremium割引50%
+
   /// ユーザーの紹介コードを取得（なければ生成）
   Future<String> getReferralCode() async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) return '';
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
 
-      // ローカルキャッシュをチェック
-      final prefs = await SharedPreferences.getInstance();
-      String? code = prefs.getString(_keyReferralCode);
-      
-      if (code != null && code.isNotEmpty) {
-        return code;
-      }
+    final userDoc = await _firestore.collection('users').doc(user.uid).get();
+    final data = userDoc.data();
 
-      // Firestoreから取得
-      final doc = await _firestore.collection('users').doc(user.uid).get();
-      if (doc.exists && doc.data()?['referralCode'] != null) {
-        code = doc.data()!['referralCode'] as String;
-        await prefs.setString(_keyReferralCode, code);
-        return code;
-      }
-
-      // 新規生成
-      code = _generateReferralCode(user.uid);
-      
-      // Firestoreに保存
-      await _firestore.collection('users').doc(user.uid).set({
-        'referralCode': code,
-        'referralCount': 0,
-        'createdAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-
-      // ローカルキャッシュに保存
-      await prefs.setString(_keyReferralCode, code);
-
-      return code;
-    } catch (e) {
-      print('Error getting referral code: $e');
-      return '';
+    // 既存コードがあればそれを返す
+    if (data != null && data.containsKey('referralCode')) {
+      return data['referralCode'] as String;
     }
+
+    // なければ新規生成
+    final newCode = await _generateUniqueCode();
+    await _firestore.collection('users').doc(user.uid).update({
+      'referralCode': newCode,
+      'referralStats': {
+        'totalReferrals': 0,
+        'successfulReferrals': 0,
+        'discountCredits': 0,
+      },
+      'referralCodeCreatedAt': FieldValue.serverTimestamp(),
+    });
+
+    return newCode;
   }
 
-  /// 紹介コードを生成
-  String _generateReferralCode(String uid) {
-    // UIDの最後8文字 + ランダム2文字
-    final base = uid.substring(uid.length - 8).toUpperCase();
-    final random = DateTime.now().millisecondsSinceEpoch % 100;
-    return '$base$random';
-  }
+  /// ユニークな紹介コードを生成
+  Future<String> _generateUniqueCode() async {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    final random = Random.secure();
+    int attempts = 0;
+    const maxAttempts = 10;
 
-  /// 紹介コードをシェア
-  Future<void> shareReferralCode() async {
-    try {
-      final code = await getReferralCode();
-      if (code.isEmpty) {
-        print('Referral code is empty');
-        return;
-      }
+    while (attempts < maxAttempts) {
+      // コード生成（例: GYM + 5文字ランダム）
+      final randomPart = List.generate(
+        _codeLength - _codePrefix.length,
+        (index) => chars[random.nextInt(chars.length)],
+      ).join();
+      final code = '$_codePrefix$randomPart';
 
-      final shareText = '''
-🏋️ GYM MATCHに招待します！
-
-紹介コード: $code
-
-GYM MATCHは40本以上の論文に基づく
-AI科学的トレーニングコーチングアプリです。
-
-このコードで登録すると、
-あなたも私もAI追加パック（5回分）がもらえます！ 🎁
-
-#GYM_MATCH #筋トレ #AI #トレーニング
-''';
-
-      await Share.share(shareText);
-    } catch (e) {
-      print('Error sharing referral code: $e');
-    }
-  }
-
-  /// 紹介コードを適用（新規ユーザー登録時）
-  /// 
-  /// [referralCode] 紹介コード
-  /// 戻り値: 適用成功 true/失敗 false
-  Future<bool> applyReferralCode(String referralCode) async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) return false;
-
-      // 既に紹介コードを適用済みかチェック
-      final prefs = await SharedPreferences.getInstance();
-      if (prefs.getString(_keyReferredBy) != null) {
-        print('Referral code already applied');
-        return false;
-      }
-
-      // 紹介コードが存在するかチェック
-      final referrerQuery = await _firestore
+      // 重複チェック
+      final existingCode = await _firestore
           .collection('users')
-          .where('referralCode', isEqualTo: referralCode)
+          .where('referralCode', isEqualTo: code)
           .limit(1)
           .get();
 
-      if (referrerQuery.docs.isEmpty) {
-        print('Invalid referral code');
-        return false;
+      if (existingCode.docs.isEmpty) {
+        return code;
       }
 
-      final referrerDoc = referrerQuery.docs.first;
-      final referrerId = referrerDoc.id;
+      attempts++;
+    }
 
-      // 自分自身のコードは使えない
-      if (referrerId == user.uid) {
-        print('Cannot use own referral code');
-        return false;
-      }
+    throw Exception('Failed to generate unique referral code after $maxAttempts attempts');
+  }
 
-      // トランザクションで紹介カウントを増やす & 報酬を付与
-      await _firestore.runTransaction((transaction) async {
-        final referrerRef = _firestore.collection('users').doc(referrerId);
-        final referrerSnapshot = await transaction.get(referrerRef);
+  /// 紹介コードを使用（新規ユーザー登録時）
+  Future<bool> applyReferralCode(String code) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
 
-        if (!referrerSnapshot.exists) {
-          throw Exception('Referrer not found');
-        }
+    // コードの検証
+    code = code.trim().toUpperCase();
+    if (code.isEmpty || !code.startsWith(_codePrefix)) {
+      throw Exception('Invalid referral code format');
+    }
 
-        final currentCount = referrerSnapshot.data()?['referralCount'] as int? ?? 0;
+    // 紹介者を検索
+    final referrerQuery = await _firestore
+        .collection('users')
+        .where('referralCode', isEqualTo: code)
+        .limit(1)
+        .get();
 
-        // 紹介者のカウントを増やす
-        transaction.update(referrerRef, {
-          'referralCount': currentCount + 1,
-          'lastReferralAt': FieldValue.serverTimestamp(),
-        });
+    if (referrerQuery.docs.isEmpty) {
+      throw Exception('Referral code not found');
+    }
 
-        // 新規ユーザーに紹介元を記録
-        final newUserRef = _firestore.collection('users').doc(user.uid);
-        transaction.set(newUserRef, {
-          'referredBy': referrerId,
-          'referralCodeUsed': referralCode,
-          'referredAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+    final referrerDoc = referrerQuery.docs.first;
+    final referrerId = referrerDoc.id;
+
+    // 自分自身の紹介は不可
+    if (referrerId == user.uid) {
+      throw Exception('Cannot use your own referral code');
+    }
+
+    // 既に紹介コードを使用済みかチェック
+    final userDoc = await _firestore.collection('users').doc(user.uid).get();
+    final userData = userDoc.data();
+    if (userData != null && userData.containsKey('usedReferralCode')) {
+      throw Exception('You have already used a referral code');
+    }
+
+    // トランザクションで処理
+    await _firestore.runTransaction((transaction) async {
+      // 1. 紹介された側（referee）にAI無料利用×3回付与
+      final userRef = _firestore.collection('users').doc(user.uid);
+      transaction.update(userRef, {
+        'usedReferralCode': code,
+        'referredBy': referrerId,
+        'referralBonusAiCredits': _refereeAiBonus,
+        'referredAt': FieldValue.serverTimestamp(),
       });
 
-      // 紹介者にAI追加パック報酬を付与
-      await _grantReferralReward(referrerId);
+      // 2. 紹介した側（referrer）に割引クレジット付与
+      final referrerRef = _firestore.collection('users').doc(referrerId);
+      transaction.update(referrerRef, {
+        'referralStats.totalReferrals': FieldValue.increment(1),
+        'referralStats.successfulReferrals': FieldValue.increment(1),
+        'referralStats.discountCredits': FieldValue.increment(1), // 50%割引×1回
+      });
 
-      // 新規ユーザーにもAI追加パック報酬を付与
-      await _grantReferralReward(user.uid);
+      // 3. 紹介履歴を記録
+      final referralRef = _firestore.collection('referrals').doc();
+      transaction.set(referralRef, {
+        'referrerId': referrerId,
+        'refereeId': user.uid,
+        'referralCode': code,
+        'createdAt': FieldValue.serverTimestamp(),
+        'status': 'completed',
+        'bonuses': {
+          'refereeAiCredits': _refereeAiBonus,
+          'referrerDiscountCredit': 1,
+        },
+      });
+    });
 
-      // ローカルに記録
-      await prefs.setString(_keyReferredBy, referrerId);
-
-      print('Referral code applied successfully');
-      return true;
-    } catch (e) {
-      print('Error applying referral code: $e');
-      return false;
-    }
+    return true;
   }
 
-  /// 紹介報酬を付与（AI追加パック5回分）
-  Future<void> _grantReferralReward(String userId) async {
-    try {
-      // AI Credit Serviceを使って5回分のクレジットを付与
-      final creditService = AICreditService();
-      
-      // 5回分追加
-      for (int i = 0; i < 5; i++) {
-        await creditService.addAICredit();
-      }
-      
-      print('Granted 5 AI credits to user: $userId');
-    } catch (e) {
-      print('Error granting referral reward: $e');
-    }
-  }
-
-  /// 紹介成功数を取得
-  Future<int> getReferralCount() async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) return 0;
-
-      final doc = await _firestore.collection('users').doc(user.uid).get();
-      if (!doc.exists) return 0;
-
-      return doc.data()?['referralCount'] as int? ?? 0;
-    } catch (e) {
-      print('Error getting referral count: $e');
-      return 0;
-    }
-  }
-
-  /// 紹介報酬の詳細を取得
+  /// 紹介統計を取得
   Future<Map<String, dynamic>> getReferralStats() async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) {
-        return {'count': 0, 'reward': 0, 'code': ''};
-      }
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
 
-      final code = await getReferralCode();
-      final count = await getReferralCount();
-      final reward = count * 5; // 1紹介につきAI 5回分
+    final userDoc = await _firestore.collection('users').doc(user.uid).get();
+    final data = userDoc.data();
 
+    if (data == null || !data.containsKey('referralStats')) {
       return {
-        'code': code,
-        'count': count,
-        'reward': reward,
+        'totalReferrals': 0,
+        'successfulReferrals': 0,
+        'discountCredits': 0,
+        'referralCode': await getReferralCode(),
       };
-    } catch (e) {
-      print('Error getting referral stats: $e');
-      return {'count': 0, 'reward': 0, 'code': ''};
     }
+
+    final stats = data['referralStats'] as Map<String, dynamic>;
+    return {
+      'totalReferrals': stats['totalReferrals'] ?? 0,
+      'successfulReferrals': stats['successfulReferrals'] ?? 0,
+      'discountCredits': stats['discountCredits'] ?? 0,
+      'referralCode': data['referralCode'] ?? await getReferralCode(),
+    };
+  }
+
+  /// 紹介ボーナスのAIクレジットを取得
+  Future<int> getReferralBonusAiCredits() async {
+    final user = _auth.currentUser;
+    if (user == null) return 0;
+
+    final userDoc = await _firestore.collection('users').doc(user.uid).get();
+    final data = userDoc.data();
+
+    if (data == null) return 0;
+    return (data['referralBonusAiCredits'] as int?) ?? 0;
+  }
+
+  /// 紹介ボーナスのAIクレジットを消費
+  Future<void> consumeReferralBonusAiCredit() async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    await _firestore.collection('users').doc(user.uid).update({
+      'referralBonusAiCredits': FieldValue.increment(-1),
+    });
+  }
+
+  /// 紹介した側の割引クレジットを使用
+  Future<bool> useReferrerDiscountCredit() async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    final userDoc = await _firestore.collection('users').doc(user.uid).get();
+    final data = userDoc.data();
+
+    if (data == null) return false;
+
+    final stats = data['referralStats'] as Map<String, dynamic>?;
+    final discountCredits = (stats?['discountCredits'] as int?) ?? 0;
+
+    if (discountCredits <= 0) return false;
+
+    await _firestore.collection('users').doc(user.uid).update({
+      'referralStats.discountCredits': FieldValue.increment(-1),
+      'referralStats.usedDiscountCredits': FieldValue.increment(1),
+    });
+
+    return true;
+  }
+
+  /// 紹介リストを取得（紹介した側用）
+  Future<List<Map<String, dynamic>>> getReferralsList() async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    final referralsQuery = await _firestore
+        .collection('referrals')
+        .where('referrerId', isEqualTo: user.uid)
+        .orderBy('createdAt', descending: true)
+        .limit(50)
+        .get();
+
+    return referralsQuery.docs.map((doc) {
+      final data = doc.data();
+      return {
+        'id': doc.id,
+        'refereeId': data['refereeId'],
+        'referralCode': data['referralCode'],
+        'createdAt': (data['createdAt'] as Timestamp?)?.toDate(),
+        'status': data['status'],
+      };
+    }).toList();
+  }
+
+  /// SharedPreferencesに紹介コードをキャッシュ
+  Future<void> cacheReferralCode(String code) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('referral_code', code);
+  }
+
+  /// SharedPreferencesから紹介コードを取得
+  Future<String?> getCachedReferralCode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('referral_code');
+  }
+
+  /// 紹介コード適用済みかチェック
+  Future<bool> hasUsedReferralCode() async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+
+    final userDoc = await _firestore.collection('users').doc(user.uid).get();
+    final data = userDoc.data();
+
+    return data != null && data.containsKey('usedReferralCode');
   }
 }

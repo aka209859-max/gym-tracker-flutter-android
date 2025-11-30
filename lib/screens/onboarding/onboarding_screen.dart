@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/onboarding_service.dart';
+import '../../services/referral_service.dart';
 
 /// オンボーディング画面
 /// 
@@ -14,6 +15,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   final OnboardingService _onboardingService = OnboardingService();
+  final ReferralService _referralService = ReferralService();
   
   int _currentPage = 0;
   
@@ -21,10 +23,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String _selectedTrainingLevel = '';
   String _selectedTrainingGoal = '';
   String _selectedTrainingFrequency = '';
+  
+  // 🎁 紹介コード（Task 10: バイラルループ）
+  final TextEditingController _referralCodeController = TextEditingController();
+  bool _hasReferralCode = false;
 
   @override
   void dispose() {
     _pageController.dispose();
+    _referralCodeController.dispose();
     super.dispose();
   }
 
@@ -48,6 +55,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       trainingGoal: _selectedTrainingGoal,
       trainingFrequency: _selectedTrainingFrequency,
     );
+    
+    // 🎁 紹介コード処理（Task 10: バイラルループ）
+    if (_hasReferralCode && _referralCodeController.text.trim().isNotEmpty) {
+      try {
+        await _referralService.applyReferralCode(_referralCodeController.text.trim());
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('🎉 紹介コードを適用しました！AI無料利用×3回を獲得！'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('紹介コードエラー: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
     
     // オンボーディング完了マーク
     await _onboardingService.markOnboardingCompleted();
@@ -460,8 +491,107 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             description: 'バッジやアチーブメントで継続をサポート',
             delay: 400,
           ),
+          const SizedBox(height: 32),
+          // 🎁 紹介コード入力（Task 10: バイラルループ）
+          _buildReferralCodeSection(),
         ],
       ),
+    );
+  }
+
+  /// 🎁 紹介コードセクション（Task 10: バイラルループ）
+  Widget _buildReferralCodeSection() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 1000),
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.orange.withOpacity(0.3),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.card_giftcard, color: Colors.orange, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      '紹介コードをお持ちですか？',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                CheckboxListTile(
+                  value: _hasReferralCode,
+                  onChanged: (value) {
+                    setState(() {
+                      _hasReferralCode = value ?? false;
+                    });
+                  },
+                  title: Text(
+                    '紹介コードを入力する',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 13,
+                    ),
+                  ),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  activeColor: Colors.orange,
+                ),
+                if (_hasReferralCode) ...[
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _referralCodeController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'GYM12ABC',
+                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.05),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.orange.withOpacity(0.5)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.orange.withOpacity(0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Colors.orange, width: 2),
+                      ),
+                      prefixIcon: const Icon(Icons.confirmation_number, color: Colors.orange),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '✨ AI無料利用×3回を獲得！',
+                    style: TextStyle(
+                      color: Colors.amber.withOpacity(0.9),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

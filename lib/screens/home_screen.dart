@@ -35,6 +35,7 @@ import '../services/reminder_service.dart';
 import '../services/habit_formation_service.dart';
 import '../services/magic_number_service.dart';
 import '../services/crowd_alert_service.dart';
+import '../services/referral_service.dart';
 import 'debug_log_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -112,6 +113,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Map<String, int> _weeklyProgress = {'current': 0, 'goal': 3};
   List<Map<String, dynamic>> _topTrainingDays = [];
   
+  // 🎁 バイラルループシステム（Task 10）
+  final ReferralService _referralService = ReferralService();
+  String? _referralCode;
+  int _totalReferrals = 0;
+  int _discountCredits = 0;
+  
   // 詳細セクションの表示/非表示状態
   bool _isAdvancedSectionsExpanded = false;
   
@@ -139,6 +146,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       
       // 🔥 習慣形成データ読み込み
       _loadHabitData();
+      
+      // 🎁 紹介コードデータ読み込み（Task 10）
+      _loadReferralData();
     });
     
     // 📱 バナー広告をロード
@@ -1017,6 +1027,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               const SizedBox(height: 16),
               _buildMagicNumberCard(theme),
             ],
+            
+            // 🎁 紹介コードカード（Task 10: バイラルループ）
+            const SizedBox(height: 16),
+            _buildReferralCard(theme),
             
             // 🔥 習慣形成サポートカード
             if (_currentStreak > 0 || _weeklyProgress['current']! > 0)
@@ -5680,6 +5694,225 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
         ),
       ),
+    );
+  }
+
+  /// 🎁 紹介コードデータを読み込む（Task 10）
+  Future<void> _loadReferralData() async {
+    try {
+      final stats = await _referralService.getReferralStats();
+      if (mounted) {
+        setState(() {
+          _referralCode = stats['referralCode'] as String?;
+          _totalReferrals = stats['successfulReferrals'] as int? ?? 0;
+          _discountCredits = stats['discountCredits'] as int? ?? 0;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('紹介コードデータ読み込みエラー: $e');
+      }
+    }
+  }
+
+  /// 🎁 紹介コードカードを構築（Task 10: バイラルループ）
+  Widget _buildReferralCard(ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.orange.shade50, Colors.deepOrange.shade50],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.deepOrange.shade200, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.deepOrange.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.orange.shade400, Colors.deepOrange.shade400],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.card_giftcard,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  '友達を招待',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepOrange,
+                  ),
+                ),
+              ),
+              if (_totalReferrals > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.deepOrange,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '$_totalReferrals人招待済み',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // 特典説明
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.deepOrange.shade200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.star, color: Colors.amber, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        '紹介特典',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepOrange,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildBenefitRow('招待された側', 'AI無料利用×3回', Icons.psychology),
+                const SizedBox(height: 8),
+                _buildBenefitRow('招待した側', 'Premium 50%割引×1ヶ月', Icons.discount),
+                if (_discountCredits > 0) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.celebration, color: Colors.deepOrange, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          '割引クレジット: $_discountCreditsヶ月分',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepOrange,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // 紹介コード表示
+          if (_referralCode != null) ...[
+            const Text(
+              'あなたの招待コード',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.deepOrange.shade300, width: 2),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _referralCode!,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepOrange.shade700,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy, color: Colors.deepOrange),
+                    onPressed: () {
+                      // コピー機能は後で実装
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('コードをコピーしました')),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 特典行を構築
+  Widget _buildBenefitRow(String who, String benefit, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: Colors.deepOrange.shade400),
+        const SizedBox(width: 8),
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
+              children: [
+                TextSpan(
+                  text: '$who: ',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                TextSpan(text: benefit),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

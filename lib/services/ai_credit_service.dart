@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'subscription_service.dart';
 import 'ai_abuse_prevention_service.dart';
+import 'referral_service.dart';
 
 /// AI機能クレジット管理サービス（CEO戦略: 動画視聴で1回追加）
 class AICreditService {
@@ -11,6 +12,7 @@ class AICreditService {
   
   final SubscriptionService _subscriptionService = SubscriptionService();
   final AIAbusePreventionService _abusePreventionService = AIAbusePreventionService();
+  final ReferralService _referralService = ReferralService();
   
   /// Firestoreへのバックアップフラグ
   static const bool _enableFirestoreBackup = true;
@@ -170,7 +172,19 @@ class AICreditService {
       return await _subscriptionService.incrementAIUsage();
     }
     
-    // 無料プラン: まずAI追加パック（¥300）から消費
+    // 🎁 Task 10: 紹介ボーナスのAIクレジットから最優先で消費
+    final referralBonusCredits = await _referralService.getReferralBonusAiCredits();
+    if (referralBonusCredits > 0) {
+      try {
+        await _referralService.consumeReferralBonusAiCredit();
+        print('✅ 紹介ボーナスAIクレジット消費: -1 (残り: ${referralBonusCredits - 1})');
+        return true;
+      } catch (e) {
+        print('⚠️ 紹介ボーナスクレジット消費失敗: $e');
+      }
+    }
+    
+    // 無料プラン: AI追加パック（¥300）から消費
     final addonUsage = await _subscriptionService.getAddonAIUsage();
     if (addonUsage > 0) {
       final success = await _subscriptionService.consumeAddonAIUsage();
@@ -219,13 +233,23 @@ class AICreditService {
     final plan = await _subscriptionService.getCurrentPlan();
     
     if (plan == SubscriptionType.free) {
-      // 無料プラン: AI追加パック + クレジット残高
+      // 無料プラン: 紹介ボーナス + AI追加パック + クレジット残高
+      final referralBonus = await _referralService.getReferralBonusAiCredits();
       final addonUsage = await _subscriptionService.getAddonAIUsage();
       final credits = await getAICredits();
-      if (addonUsage > 0) {
-        return 'AI追加パック: $addonUsage回 | AIクレジット: $credits回';
+      
+      List<String> parts = [];
+      if (referralBonus > 0) {
+        parts.add('🎁紹介ボーナス: $referralBonus回');
       }
-      return 'AIクレジット: $credits回';
+      if (addonUsage > 0) {
+        parts.add('AI追加パック: $addonUsage回');
+      }
+      if (credits > 0 || parts.isEmpty) {
+        parts.add('AIクレジット: $credits回');
+      }
+      
+      return parts.join(' | ');
     } else {
       // 有料プランは月次制限
       return await _subscriptionService.getAIUsageStatus();
