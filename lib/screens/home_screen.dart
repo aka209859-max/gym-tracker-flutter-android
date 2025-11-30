@@ -802,27 +802,47 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       print('🕐 選択日: $selectedDate (${selectedDate.year}/${selectedDate.month}/${selectedDate.day})');
 
       // メモリ内でフィルタリング
-      final allWorkouts = querySnapshot.docs.map((doc) {
-        final data = doc.data();
-        return {
-          'id': doc.id,
-          'muscle_group': data['muscle_group'],
-          'start_time': data['start_time'],
-          'end_time': data['end_time'],
-          'sets': data['sets'] as List<dynamic>,
-          'date': (data['date'] as Timestamp).toDate(),
-        };
-      }).toList();
+      DebugLogger.instance.log('🔄 データマッピング開始...');
+      final allWorkouts = <Map<String, dynamic>>[];
+      
+      for (var i = 0; i < querySnapshot.docs.length; i++) {
+        try {
+          final doc = querySnapshot.docs[i];
+          final data = doc.data();
+          
+          // データ構造をログ出力（最初の1件のみ）
+          if (i == 0) {
+            DebugLogger.instance.log('📋 データ構造サンプル:');
+            DebugLogger.instance.log('   muscle_group: ${data['muscle_group']?.runtimeType}');
+            DebugLogger.instance.log('   date: ${data['date']?.runtimeType}');
+            DebugLogger.instance.log('   sets: ${data['sets']?.runtimeType}');
+          }
+          
+          final workout = {
+            'id': doc.id,
+            'muscle_group': data['muscle_group'],
+            'start_time': data['start_time'],
+            'end_time': data['end_time'],
+            'sets': data['sets'] as List<dynamic>,
+            'date': (data['date'] as Timestamp).toDate(),
+          };
+          allWorkouts.add(workout);
+        } catch (e) {
+          DebugLogger.instance.log('❌ データマッピングエラー [$i]: $e');
+          continue;
+        }
+      }
 
+      DebugLogger.instance.log('✅ マッピング完了: ${allWorkouts.length}/${querySnapshot.docs.length}件');
       DebugLogger.instance.log('📊 全ワークアウト詳細: ${allWorkouts.length}件');
-      for (var i = 0; i < allWorkouts.length && i < 5; i++) {
+      for (var i = 0; i < allWorkouts.length && i < 3; i++) {
         final workout = allWorkouts[i];
         final workoutDate = workout['date'] as DateTime;
         final normalizedDate = DateTime(workoutDate.year, workoutDate.month, workoutDate.day);
         DebugLogger.instance.log('   [$i] date=${normalizedDate.year}/${normalizedDate.month}/${normalizedDate.day}, muscle=${workout['muscle_group']}');
       }
-      if (allWorkouts.length > 5) {
-        DebugLogger.instance.log('   ... 他 ${allWorkouts.length - 5}件');
+      if (allWorkouts.length > 3) {
+        DebugLogger.instance.log('   ... 他 ${allWorkouts.length - 3}件');
       }
 
       // 選択した日のデータだけをフィルタ（時刻を無視して年月日のみで比較）

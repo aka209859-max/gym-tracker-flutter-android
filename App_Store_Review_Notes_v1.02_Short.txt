@@ -1,0 +1,124 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GYM MATCH v1.02 - APP REVIEW NOTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【v1.02 Updates】
+✅ Fixed: Training history display bug
+✅ New: Rewarded video ads for free AI usage
+✅ Improved: AI fatigue analysis accuracy
+✅ AdMob: Production Ad Unit IDs configured
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TEST ACCOUNT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Email: reviewer@gymmatch.test
+Password: TestReview2025!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TRAINING PARTNER FEATURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NOT a dating service - fitness community only.
+
+Safety: Friend approval required, Block/Report available, 
+Prefecture-level location (no GPS), Age 16+
+
+Test: "パートナー" tab → "検索開始" → Profile → "友達申請" 
+→ Approval → "メッセージを送る" → Chat menu "⋮" for Block/Report
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IAP TESTING (5 PRODUCTS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Access: "プラン管理" tab
+
+Subscriptions (4):
+• Premium Monthly (¥500, 30-day trial)
+• Pro Monthly (¥980, 14-day trial)
+• Premium Annual (¥4,800) - Toggle "年額"
+• Pro Annual (¥8,000) - Toggle "年額"
+
+Consumable (1):
+• AI Additional Pack (¥300, 5 uses) - "AI追加パック" card
+
+Restore: Tap "Restore" button (top-right)
+
+Legal: Subscription screen → "Legal Information" card
+• Terms: https://gym-match-e560d.web.app/terms.html
+• Privacy: https://gym-match-e560d.web.app/privacy_policy.html
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AI FEATURE TESTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Limits: Free 3/month, Premium 10/month, Pro Unlimited
+
+NEW: Rewarded Video for +1 AI Use:
+1. Home → "💡 今日のAI提案" card
+2. When depleted → "動画を見て1回分ゲット" button
+3. Watch video → Auto +1 AI use
+4. Check "AI残回数" counter
+
+Test AI: "記録" tab → Add workout → "本日の全トレーニング終了" 
+→ Rate RPE (6-20) → AI fatigue analysis & recovery advice
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ADMOB ADS (v1.02 Update)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Production IDs: ca-app-pub-2887531479031819
+✅ app-ads.txt: https://gym-match-e560d.web.app/app-ads.txt
+
+1. Banner Ads (Free plan only, bottom of home screen)
+2. Rewarded Videos (All plans, user-initiated for +1 AI use)
+
+Note: Ads may show "No Fill" in TestFlight (normal).
+Production ads serve after App Store release.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+UGC MODERATION & PRIVACY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Report/Block for inappropriate content
+✅ Firebase Security Rules for access control
+✅ Manual review of reports
+✅ Privacy: Name, Photos, Messages, Coarse Location
+✅ Usage: App Functionality only (no tracking)
+✅ Complies with Guidelines 4.3 & 5.1.1
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TECHNICAL INFO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+• iOS-only (no Android in Dec 2025)
+• RevenueCat for subscriptions
+• Firebase Auth & Firestore
+• AdMob monetization
+• Age: 16+
+
+Support: https://gym-match-e560d.web.app
+Developer: Hajime Inoue (aka209859@gmail.com)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPORTANT NOTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. History Bug Fix: Date comparison issue resolved.
+   Test: Add workout → Calendar → Tap date → View history
+
+2. Rewarded Ads: User-initiated only (not intrusive)
+
+3. AdMob: app-ads.txt configured, production IDs active
+
+4. Safety: No GPS, friend approval required, complies with 4.3 & 5.1.1
+
+Thank you for reviewing GYM MATCH v1.02!
