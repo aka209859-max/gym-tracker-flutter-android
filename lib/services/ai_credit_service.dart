@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'subscription_service.dart';
+import 'ai_abuse_prevention_service.dart';
 
 /// AI機能クレジット管理サービス（CEO戦略: 動画視聴で1回追加）
 class AICreditService {
@@ -9,38 +10,85 @@ class AICreditService {
   static const String _lastResetDateKey = 'ai_credit_last_reset_date';
   
   final SubscriptionService _subscriptionService = SubscriptionService();
+  final AIAbusePreventionService _abusePreventionService = AIAbusePreventionService();
   
   /// Firestoreへのバックアップフラグ
   static const bool _enableFirestoreBackup = true;
   
-  /// AI機能が使用可能かチェック（サブスクまたはクレジットあり）
-  Future<bool> canUseAI() async {
+  /// AI機能が使用可能かチェック（サブスクまたはクレジットあり + 悪用防止）
+  Future<CanUseAIResult> canUseAI() async {
     try {
-      // 有料プランなら直接OK
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        return CanUseAIResult(
+          allowed: false,
+          reason: 'ログインが必要です',
+        );
+      }
+      
+      // 🛡️ Phase 1: ブロックチェック
+      final isBlocked = await _abusePreventionService.isUserBlocked(user.uid);
+      if (isBlocked) {
+        return CanUseAIResult(
+          allowed: false,
+          reason: 'アカウントがブロックされています。\nサポートにお問い合わせください。',
+        );
+      }
+      
       final plan = await _subscriptionService.getCurrentPlan();
       print('🔍 [canUseAI] 現在のプラン: $plan');
       
+      // 🛡️ Phase 2: Pro会員のレート制限チェック
+      if (plan == SubscriptionType.pro) {
+        final rateLimitResult = await _abusePreventionService.checkRateLimit(user.uid);
+        if (!rateLimitResult.allowed) {
+          return CanUseAIResult(
+            allowed: false,
+            reason: rateLimitResult.reason ?? 'レート制限に達しました',
+          );
+        }
+        
+        // Pro会員は無制限（レート制限内なら利用可能）
+        return CanUseAIResult(allowed: true);
+      }
+      
       if (plan != SubscriptionType.free) {
-        // 有料プランの月次制限チェック
+        // Premium: 月次制限チェック
         final remaining = await _subscriptionService.getRemainingAIUsage();
-        print('🔍 [canUseAI] 有料プラン残回数: $remaining');
-        return remaining > 0;
+        print('🔍 [canUseAI] Premium残回数: $remaining');
+        if (remaining > 0) {
+          return CanUseAIResult(allowed: true);
+        }
+        return CanUseAIResult(
+          allowed: false,
+          reason: '今月のAI利用回数（20回）を使い切りました',
+        );
       }
       
       // 無料プラン: まずAI追加パック（¥300）の残回数をチェック
       final addonUsage = await _subscriptionService.getAddonAIUsage();
       print('🔍 [canUseAI] AI追加パック残回数: $addonUsage');
       if (addonUsage > 0) {
-        return true; // AI追加パックがあれば広告なしで利用可能
+        return CanUseAIResult(allowed: true);
       }
       
       // AI追加パックなし: クレジット残高をチェック
       final credits = await getAICredits();
       print('🔍 [canUseAI] 無料プラン AIクレジット: $credits');
-      return credits > 0;
+      if (credits > 0) {
+        return CanUseAIResult(allowed: true);
+      }
+      
+      return CanUseAIResult(
+        allowed: false,
+        reason: '今月のAI利用回数（3回）を使い切りました',
+      );
     } catch (e) {
       print('❌ [canUseAI] エラー: $e');
-      return false;
+      return CanUseAIResult(
+        allowed: false,
+        reason: 'エラーが発生しました',
+      );
     }
   }
   
@@ -107,9 +155,15 @@ class AICreditService {
     print('✅ AIクレジット追加: +$amount (合計: $newTotal)');
   }
   
-  /// AIクレジットを消費（無料プランのAI利用時）
-  Future<bool> consumeAICredit() async {
+  /// AIクレジットを消費（無料プランのAI利用時）+ ログ記録
+  Future<bool> consumeAICredit({String featureType = 'unknown'}) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+    
     final plan = await _subscriptionService.getCurrentPlan();
+    
+    // 🛡️ AI利用ログを記録（悪用検出用）
+    await _abusePreventionService.logAIUsage(user.uid, featureType);
     
     // 有料プランはサブスクリプションサービス経由
     if (plan != SubscriptionType.free) {
@@ -141,7 +195,6 @@ class AICreditService {
     // Firestoreにバックアップ
     if (_enableFirestoreBackup) {
       try {
-        final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
           await FirebaseFirestore.instance
               .collection('users')
@@ -224,4 +277,15 @@ class AICreditService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('${_aiCreditKey}_earned_count', count + 1);
   }
+}
+
+/// AI利用可能判定結果
+class CanUseAIResult {
+  final bool allowed;
+  final String? reason;
+  
+  CanUseAIResult({
+    required this.allowed,
+    this.reason,
+  });
 }

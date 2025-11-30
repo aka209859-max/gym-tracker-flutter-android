@@ -222,9 +222,9 @@ class SubscriptionService {
   /// プラン説明を取得
   String getPlanDescription(SubscriptionType plan) {
     return switch (plan) {
-      SubscriptionType.free => 'ジム検索 + AI混雑度予測 + トレーニング記録',
-      SubscriptionType.premium => 'AI機能月10回（AIコーチ・成長予測・効果分析） + お気に入り無制限 + レビュー投稿',
-      SubscriptionType.pro => 'AI機能月30回（AIコーチ・成長予測・効果分析） + パートナー検索 + メッセージング',
+      SubscriptionType.free => 'ジム検索 + AI混雑度予測 + トレーニング記録 + AI機能月3回',
+      SubscriptionType.premium => 'AI機能月20回（AIコーチ・成長予測・効果分析） + お気に入り無制限 + レビュー投稿',
+      SubscriptionType.pro => 'AI機能無制限（AIコーチ・成長予測・効果分析） + パートナー検索 + メッセージング',
     };
   }
   
@@ -250,11 +250,16 @@ class SubscriptionService {
   }
   
   /// AI使用回数上限を取得
+  /// 
+  /// A案フル実装:
+  /// - Free: 3回/月（オンボーディング体験用）
+  /// - Premium: 20回/月（週5回トレーニング対応）
+  /// - Pro: 999回/月（実質無制限、悪用対策で上限設定）
   int getAIUsageLimit(SubscriptionType plan) {
     return switch (plan) {
-      SubscriptionType.free => 0,
-      SubscriptionType.premium => 10,
-      SubscriptionType.pro => 30,
+      SubscriptionType.free => 3,      // 0 → 3回
+      SubscriptionType.premium => 20,  // 10 → 20回
+      SubscriptionType.pro => 999,     // 30 → 999回（実質無制限）
     };
   }
   
