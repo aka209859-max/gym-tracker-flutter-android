@@ -1242,9 +1242,34 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '一時停止中は料金が発生しません。\nいつでも再開できます。',
-                  style: TextStyle(fontSize: 14),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '⚠️ 重要なお知らせ',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                      ),
+                      child: const Text(
+                        '一時停止中もApp Storeからの課金は継続されます。\n'
+                        '課金を停止するには、App Storeから直接サブスクリプションをキャンセルしてください。\n\n'
+                        '一時停止機能は、アプリ内の有料機能へのアクセスを停止し、'
+                        '停止期間終了後にスムーズに再開できるようにするためのものです。',
+                        style: TextStyle(fontSize: 12, height: 1.5),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 

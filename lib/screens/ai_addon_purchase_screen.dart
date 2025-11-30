@@ -182,6 +182,7 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final remaining = _totalLimit - _currentUsage;
+    final isProPlan = _baseLimit >= 999; // Pro Plan判定
     
     return Scaffold(
       appBar: AppBar(
@@ -241,18 +242,20 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
                           ),
                         ),
                         Text(
-                          '残り: $remaining回',
+                          isProPlan ? '残り: ∞' : '残り: $remaining回',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: remaining <= 3 ? Colors.red : Colors.blue,
+                            color: remaining <= 3 && !isProPlan ? Colors.red : Colors.blue,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'プラン基本: $_baseLimit回 / 追加購入: $_addonLimit回',
+                      isProPlan 
+                          ? 'プラン基本: 無制限 / 追加購入: $_addonLimit回'
+                          : 'プラン基本: $_baseLimit回 / 追加購入: $_addonLimit回',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
