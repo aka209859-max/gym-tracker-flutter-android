@@ -4,6 +4,7 @@ import 'dart:math' show cos, sqrt, asin;
 import '../models/partner_profile.dart';
 import 'subscription_service.dart';
 import 'strength_matching_service.dart';
+import 'spatiotemporal_matching_service.dart';
 
 /// パートナー検索サービス
 /// 
@@ -13,6 +14,7 @@ class PartnerSearchService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final SubscriptionService _subscriptionService = SubscriptionService();
   final StrengthMatchingService _strengthService = StrengthMatchingService();
+  final SpatiotemporalMatchingService _spatiotemporalService = SpatiotemporalMatchingService();
 
   /// 自分のパートナープロフィールを取得
   Future<PartnerProfile?> getMyProfile() async {
@@ -62,7 +64,7 @@ class PartnerSearchService {
     }
   }
 
-  /// パートナー検索（フィルター付き + Pro非対称可視性対応 + 実力ベースマッチング）
+  /// パートナー検索（フィルター付き + Pro非対称可視性 + 実力 + 時空間マッチング）
   /// 
   /// Pro Plan非対称可視性:
   /// - Proユーザー: すべてのユーザー（Free/Premium/Pro）を検索可能
@@ -72,6 +74,10 @@ class PartnerSearchService {
   /// - enableStrengthFilter = true: ±15%範囲内のみ表示
   /// - enableStrengthFilter = false: 全ユーザー表示（実力差でソート）
   /// 
+  /// 時空間コンテキストマッチング:
+  /// - enableSpatiotemporalFilter = true: 同じジム・同じ時間帯（±2h）のみ表示
+  /// - enableSpatiotemporalFilter = false: 全ユーザー表示（時空間スコアでソート）
+  /// 
   /// 検索条件:
   /// - 場所（緯度経度からの距離）
   /// - トレーニング目標
@@ -80,6 +86,7 @@ class PartnerSearchService {
   /// - 性別
   /// - 曜日・時間帯の可用性
   /// - 実力（±15% 1RM）
+  /// - 時空間（同じジム・時間帯）
   Future<List<PartnerProfile>> searchPartners({
     double? latitude,
     double? longitude,
@@ -92,6 +99,7 @@ class PartnerSearchService {
     List<String>? availableDays,
     List<String>? availableTimeSlots,
     bool enableStrengthFilter = false, // ✅ 実力フィルター有効化フラグ
+    bool enableSpatiotemporalFilter = false, // ✅ 時空間フィルター有効化フラグ
   }) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('ログインが必要です');
@@ -106,6 +114,16 @@ class PartnerSearchService {
       if (enableStrengthFilter) {
         userAverage1RM = await _strengthService.calculateAverage1RM(userId);
         print('💪 実力フィルター有効 - 検索者の平均1RM: ${userAverage1RM?.toStringAsFixed(1) ?? "記録なし"}kg');
+      }
+      
+      // ✅ 時空間コンテキストマッチング: 検索者のジム・時間帯データを取得
+      String? userGymId;
+      List<int> userPreferredHours = [];
+      if (enableSpatiotemporalFilter) {
+        final spatioData = await _spatiotemporalService.getMostFrequentGymAndTime(userId);
+        userGymId = spatioData['gymId'];
+        userPreferredHours = spatioData['preferredHours'] ?? [];
+        print('🕐 時空間フィルター有効 - 検索者のジム: $userGymId, 時間: $userPreferredHours');
       }
       
       print('🔍 パートナー検索: ${currentUserPlan.toString().split(".").last}ユーザー (Pro非対称: ${isProUser ? "全員検索可能" : "Pro限定"})');
@@ -141,6 +159,22 @@ class PartnerSearchService {
           if (!_strengthService.isStrengthMatch(userAverage1RM, profile.average1RM)) {
             print('⏭️ Skip: ${doc.id} - 実力差が大きい');
             continue; // ±15%範囲外を除外
+          }
+        }
+        
+        // ✅ 時空間コンテキストマッチングフィルター（同じジム・±2時間）
+        if (enableSpatiotemporalFilter && userGymId != null) {
+          final score = _spatiotemporalService.calculateSpatiotemporalScore(
+            userGymId: userGymId,
+            userPreferredHours: userPreferredHours,
+            targetGymId: profile.mostFrequentGymId ?? '',
+            targetPreferredHours: profile.preferredHours ?? [],
+          );
+          
+          // スコアが25点未満（時間差±2時間超 or 別ジム）は除外
+          if (score < 25) {
+            print('⏭️ Skip: ${doc.id} - 時空間スコア低 ($score点)');
+            continue;
           }
         }
         
@@ -206,10 +240,29 @@ class PartnerSearchService {
       }
 
       // ✅ ソート優先順位:
-      // 1. 実力フィルター有効時: 実力差（近い順）
-      // 2. 距離情報あり: 距離（近い順）
-      // 3. それ以外: レーティング（高い順）
-      if (enableStrengthFilter && userAverage1RM != null) {
+      // 1. 時空間フィルター有効時: 時空間スコア（高い順）
+      // 2. 実力フィルター有効時: 実力差（近い順）
+      // 3. 距離情報あり: 距離（近い順）
+      // 4. それ以外: レーティング（高い順）
+      if (enableSpatiotemporalFilter && userGymId != null) {
+        // 時空間スコアでソート（100点 = 完全一致、0点 = 全く合わない）
+        profiles.sort((a, b) {
+          final scoreA = _spatiotemporalService.calculateSpatiotemporalScore(
+            userGymId: userGymId,
+            userPreferredHours: userPreferredHours,
+            targetGymId: a.mostFrequentGymId ?? '',
+            targetPreferredHours: a.preferredHours ?? [],
+          );
+          final scoreB = _spatiotemporalService.calculateSpatiotemporalScore(
+            userGymId: userGymId,
+            userPreferredHours: userPreferredHours,
+            targetGymId: b.mostFrequentGymId ?? '',
+            targetPreferredHours: b.preferredHours ?? [],
+          );
+          return scoreB.compareTo(scoreA); // 降順（高スコアが上）
+        });
+        print('✅ 時空間スコアでソート完了: ${profiles.length}件');
+      } else if (enableStrengthFilter && userAverage1RM != null) {
         // 実力差でソート（0% = 完全一致、100% = 最大差）
         profiles.sort((a, b) {
           final diffA = _strengthService.calculateStrengthDifference(userAverage1RM, a.average1RM);

@@ -40,6 +40,7 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
   String? _selectedExperienceLevel;
   List<String> _selectedGenders = [];
   bool _enableStrengthFilter = false; // ✅ 実力フィルター（±15% 1RM）
+  bool _enableSpatiotemporalFilter = false; // ✅ 時空間フィルター（同じジム・時間）
 
   // 利用可能なオプション
   final Map<String, String> _trainingGoals = {
@@ -114,6 +115,7 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
         experienceLevel: _selectedExperienceLevel,
         genders: _selectedGenders.isEmpty ? null : _selectedGenders,
         enableStrengthFilter: _enableStrengthFilter, // ✅ 実力フィルター
+        enableSpatiotemporalFilter: _enableSpatiotemporalFilter, // ✅ 時空間フィルター
       );
 
       if (!mounted) return;
@@ -290,6 +292,43 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
                 padding: EdgeInsets.only(top: 4),
                 child: Text(
                   'あなたのBIG3平均1RMの±15%範囲内のユーザーのみ表示',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ),
+            const SizedBox(height: 16),
+            
+            // ✅ 時空間コンテキストマッチング
+            Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      const Icon(Icons.place_outlined, size: 20, color: Colors.grey),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          '同じジム・時間帯の人のみ（±2時間）',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: _enableSpatiotemporalFilter,
+                  onChanged: (value) {
+                    setState(() {
+                      _enableSpatiotemporalFilter = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+            if (_enableSpatiotemporalFilter)
+              const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text(
+                  'あなたがよく行くジムで、同じ時間帯（±2時間）にトレーニングする人のみ表示',
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ),

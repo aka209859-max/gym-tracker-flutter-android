@@ -38,6 +38,11 @@ class PartnerProfile {
   // ✅ 実力ベースマッチング（±15% 1RM）
   final double? average1RM; // BIG3の平均1RM（kg）
   final DateTime? average1RMUpdatedAt; // 最終更新日時
+  
+  // ✅ 時空間コンテキストマッチング
+  final String? mostFrequentGymId; // 最もよく通うジムID
+  final List<int>? preferredHours; // よく行く時間帯（0-23）
+  final DateTime? spatiotemporalUpdatedAt; // 最終更新日時
 
   PartnerProfile({
     required this.userId,
@@ -65,6 +70,9 @@ class PartnerProfile {
     this.rating = 0.0,
     this.average1RM,
     this.average1RMUpdatedAt,
+    this.mostFrequentGymId,
+    this.preferredHours,
+    this.spatiotemporalUpdatedAt,
   });
 
   /// Firestore からのデータ読み込み
@@ -97,6 +105,13 @@ class PartnerProfile {
       average1RMUpdatedAt: data['average_1rm_updated_at'] != null
           ? DateTime.parse(data['average_1rm_updated_at'] as String)
           : null,
+      mostFrequentGymId: data['most_frequent_gym_id'] as String?,
+      preferredHours: (data['preferred_hours'] as List<dynamic>?)
+          ?.map((h) => h as int)
+          .toList(),
+      spatiotemporalUpdatedAt: data['spatiotemporal_updated_at'] != null
+          ? DateTime.parse(data['spatiotemporal_updated_at'] as String)
+          : null,
     );
   }
 
@@ -127,6 +142,9 @@ class PartnerProfile {
       'rating': rating,
       'average_1rm': average1RM,
       'average_1rm_updated_at': average1RMUpdatedAt?.toIso8601String(),
+      'most_frequent_gym_id': mostFrequentGymId,
+      'preferred_hours': preferredHours,
+      'spatiotemporal_updated_at': spatiotemporalUpdatedAt?.toIso8601String(),
     };
   }
 
@@ -155,6 +173,9 @@ class PartnerProfile {
     double? rating,
     double? average1RM,
     DateTime? average1RMUpdatedAt,
+    String? mostFrequentGymId,
+    List<int>? preferredHours,
+    DateTime? spatiotemporalUpdatedAt,
   }) {
     return PartnerProfile(
       userId: userId,
@@ -182,6 +203,9 @@ class PartnerProfile {
       rating: rating ?? this.rating,
       average1RM: average1RM ?? this.average1RM,
       average1RMUpdatedAt: average1RMUpdatedAt ?? this.average1RMUpdatedAt,
+      mostFrequentGymId: mostFrequentGymId ?? this.mostFrequentGymId,
+      preferredHours: preferredHours ?? this.preferredHours,
+      spatiotemporalUpdatedAt: spatiotemporalUpdatedAt ?? this.spatiotemporalUpdatedAt,
     );
   }
 }
