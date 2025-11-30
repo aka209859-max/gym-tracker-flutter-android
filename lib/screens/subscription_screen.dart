@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/subscription_service.dart';
 import '../services/revenue_cat_service.dart';
+import '../services/subscription_management_service.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'ai_addon_purchase_screen.dart';
@@ -19,6 +20,7 @@ class SubscriptionScreen extends StatefulWidget {
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
   final SubscriptionService _subscriptionService = SubscriptionService();
   final RevenueCatService _revenueCatService = RevenueCatService();
+  final SubscriptionManagementService _managementService = SubscriptionManagementService();
   SubscriptionType _currentPlan = SubscriptionType.free;
   bool _isLoading = true;
   List<StoreProduct> _availableProducts = [];
@@ -252,6 +254,36 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 fontWeight: FontWeight.w500,
               ),
             ),
+            
+            // ✅ プラン管理ボタン（有料プランのみ）
+            if (_currentPlan != SubscriptionType.free) ...[
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // 一時停止ボタン
+                  TextButton.icon(
+                    onPressed: _showPauseDialog,
+                    icon: const Icon(Icons.pause_circle_outline, size: 20),
+                    label: const Text('一時停止'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.orange,
+                    ),
+                  ),
+                  // ダウングレードボタン
+                  TextButton.icon(
+                    onPressed: _showDowngradeDialog,
+                    icon: const Icon(Icons.arrow_downward, size: 20),
+                    label: const Text('変更'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -1180,6 +1212,310 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// ✅ 一時停止ダイアログ
+  void _showPauseDialog() {
+    String? selectedReason;
+    int selectedDuration = 1;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.pause_circle, color: Colors.orange),
+              const SizedBox(width: 8),
+              const Text('サブスクリプション一時停止'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '一時停止中は料金が発生しません。\nいつでも再開できます。',
+                  style: TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                
+                // 期間選択
+                const Text('停止期間', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                ...SubscriptionManagementService.pauseDurationMonths.map((months) {
+                  return RadioListTile<int>(
+                    title: Text('$months ヶ月'),
+                    value: months,
+                    groupValue: selectedDuration,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedDuration = value!;
+                      });
+                    },
+                  );
+                }).toList(),
+                
+                const SizedBox(height: 16),
+                
+                // 理由選択
+                const Text('停止理由（任意）', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: '選択してください',
+                  ),
+                  value: selectedReason,
+                  items: SubscriptionManagementService.churnReasons.map((reason) {
+                    return DropdownMenuItem(value: reason, child: Text(reason));
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedReason = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('キャンセル'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                
+                final success = await _managementService.pauseSubscription(
+                  durationMonths: selectedDuration,
+                  reason: selectedReason,
+                );
+                
+                if (success && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('$selectedDuration ヶ月間一時停止しました'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('一時停止する'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// ✅ ダウングレードダイアログ
+  void _showDowngradeDialog() {
+    String? selectedReason;
+    
+    // 現在のプランに応じてダウングレード先を決定
+    final String targetPlan = _currentPlan == SubscriptionType.pro ? 'premium' : 'free';
+    final String targetPlanName = targetPlan == 'premium' ? 'Premium' : '無料プラン';
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.arrow_downward, color: Colors.blue),
+              const SizedBox(width: 8),
+              Text('$targetPlanName に変更'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 代替案の提案
+                if (selectedReason != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue[200]!),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.lightbulb, color: Colors.blue, size: 20),
+                            const SizedBox(width: 8),
+                            const Text(
+                              '💡 こんな選択肢もあります',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _managementService.suggestRetentionOption(
+                            _currentPlan.toString().split('.').last,
+                            selectedReason!,
+                          )['message']!,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                
+                Text('$targetPlanName に変更すると、以下の機能が制限されます：'),
+                const SizedBox(height: 12),
+                
+                // 失う機能のリスト
+                ..._getLostFeatures().map((feature) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(feature, style: const TextStyle(fontSize: 14))),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                
+                const SizedBox(height: 16),
+                
+                // 理由選択
+                const Text('変更理由', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: '選択してください',
+                  ),
+                  value: selectedReason,
+                  items: SubscriptionManagementService.churnReasons.map((reason) {
+                    return DropdownMenuItem(value: reason, child: Text(reason));
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedReason = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('キャンセル'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                
+                final success = await _managementService.requestDowngrade(
+                  currentPlan: _currentPlan.toString().split('.').last,
+                  targetPlan: targetPlan,
+                  reason: selectedReason,
+                );
+                
+                if (success && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('App Store設定から$targetPlanNameへ変更してください'),
+                      backgroundColor: Colors.blue,
+                      duration: const Duration(seconds: 5),
+                      action: SnackBarAction(
+                        label: 'ヘルプ',
+                        textColor: Colors.white,
+                        onPressed: () {
+                          // App Store設定へのリンクを表示
+                          _showAppStoreInstructions();
+                        },
+                      ),
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('変更する'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 失う機能のリストを取得
+  List<String> _getLostFeatures() {
+    if (_currentPlan == SubscriptionType.pro) {
+      return [
+        'AI機能が無制限→月20回に制限',
+        'トレーニングパートナー検索',
+        'メッセージング機能',
+      ];
+    } else if (_currentPlan == SubscriptionType.premium) {
+      return [
+        'AI機能が月20回→月3回に制限',
+        'お気に入り無制限→制限あり',
+        '詳細な混雑度統計',
+        'ジムレビュー投稿',
+        '広告が表示されます',
+      ];
+    }
+    return [];
+  }
+
+  /// App Store設定手順を表示
+  void _showAppStoreInstructions() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('プラン変更手順'),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('1. iPhoneの「設定」アプリを開く'),
+              SizedBox(height: 8),
+              Text('2. 一番上の[Apple ID]をタップ'),
+              SizedBox(height: 8),
+              Text('3. 「サブスクリプション」をタップ'),
+              SizedBox(height: 8),
+              Text('4. 「GYM MATCH」を選択'),
+              SizedBox(height: 8),
+              Text('5. 希望のプランを選択'),
+              SizedBox(height: 12),
+              Text(
+                '※ 現在のプラン期間が終了後に新プランが適用されます',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('閉じる'),
+          ),
+        ],
       ),
     );
   }
