@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -37,6 +38,24 @@ late RewardAdService globalRewardAdService;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // グローバルエラーハンドラー設定（クラッシュ防止）
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    if (kDebugMode) {
+      print('❌ Flutter Error: ${details.exception}');
+      print('📍 Stack trace: ${details.stack}');
+    }
+  };
+  
+  // 非同期エラーのグローバルハンドラー
+  PlatformDispatcher.instance.onError = (error, stack) {
+    if (kDebugMode) {
+      print('❌ Uncaught async error: $error');
+      print('📍 Stack trace: $stack');
+    }
+    return true; // エラーを処理済みとマーク
+  };
   
   // ログシステム初期化（最優先 - JS Interop版）
   ConsoleLogger.init();
