@@ -8,66 +8,91 @@ import 'package:flutter/foundation.dart';
 /// - Release Buildでも確実に出力される（developer.log使用）
 /// - プラットフォーム分岐不要
 class ConsoleLogger {
-  /// デバッグログ (リリースビルドでは無効)
+  /// デバッグログ
   static void debug(String message, {String? tag}) {
-    if (!kDebugMode) return; // リリースビルドでは何もしない
-    
     final timestamp = DateTime.now().toString().substring(11, 19);
     final tagStr = tag != null ? '[$tag] ' : '';
     final output = '🔍 DEBUG [$timestamp] $tagStr$message';
-    debugPrint(output);
+    
+    if (kDebugMode) {
+      debugPrint(output);
+    } else {
+      // Release Buildでもログ出力
+      developer.log(output, name: 'DEBUG', level: 500);
+    }
   }
   
-  /// 情報ログ (リリースビルドでは無効)
+  /// 情報ログ
   static void info(String message, {String? tag}) {
-    if (!kDebugMode) return; // リリースビルドでは何もしない
-    
     final timestamp = DateTime.now().toString().substring(11, 19);
     final tagStr = tag != null ? '[$tag] ' : '';
     final output = '✅ INFO [$timestamp] $tagStr$message';
-    debugPrint(output);
+    
+    if (kDebugMode) {
+      debugPrint(output);
+    } else {
+      developer.log(output, name: 'INFO', level: 800);
+    }
   }
   
-  /// 警告ログ (リリースビルドでは無効)
+  /// 警告ログ
   static void warn(String message, {String? tag}) {
-    if (!kDebugMode) return; // リリースビルドでは何もしない
-    
     final timestamp = DateTime.now().toString().substring(11, 19);
     final tagStr = tag != null ? '[$tag] ' : '';
     final output = '⚠️ WARN [$timestamp] $tagStr$message';
-    debugPrint(output);
+    
+    if (kDebugMode) {
+      debugPrint(output);
+    } else {
+      developer.log(output, name: 'WARN', level: 900);
+    }
   }
   
-  /// エラーログ (リリースビルドではFirebase Crashlyticsを使用)
+  /// エラーログ
   static void error(String message, {String? tag, Object? error, StackTrace? stackTrace}) {
-    if (!kDebugMode) return; // リリースビルドでは何もしない
-    
     final timestamp = DateTime.now().toString().substring(11, 19);
     final tagStr = tag != null ? '[$tag] ' : '';
     final output = '❌ ERROR [$timestamp] $tagStr$message';
-    debugPrint(output);
-    if (error != null) debugPrint('   Error: $error');
-    if (stackTrace != null) debugPrint('   StackTrace: $stackTrace');
+    
+    if (kDebugMode) {
+      debugPrint(output);
+      if (error != null) debugPrint('   Error: $error');
+      if (stackTrace != null) debugPrint('   StackTrace: $stackTrace');
+    } else {
+      developer.log(
+        output,
+        name: 'ERROR',
+        level: 1000,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
   
-  /// ユーザーアクションログ (リリースビルドでは無効)
+  /// ユーザーアクションログ
   static void userAction(String action, {Map<String, dynamic>? data}) {
-    if (!kDebugMode) return; // リリースビルドでは何もしない
-    
     final timestamp = DateTime.now().toString().substring(11, 19);
     final dataStr = data != null ? ' | Data: $data' : '';
     final output = '👤 USER_ACTION [$timestamp] $action$dataStr';
-    debugPrint(output);
+    
+    if (kDebugMode) {
+      debugPrint(output);
+    } else {
+      developer.log(output, name: 'USER_ACTION', level: 800);
+    }
   }
   
-  /// 初期化ログ (リリースビルドでは無効)
+  /// 初期化ログ
   static void init() {
-    if (!kDebugMode) return; // リリースビルドでは何もしない
-    
     final timestamp = DateTime.now().toString().substring(11, 19);
     final platform = kIsWeb ? 'WEB' : 'MOBILE';
     final mode = kDebugMode ? 'DEBUG' : 'RELEASE';
     final output = '🚀 ConsoleLogger initialized [$platform/$mode] [$timestamp]';
-    debugPrint(output);
+    
+    if (kDebugMode) {
+      debugPrint(output);
+    } else {
+      developer.log(output, name: 'INIT', level: 800);
+    }
   }
 }

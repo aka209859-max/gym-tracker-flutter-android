@@ -1,9 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// デバッグログ画面（スマホでログを確認するため）
-/// ⚠️ リリースビルドでは無効化
 class DebugLogScreen extends StatefulWidget {
   const DebugLogScreen({super.key});
 
@@ -153,10 +151,8 @@ class DebugLogger {
   final List<String> _logs = [];
   final int _maxLogs = 200; // 最大200件まで保持
   
-  /// ログを追加 (リリースビルドでは無効)
+  /// ログを追加
   void log(String message) {
-    if (!kDebugMode) return; // リリースビルドでは何もしない
-    
     final timestamp = DateTime.now().toString().substring(11, 19);
     final logEntry = '[$timestamp] $message';
     
@@ -168,7 +164,7 @@ class DebugLogger {
     }
     
     // デバッグコンソールにも出力
-    debugPrint(logEntry);
+    print(logEntry);
   }
   
   /// すべてのログを取得

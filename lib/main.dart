@@ -60,34 +60,30 @@ void main() async {
     );
     
     firebaseInitialized = true;
-    if (kDebugMode) {
-      print('✅ Firebase初期化成功');
-      print('   App name: ${Firebase.app().name}');
-    }
+    print('✅ Firebase初期化成功');
+    print('   App name: ${Firebase.app().name}');
     
     // 匿名認証を自動実行
     try {
-      if (kDebugMode) print('👤 匿名認証を開始...');
+      print('👤 匿名認証を開始...');
       final auth = firebase_auth.FirebaseAuth.instance;
       
       // 既存ユーザーがいるか確認
       if (auth.currentUser == null) {
-        if (kDebugMode) print('   新規ユーザーとして匿名ログイン中...');
+        print('   新規ユーザーとして匿名ログイン中...');
         final userCredential = await auth.signInAnonymously();
-        if (kDebugMode) print('✅ 匿名認証成功: ${userCredential.user?.uid}');
+        print('✅ 匿名認証成功: ${userCredential.user?.uid}');
       } else {
-        if (kDebugMode) print('✅ 既存ユーザー: ${auth.currentUser?.uid}');
+        print('✅ 既存ユーザー: ${auth.currentUser?.uid}');
       }
     } catch (authError) {
-      if (kDebugMode) print('❌ 匿名認証エラー: $authError');
+      print('❌ 匿名認証エラー: $authError');
     }
     
   } catch (e, stackTrace) {
     // Firebase設定エラー時はオフラインモードで起動
-    if (kDebugMode) {
-      print('❌ Firebase初期化エラー（オフラインモードで起動）: $e');
-      print('   StackTrace: $stackTrace');
-    }
+    print('❌ Firebase初期化エラー（オフラインモードで起動）: $e');
+    print('   StackTrace: $stackTrace');
   }
   
   // 🔥 マスターユーザー権限設定（CEO専用）
@@ -102,9 +98,9 @@ void main() async {
       // ダイアログ表示まで少し待機（起動直後のクラッシュ防止）
       await Future.delayed(const Duration(milliseconds: 1000));
       final status = await AppTrackingTransparency.requestTrackingAuthorization();
-      if (kDebugMode) print('📱 ATTステータス: $status');
+      print('📱 ATTステータス: $status');
     } catch (e) {
-      if (kDebugMode) print('❌ ATTリクエストエラー: $e');
+      print('❌ ATTリクエストエラー: $e');
     }
   }
   
@@ -113,66 +109,127 @@ void main() async {
     await AdService().initialize();
     // インタースティシャル広告を先読み
     InterstitialAdManager().loadAd();
-    if (kDebugMode) print('✅ AdMob初期化成功');
+    print('✅ AdMob初期化成功');
   } catch (e) {
-    if (kDebugMode) print('❌ AdMob初期化エラー: $e');
+    print('❌ AdMob初期化エラー: $e');
   }
   
   // 💾 オフラインサービス初期化（Hive）
   try {
     await OfflineService.initialize();
-    if (kDebugMode) print('✅ オフラインサービス初期化成功');
+    print('✅ オフラインサービス初期化成功');
   } catch (e) {
-    if (kDebugMode) print('❌ オフラインサービス初期化エラー: $e');
+    print('❌ オフラインサービス初期化エラー: $e');
   }
   
   // 💰 RevenueCat初期化（iOS課金統合）
   if (firebaseInitialized) {
     try {
-      if (kDebugMode) print('💰 RevenueCat初期化開始...');
+      print('💰 RevenueCat初期化開始...');
       final revenueCatService = RevenueCatService();
       await revenueCatService.initialize();
-      if (kDebugMode) print('✅ RevenueCat初期化成功');
+      print('✅ RevenueCat初期化成功');
     } catch (revenueCatError) {
-      if (kDebugMode) print('❌ RevenueCat初期化エラー（ローカルモードで動作）: $revenueCatError');
+      print('❌ RevenueCat初期化エラー（ローカルモードで動作）: $revenueCatError');
     }
     
     // 🎁 トライアル期限チェック
     try {
-      if (kDebugMode) print('🎁 トライアル期限チェック...');
+      print('🎁 トライアル期限チェック...');
       final trialService = TrialService();
       await trialService.checkTrialExpiration();
-      if (kDebugMode) print('✅ トライアル状態確認完了');
+      print('✅ トライアル状態確認完了');
     } catch (trialError) {
-      if (kDebugMode) print('❌ トライアルチェックエラー: $trialError');
+      print('❌ トライアルチェックエラー: $trialError');
     }
     
     // 📱 AdMob初期化（無料プラン広告用）
     try {
-      if (kDebugMode) print('📱 AdMob初期化...');
+      print('📱 AdMob初期化...');
       final adMobService = AdMobService();
       await adMobService.initialize();
-      if (kDebugMode) print('✅ AdMob初期化完了');
+      print('✅ AdMob初期化完了');
     } catch (adMobError) {
-      if (kDebugMode) print('❌ AdMob初期化エラー（広告なしで動作）: $adMobError');
+      print('❌ AdMob初期化エラー（広告なしで動作）: $adMobError');
     }
     
     // 🎬 リワード広告初期化（CEO戦略: 動画視聴でAIクレジット付与）
     try {
-      if (kDebugMode) print('🎬 リワード広告初期化...');
+      print('🎬 リワード広告初期化...');
       globalRewardAdService = RewardAdService();
       await globalRewardAdService.initialize();
       // 初回の広告をプリロード
       await globalRewardAdService.loadRewardedAd();
-      if (kDebugMode) print('✅ リワード広告初期化完了');
+      print('✅ リワード広告初期化完了');
     } catch (rewardAdError) {
-      if (kDebugMode) print('❌ リワード広告初期化エラー（広告なしで動作）: $rewardAdError');
+      print('❌ リワード広告初期化エラー（広告なしで動作）: $rewardAdError');
     }
   }
   
-  if (kDebugMode) print('🚀 アプリ起動開始 (Firebase: ${firebaseInitialized ? "有効" : "無効"})');
+  print('🚀 アプリ起動開始 (Firebase: ${firebaseInitialized ? "有効" : "無効"})');
   
   runApp(const GymMatchApp());
+}
+
+/// マスターユーザー権限設定（CEO専用）
+/// 起動時に自動的にProプランを設定し、全機能をフルアクセス可能にする
+Future<void> _setMasterUserPrivileges() async {
+  print('👑 マスターユーザー権限設定開始...');
+  
+  try {
+    final subscriptionService = SubscriptionService();
+    
+    // Proプランに設定（全機能アクセス可能）
+    await subscriptionService.setPlan(SubscriptionType.pro);
+    
+    // マスターユーザーフラグ設定
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_master_user', true);
+    
+    print('✅ マスターユーザー権限設定完了');
+    print('   プラン: Proプラン（全機能フルアクセス）');
+    print('   🎯 AI成長予測: ✅');
+    print('   🎯 AI効果分析: ✅');
+    print('   🎯 AI週次レポート: ✅');
+    print('   🎯 トレーニングパートナー: ✅');
+    print('   🎯 メッセージング: ✅');
+    print('   🎯 優先サポート: ✅');
+    
+  } catch (e) {
+    print('❌ マスターユーザー権限設定失敗: $e');
+  }
+}
+
+/// デバッグ: 無料プランでテスト（SharedPreferencesを完全リセット）
+Future<void> _resetToFreePlanForTesting() async {
+  print('🧪 [デバッグ] 無料プランリセット開始...');
+  
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final subscriptionService = SubscriptionService();
+    
+    // 🔥 サブスクリプション関連のデータをすべてクリア
+    await prefs.remove('subscription_type');
+    await prefs.remove('is_master_user');
+    await prefs.remove('ai_usage_count');
+    await prefs.remove('ai_usage_month');
+    await prefs.remove('ai_addon_count');
+    await prefs.remove('ai_credit_count');
+    await prefs.remove('ai_credit_last_reset_date');
+    await prefs.remove('ai_credit_count_earned_count');
+    
+    // 🔥 強制的にFreeプランに設定
+    await subscriptionService.setPlan(SubscriptionType.free);
+    
+    print('✅ [デバッグ] 無料プランリセット完了');
+    print('   プラン: Freeプラン（リワード広告テスト用）');
+    print('   AIクレジット: 0回');
+    print('   月間広告視聴回数: 0/3回');
+    print('   🎬 リワード広告ダイアログが表示されるはずです');
+    
+  } catch (e) {
+    print('❌ [デバッグ] リセット失敗: $e');
+  }
 }
 
 class GymMatchApp extends StatelessWidget {
@@ -202,9 +259,7 @@ class GymMatchApp extends StatelessWidget {
               '/main': (context) => const PasswordGateScreen(
                 child: MainScreen(),
               ),
-              // 開発者メニュー: リリースビルドでは無効化
-              if (!kReleaseMode)
-                '/developer_menu': (context) => const DeveloperMenuScreen(),
+              '/developer_menu': (context) => const DeveloperMenuScreen(),
               '/workout-memo': (context) => const WorkoutMemoListScreen(),
               '/personal-factors': (context) => const PersonalFactorsScreen(),
             },

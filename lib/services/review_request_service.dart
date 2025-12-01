@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,7 +45,7 @@ class ReviewRequestService {
 
       return true;
     } catch (e) {
-      if (kDebugMode) debugPrint('❌ レビュー依頼チェックエラー: $e');
+      print('❌ レビュー依頼チェックエラー: $e');
       return false;
     }
   }
@@ -117,15 +116,15 @@ class ReviewRequestService {
       if (await _inAppReview.isAvailable()) {
         await _inAppReview.requestReview();
         await _markAsReviewed();
-        if (kDebugMode) debugPrint('✅ レビューリクエスト送信成功');
+        print('✅ レビューリクエスト送信成功');
       } else {
         // In-App Review が利用できない場合、App Store を直接開く
         await _inAppReview.openStoreListing(appStoreId: '6755346813');
         await _markAsReviewed();
-        if (kDebugMode) debugPrint('✅ App Store を開きました');
+        print('✅ App Store を開きました');
       }
     } catch (e) {
-      if (kDebugMode) debugPrint('❌ レビューリクエストエラー: $e');
+      print('❌ レビューリクエストエラー: $e');
     }
   }
 
@@ -156,7 +155,7 @@ class ReviewRequestService {
       });
     }
 
-    if (kDebugMode) debugPrint('✅ レビュー済みフラグをセット');
+    print('✅ レビュー済みフラグをセット');
   }
 
   /// レビュー依頼を表示済みにする
@@ -170,7 +169,7 @@ class ReviewRequestService {
   Future<void> _markAsDeclined() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('review_declined_at', DateTime.now().toIso8601String());
-    if (kDebugMode) debugPrint('ℹ️ レビュー拒否: ${_cooldownDays}日間はリクエストしません');
+    print('ℹ️ レビュー拒否: ${_cooldownDays}日間はリクエストしません');
   }
 
   /// レビュー済みかチェック
