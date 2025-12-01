@@ -1029,7 +1029,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           context,
           icon: Icons.card_giftcard,
           title: '友達を招待',
-          subtitle: 'AI x15回 + 紹介された人もAI x5回 + Premium 7日間',
+          subtitle: 'AI x15回 + 紹介された人もAI x5回',
           badge: 'NEW',
           badgeColor: Colors.orange,
           onTap: () {

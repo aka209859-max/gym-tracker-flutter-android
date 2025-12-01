@@ -179,10 +179,16 @@ class EnhancedShareService {
       }
 
       // ローディング表示
-      _showLoadingDialog(context, '統計画像を生成中...');
+      if (context.mounted) {
+        _showLoadingDialog(context, '統計画像を生成中...');
+      }
 
       // 週間統計を取得
       final weeklyStats = await _getWeeklyStats(user.uid);
+      
+      if (kDebugMode) {
+        print('📊 週間統計取得: $weeklyStats');
+      }
 
       // シェア画像を生成
       final shareWidget = WeeklyStatsShareImage(
@@ -190,6 +196,10 @@ class EnhancedShareService {
       );
 
       final imageBytes = await _captureWidget(shareWidget);
+      
+      if (kDebugMode) {
+        print('🎨 画像生成完了: ${imageBytes.length} bytes');
+      }
 
       // ローディング閉じる
       if (context.mounted) {
@@ -206,11 +216,15 @@ class EnhancedShareService {
 
       // シェア記録を保存（バイラル効果測定）
       await _recordShareEvent('weekly_stats');
-    } catch (e) {
-      if (kDebugMode) print('❌ 週間統計シェアエラー: $e');
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print('❌ 週間統計シェアエラー: $e');
+        print('📍 Stack trace: $stackTrace');
+      }
       if (context.mounted) {
-        Navigator.of(context).pop();
-        _showError(context, 'シェアに失敗しました');
+        // ローディングダイアログが開いていたら閉じる
+        Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst || !route.isActive || route is! DialogRoute);
+        _showError(context, 'シェアに失敗しました: ${e.toString()}');
       }
     }
   }
@@ -385,38 +399,60 @@ class EnhancedShareService {
 
   /// 週間統計を取得
   Future<Map<String, dynamic>> _getWeeklyStats(String userId) async {
-    final now = DateTime.now();
-    final weekAgo = now.subtract(const Duration(days: 7));
+    try {
+      final now = DateTime.now();
+      final weekAgo = now.subtract(const Duration(days: 7));
 
-    final snapshot = await _firestore
-        .collection('workout_logs')
-        .where('user_id', isEqualTo: userId)
-        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(weekAgo))
-        .get();
+      final snapshot = await _firestore
+          .collection('workout_logs')
+          .where('user_id', isEqualTo: userId)
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(weekAgo))
+          .get();
 
-    int totalWorkouts = snapshot.docs.length;
-    double totalVolume = 0.0;
-    Set<String> muscleGroups = {};
+      int totalWorkouts = snapshot.docs.length;
+      double totalVolume = 0.0;
+      Set<String> muscleGroups = {};
 
-    for (var doc in snapshot.docs) {
-      final data = doc.data();
-      final sets = List<Map<String, dynamic>>.from(data['sets'] ?? []);
-      
-      for (var set in sets) {
-        final weight = (set['weight'] as num?)?.toDouble() ?? 0.0;
-        final reps = (set['reps'] as int?) ?? 0;
-        totalVolume += weight * reps;
+      for (var doc in snapshot.docs) {
+        try {
+          final data = doc.data();
+          
+          // setsフィールドの安全な取得
+          final setsData = data['sets'];
+          if (setsData == null || setsData is! List) {
+            if (kDebugMode) print('⚠️ sets is null or not a list for doc ${doc.id}');
+            continue;
+          }
+          
+          final sets = List<Map<String, dynamic>>.from(setsData);
+          
+          for (var set in sets) {
+            if (set is! Map) continue;
+            final weight = (set['weight'] as num?)?.toDouble() ?? 0.0;
+            final reps = (set['reps'] as int?) ?? 0;
+            totalVolume += weight * reps;
+          }
+
+          final muscleGroup = data['muscle_group'];
+          if (muscleGroup != null && muscleGroup is String && muscleGroup.isNotEmpty) {
+            muscleGroups.add(muscleGroup);
+          }
+        } catch (e) {
+          if (kDebugMode) print('⚠️ Error processing doc ${doc.id}: $e');
+          continue;
+        }
       }
 
-      muscleGroups.add(data['muscle_group'] ?? '');
+      return {
+        'totalWorkouts': totalWorkouts,
+        'totalVolume': totalVolume,
+        'muscleGroupsCount': muscleGroups.length,
+        'avgVolumePerWorkout': totalWorkouts > 0 ? totalVolume / totalWorkouts : 0.0,
+      };
+    } catch (e) {
+      if (kDebugMode) print('❌ _getWeeklyStats error: $e');
+      rethrow;
     }
-
-    return {
-      'totalWorkouts': totalWorkouts,
-      'totalVolume': totalVolume,
-      'muscleGroupsCount': muscleGroups.length,
-      'avgVolumePerWorkout': totalWorkouts > 0 ? totalVolume / totalWorkouts : 0.0,
-    };
   }
 
   /// Widgetを画像に変換
