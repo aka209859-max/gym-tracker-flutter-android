@@ -21,6 +21,7 @@ import '../services/achievement_service.dart';
 import '../services/goal_service.dart';
 import '../services/share_service.dart';
 import '../services/workout_share_service.dart';
+import '../services/enhanced_share_service.dart';
 import '../services/fatigue_management_service.dart';
 import '../services/advanced_fatigue_service.dart';
 import '../models/user_profile.dart';
@@ -803,8 +804,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         return;
       }
 
-      // シェア実行
-      final shareService = WorkoutShareService();
+      // シェア実行（Instagram Stories対応）
+      final shareService = EnhancedShareService();
       await shareService.shareWorkout(
         context: context,
         date: _selectedDay!,
