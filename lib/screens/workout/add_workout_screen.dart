@@ -9,6 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:vibration/vibration.dart'; // バイブレーション用
 import '../debug_log_screen.dart';
+import '../../services/review_request_service.dart';
+import '../../services/enhanced_share_service.dart';
 
 // SetType enum
 enum SetType {
@@ -1081,6 +1083,9 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         
         // ⭐ ASO: レビュー依頼（5回目のトレーニング後）
         _checkAndShowReviewRequest();
+        
+        // 🏆 PR達成チェック & シェア提案
+        _checkPRAndOfferShare();
       }
     } catch (e, stackTrace) {
       DebugLogger.instance.log('❌ ワークアウト保存エラー');
@@ -1963,6 +1968,36 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
       }
     } catch (e) {
       print('❌ レビュー依頼チェックエラー: $e');
+      // エラーが発生してもアプリは継続
+    }
+  }
+  
+  // 🏆 PR達成チェック & シェア提案
+  Future<void> _checkPRAndOfferShare() async {
+    if (!mounted) return;
+    
+    try {
+      final shareService = EnhancedShareService();
+      
+      // 各セットの最高重量をチェック
+      for (var set in _sets) {
+        if (set.isCompleted && !set.hasAssist && !set.isBodyweightMode) {
+          // 少し遅延してから表示（レビュー依頼の後）
+          await Future.delayed(const Duration(milliseconds: 1000));
+          
+          if (mounted) {
+            await shareService.checkAndOfferPRShare(
+              context: context,
+              exerciseName: set.exerciseName,
+              newWeight: set.weight,
+              reps: set.reps,
+            );
+            break; // 1つのPRだけ表示
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ PR達成チェックエラー: $e');
       // エラーが発生してもアプリは継続
     }
   }
