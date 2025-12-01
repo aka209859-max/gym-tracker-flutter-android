@@ -70,17 +70,18 @@ jobs:
           PROFILE_NAME: ${{ env.PROFILE_NAME }}
           TEAM_ID: ${{ env.TEAM_ID }}
         run: |
-                  echo "🔧 Installing pbxproj Python package..."
-        python3 -m pip install --user pbxproj || {
-          echo "❌ Failed to install pbxproj with --user flag"
-          echo "Trying with --break-system-packages (Python 3.11+)..."
-          pip3 install --break-system-packages pbxproj
-        }
-        
-        echo "✅ pbxproj installed successfully"
-        python3 -m pip show pbxproj || pip3 show pbxproj
-        
+          echo "🔧 Installing pbxproj Python package..."
+          python3 -m pip install --user pbxproj || {
+            echo "❌ Failed to install pbxproj with --user flag"
+            echo "Trying with --break-system-packages (Python 3.11+)..."
+            pip3 install --break-system-packages pbxproj
+          }
+          
+          echo "✅ pbxproj installed successfully"
+          python3 -m pip show pbxproj || pip3 show pbxproj
+          
           python3 << 'PYTHON_SCRIPT'
+
           import sys
           import os
           from pbxproj import XcodeProject
