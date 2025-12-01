@@ -404,7 +404,7 @@ class EnhancedShareService {
     final snapshot = await _firestore
         .collection('workout_logs')
         .where('user_id', isEqualTo: userId)
-        .where('date', isGreaterThanOrEqual: Timestamp.fromDate(weekAgo))
+        .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(weekAgo))
         .get();
 
     int totalWorkouts = snapshot.docs.length;
