@@ -1078,6 +1078,9 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         
         // 🎯 Phase 1: トレーニング記録後のAI導線ポップアップ
         await _showPostWorkoutAIPrompt();
+        
+        // ⭐ ASO: レビュー依頼（5回目のトレーニング後）
+        _checkAndShowReviewRequest();
       }
     } catch (e, stackTrace) {
       DebugLogger.instance.log('❌ ワークアウト保存エラー');
@@ -1940,5 +1943,27 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         ],
       ),
     );
+  }
+  
+  // ⭐ ASO: レビュー依頼を確認して表示
+  Future<void> _checkAndShowReviewRequest() async {
+    if (!mounted) return;
+    
+    try {
+      final reviewService = ReviewRequestService();
+      
+      // レビュー依頼を表示すべきかチェック
+      if (await reviewService.shouldShowReviewRequest()) {
+        // 少し遅延してから表示（UX改善）
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        if (mounted) {
+          await reviewService.showReviewRequestDialog(context);
+        }
+      }
+    } catch (e) {
+      print('❌ レビュー依頼チェックエラー: $e');
+      // エラーが発生してもアプリは継続
+    }
   }
 }

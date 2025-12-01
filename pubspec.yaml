@@ -78,6 +78,9 @@ dependencies:
   # Push Notifications (Local notifications for training reminders)
   flutter_local_notifications: ^18.0.1  # Local push notifications
   timezone: ^0.9.4  # Timezone support for scheduled notifications
+  
+  # ASO - App Store Review Request
+  in_app_review: ^2.0.10  # In-app review request for ASO optimization
 
 dev_dependencies:
   flutter_test:
