@@ -120,21 +120,39 @@ class ReferralService {
       // 1. 紹介された側（referee）に特典付与
       //    - AI無料利用×5回
       final userRef = _firestore.collection('users').doc(user.uid);
-      transaction.update(userRef, {
-        'usedReferralCode': code,
-        'referredBy': referrerId,
-        'referralBonusAiCredits': _refereeAiBonus, // 5回分
-        'referredAt': FieldValue.serverTimestamp(),
-      });
+      final userSnapshot = await transaction.get(userRef);
+      
+      if (userSnapshot.exists) {
+        transaction.update(userRef, {
+          'usedReferralCode': code,
+          'referredBy': referrerId,
+          'referralBonusAiCredits': _refereeAiBonus, // 5回分
+          'referredAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        // ユーザードキュメントが存在しない場合は新規作成
+        transaction.set(userRef, {
+          'usedReferralCode': code,
+          'referredBy': referrerId,
+          'referralBonusAiCredits': _refereeAiBonus, // 5回分
+          'referredAt': FieldValue.serverTimestamp(),
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
 
       // 2. 紹介した側（referrer）に特典付与
       //    - AI追加パック×3個（15回分）
       final referrerRef = _firestore.collection('users').doc(referrerId);
+      final referrerSnapshot = await transaction.get(referrerRef);
+      
+      final currentAiCredits = (referrerSnapshot.data()?['ai_credits'] as int?) ?? 0;
+      final currentStats = referrerSnapshot.data()?['referralStats'] as Map<String, dynamic>? ?? {};
+      
       transaction.update(referrerRef, {
-        'referralStats.totalReferrals': FieldValue.increment(1),
-        'referralStats.successfulReferrals': FieldValue.increment(1),
-        'referralStats.aiPackCredits': FieldValue.increment(3), // AI追加パック×3個
-        'ai_credits': FieldValue.increment(_referrerAiBonus), // AI 15回分を直接付与
+        'referralStats.totalReferrals': (currentStats['totalReferrals'] as int? ?? 0) + 1,
+        'referralStats.successfulReferrals': (currentStats['successfulReferrals'] as int? ?? 0) + 1,
+        'referralStats.aiPackCredits': (currentStats['aiPackCredits'] as int? ?? 0) + 3, // AI追加パック×3個
+        'ai_credits': currentAiCredits + _referrerAiBonus, // AI 15回分を直接付与
       });
 
       // 3. 紹介履歴を記録（v1.02強化版）

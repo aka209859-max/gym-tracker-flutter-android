@@ -59,12 +59,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     // 🎁 紹介コード処理（Task 10: バイラルループ）
     if (_hasReferralCode && _referralCodeController.text.trim().isNotEmpty) {
       try {
-        await _referralService.applyReferralCode(_referralCodeController.text.trim());
+        final result = await _referralService.applyReferralCode(_referralCodeController.text.trim());
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('🎉 紹介コードを適用しました！AI無料利用×3回を獲得！'),
+              content: Text('🎉 紹介コードを適用しました！AI無料利用×5回を獲得！'),
               backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
             ),
           );
         }
@@ -74,6 +75,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             SnackBar(
               content: Text('紹介コードエラー: ${e.toString()}'),
               backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
             ),
           );
         }

@@ -113,7 +113,11 @@ class ChatService {
         .get();
 
     for (var doc in existingRooms.docs) {
-      final participants = List<String>.from(doc.data()['participants']);
+      final data = doc.data();
+      final participantsData = data['participants'];
+      if (participantsData == null) continue;
+      
+      final participants = List<String>.from(participantsData);
       if (participants.contains(partnerId)) {
         return doc.id;
       }

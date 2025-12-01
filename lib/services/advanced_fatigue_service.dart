@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_profile.dart';
 
@@ -38,7 +39,12 @@ class AdvancedFatigueService {
       return UserProfile.defaultProfile();
     }
     
-    return UserProfile.fromJson(jsonDecode(profileJson) as Map<String, dynamic>);
+    try {
+      return UserProfile.fromJson(jsonDecode(profileJson) as Map<String, dynamic>);
+    } catch (e) {
+      if (kDebugMode) print('❌ Error parsing user profile: $e');
+      return UserProfile.defaultProfile();
+    }
   }
   
   /// Phase 2b: Personal Factor Multiplier (PFM) 計算

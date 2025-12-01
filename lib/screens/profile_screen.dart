@@ -519,23 +519,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  /// 週間統計をシェア
-  Future<void> _shareWeeklyStats() async {
-    try {
-      final shareService = EnhancedShareService();
-      await shareService.shareWeeklyStats(context: context);
-    } catch (e) {
-      if (!mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('❌ シェアエラー: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -676,23 +659,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _shareWeeklyStats,
-                icon: const Icon(Icons.share, size: 18),
-                label: const Text('Instagram Storiesでシェア'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.purple.shade700,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
               ),
             ),
           ],

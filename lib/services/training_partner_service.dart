@@ -143,7 +143,11 @@ class TrainingPartnerService {
         .get();
 
     for (var doc in chatRoomQuery.docs) {
-      final participants = List<String>.from(doc.data()['participants']);
+      final data = doc.data();
+      final participantsData = data['participants'];
+      if (participantsData == null) continue;
+      
+      final participants = List<String>.from(participantsData);
       if (participants.contains(targetUserId)) {
         await doc.reference.update({
           'hidden_for': FieldValue.arrayUnion([currentUserId]),
