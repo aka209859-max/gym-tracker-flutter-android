@@ -1,5 +1,5 @@
 name: gym_match
-description: "GYM MATCH - ジム検索アプリ | リアルタイム混雑度・パートナージム優先表示"
+description: "GYM MATCH - ジム検索アプリ | リアルタイム混雑度・パートナージム優先表示 v1.02"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
