@@ -556,12 +556,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      child: InkWell(
-        onTap: () {
-          Navigator.pushNamed(context, '/weekly-stats');
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
+      child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -666,24 +661,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'タップして週間統計を見る',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white60,
-                    ),
-                  ),
-                  SizedBox(width: 4),
-                  Icon(Icons.bar_chart, color: Colors.white60, size: 16),
-                ],
-              ),
             ],
           ),
-        ),
       ),
     );
   }
