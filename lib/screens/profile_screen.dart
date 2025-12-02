@@ -19,6 +19,7 @@ import 'campaign/campaign_registration_screen.dart';
 import 'ai_addon_purchase_screen.dart';
 import 'profile_edit_screen.dart';
 import 'redeem_invite_code_screen.dart';
+import 'weekly_stats_screen.dart';
 import '../services/favorites_service.dart';
 import '../services/subscription_service.dart';
 import '../services/chat_service.dart';
@@ -714,8 +715,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: InkWell(
         onTap: () {
-          // トレーニングメモ画面に直接遷移
-          Navigator.pushNamed(context, '/workout-memo');
+          // 週間統計画面に遷移（実装済み）
+          Navigator.pushNamed(context, '/weekly-stats');
         },
         borderRadius: BorderRadius.circular(16),
         child: Container(
@@ -828,14 +829,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'タップしてメモを見る',
+                    'タップして週間統計を見る',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.white60,
                     ),
                   ),
                   SizedBox(width: 4),
-                  Icon(Icons.note, color: Colors.white60, size: 16),
+                  Icon(Icons.bar_chart, color: Colors.white60, size: 16),
                 ],
               ),
             ],
