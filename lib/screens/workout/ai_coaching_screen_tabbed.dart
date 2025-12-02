@@ -2215,12 +2215,8 @@ class _GrowthPredictionTabState extends State<_GrowthPredictionTab>
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              // TODO: サブスクリプション画面へ遷移
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('サブスクリプション機能は準備中です'),
-                ),
-              );
+              // サブスクリプション画面へ遷移
+              Navigator.pushNamed(context, '/subscription');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.amber.shade700,
@@ -3654,12 +3650,8 @@ class _EffectAnalysisTabState extends State<_EffectAnalysisTab>
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              // TODO: サブスクリプション画面へ遷移
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('サブスクリプション機能は準備中です'),
-                ),
-              );
+              // サブスクリプション画面へ遷移
+              Navigator.pushNamed(context, '/subscription');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.amber.shade700,
