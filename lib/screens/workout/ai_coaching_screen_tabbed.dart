@@ -2215,7 +2215,6 @@ class _GrowthPredictionTabState extends State<_GrowthPredictionTab>
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              // サブスクリプション画面へ遷移
               Navigator.pushNamed(context, '/subscription');
             },
             style: ElevatedButton.styleFrom(
@@ -3650,7 +3649,6 @@ class _EffectAnalysisTabState extends State<_EffectAnalysisTab>
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
-              // サブスクリプション画面へ遷移
               Navigator.pushNamed(context, '/subscription');
             },
             style: ElevatedButton.styleFrom(

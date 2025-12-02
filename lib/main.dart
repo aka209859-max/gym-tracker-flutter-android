@@ -227,12 +227,7 @@ class GymMatchApp extends StatelessWidget {
               '/weekly-stats': (context) => const WeeklyStatsScreen(),
               '/subscription': (context) => const SubscriptionScreen(),
             },
-            
-            // 未定義ルートのフォールバック（クラッシュ防止）
             onUnknownRoute: (settings) {
-              if (kDebugMode) {
-                print('⚠️ Unknown route: ${settings.name}');
-              }
               return MaterialPageRoute(
                 builder: (context) => const SplashScreen(),
               );
