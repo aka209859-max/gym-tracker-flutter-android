@@ -19,7 +19,6 @@ import 'campaign/campaign_registration_screen.dart';
 import 'ai_addon_purchase_screen.dart';
 import 'profile_edit_screen.dart';
 import 'redeem_invite_code_screen.dart';
-import 'weekly_stats_screen.dart';
 import '../services/favorites_service.dart';
 import '../services/subscription_service.dart';
 import '../services/chat_service.dart';
@@ -491,162 +490,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  /// 招待コード入力ダイアログ
-  Future<void> _showEnterReferralCodeDialog() async {
-    final TextEditingController codeController = TextEditingController();
-    
-    // 既に使用済みかチェック
-    final hasUsed = await _referralService.hasUsedReferralCode();
-    if (hasUsed && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('⚠️ 招待コードは既に使用済みです'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-    
-    if (!mounted) return;
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.amber.shade100,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.redeem,
-                color: Colors.amber,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Text(
-                '招待コードを入力',
-                style: TextStyle(fontSize: 20),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '友達から受け取った招待コードを入力してください',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: codeController,
-              decoration: InputDecoration(
-                hintText: 'GYMXXXXX',
-                prefixIcon: const Icon(Icons.vpn_key, color: Colors.amber),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.amber, width: 2),
-                ),
-              ),
-              textCapitalization: TextCapitalization.characters,
-              maxLength: 8,
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.amber.shade50,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.card_giftcard, color: Colors.amber, size: 20),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'AI使用回数 x3回を獲得！',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('キャンセル'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final code = codeController.text.trim().toUpperCase();
-              if (code.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('⚠️ 招待コードを入力してください'),
-                    backgroundColor: Colors.orange,
-                  ),
-                );
-                return;
-              }
-              
-              Navigator.of(context).pop();
-              
-              // 招待コードを適用
-              try {
-                await _referralService.applyReferralCode(code);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('🎉 招待コードを適用しました！AI無料利用×3回を獲得！'),
-                      backgroundColor: Colors.green,
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                  _loadUserData(); // データ再読み込み
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('❌ エラー: ${e.toString()}'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('適用する'),
-          ),
-        ],
-      ),
-    );
-  }
-  
   Widget _buildRewardItem(String title, String reward) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -713,134 +556,112 @@ class _ProfileScreenState extends State<ProfileScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      child: InkWell(
-        onTap: () {
-          // 週間統計画面に遷移（実装済み）
-          Navigator.pushNamed(context, '/weekly-stats');
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.purple.shade400,
-                Colors.deepPurple.shade600,
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.bar_chart,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '週間トレーニング統計',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          '過去7日間の記録',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'NEW',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Column(
-                      children: [
-                        Icon(Icons.fitness_center, color: Colors.white, size: 24),
-                        SizedBox(height: 8),
-                        Text(
-                          'トレーニング',
-                          style: TextStyle(fontSize: 10, color: Colors.white70),
-                        ),
-                        Text(
-                          '回数・ボリューム',
-                          style: TextStyle(fontSize: 10, color: Colors.white70),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        Icon(Icons.show_chart, color: Colors.white, size: 24),
-                        SizedBox(height: 8),
-                        Text(
-                          '部位数',
-                          style: TextStyle(fontSize: 10, color: Colors.white70),
-                        ),
-                        Text(
-                          '平均ボリューム',
-                          style: TextStyle(fontSize: 10, color: Colors.white70),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'タップして週間統計を見る',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white60,
-                    ),
-                  ),
-                  SizedBox(width: 4),
-                  Icon(Icons.bar_chart, color: Colors.white60, size: 16),
-                ],
-              ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.purple.shade400,
+              Colors.deepPurple.shade600,
             ],
           ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.bar_chart,
+                  color: Colors.white,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '週間トレーニング統計',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        '過去7日間の記録',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'NEW',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Column(
+                    children: [
+                      Icon(Icons.fitness_center, color: Colors.white, size: 24),
+                      SizedBox(height: 8),
+                      Text(
+                        'トレーニング',
+                        style: TextStyle(fontSize: 10, color: Colors.white70),
+                      ),
+                      Text(
+                        '回数・ボリューム',
+                        style: TextStyle(fontSize: 10, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      Icon(Icons.show_chart, color: Colors.white, size: 24),
+                      SizedBox(height: 8),
+                      Text(
+                        '部位数',
+                        style: TextStyle(fontSize: 10, color: Colors.white70),
+                      ),
+                      Text(
+                        '平均ボリューム',
+                        style: TextStyle(fontSize: 10, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -1195,17 +1016,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
           },
         ),
         const SizedBox(height: 12),
-        _buildMenuCard(
-          context,
-          icon: Icons.card_giftcard,
-          title: '招待コードを入力',
-          subtitle: 'AI使用回数 x3回をゲット',
-          badge: '特典',
-          badgeColor: Colors.amber,
-          onTap: () {
-            _showEnterReferralCodeDialog();
-          },
-        ),
+        // 招待コード機能は削除（炎上リスク回避）
+        // _buildMenuCard(
+        //   context,
+        //   icon: Icons.card_giftcard,
+        //   title: '招待コードを使用',
+        //   subtitle: '特別招待コードで永年無料',
+        //   badge: '特典',
+        //   badgeColor: Colors.amber,
+        //   onTap: () async {
+        //     final result = await Navigator.push(
+        //       context,
+        //       MaterialPageRoute(builder: (context) => const RedeemInviteCodeScreen()),
+        //     );
+        //     
+        //     // 招待コード使用成功時はデータ再読み込み
+        //     if (result == true) {
+        //       _loadUserData();
+        //     }
+        //   },
+        // ),
       ],
     );
   }
