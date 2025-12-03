@@ -13,8 +13,8 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "jp.nexa.fitsync"
-    compileSdk = flutter.compileSdkVersion
+    namespace = "com.gymmatch.app"
+    compileSdk = 34
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -26,7 +26,7 @@ android {
         jvmTarget = JavaVersion.VERSION_11
     }
 
-    // リリース署名設定
+    // Release signing config
     signingConfigs {
         release {
             if (keystorePropertiesFile.exists()) {
@@ -39,10 +39,10 @@ android {
     }
 
     defaultConfig {
-        // GYM MATCH - NexaJP フィットネストレーニング管理アプリ
-        applicationId = "jp.nexa.fitsync"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        // GYM MATCH - Android Version (Fitness Training App)
+        applicationId = "com.gymmatch.app"
+        minSdk = 24  // Android 7.0 (Nougat)
+        targetSdk = 34  // Android 14
         versionCode = 1
         versionName = "1.0.0"
     }
