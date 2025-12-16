@@ -1,10 +1,29 @@
 pluginManagement {
     def flutterSdkPath = {
+        def localPropertiesFile = file("local.properties")
         def properties = new Properties()
-        file("local.properties").withInputStream { properties.load(it) }
-        def flutterSdkPath = properties.getProperty("flutter.sdk")
-        assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
-        return flutterSdkPath
+        
+        // CI環境で local.properties がない場合の対応
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.withInputStream { properties.load(it) }
+            def flutterSdkPath = properties.getProperty("flutter.sdk")
+            if (flutterSdkPath != null) {
+                return flutterSdkPath
+            }
+        }
+        
+        // 環境変数 FLUTTER_ROOT をチェック（GitHub Actions用）
+        def envFlutterRoot = System.getenv("FLUTTER_ROOT")
+        if (envFlutterRoot != null) {
+            return envFlutterRoot
+        }
+        
+        // エラー: Flutter SDK が見つからない
+        throw new GradleException(
+            "Flutter SDK not found. Define location with:\n" +
+            "  1. Set flutter.sdk in local.properties, or\n" +
+            "  2. Set FLUTTER_ROOT environment variable"
+        )
     }()
 
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
