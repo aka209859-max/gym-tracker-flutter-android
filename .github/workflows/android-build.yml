@@ -37,6 +37,18 @@ jobs:
 
       - name: 🔍 Flutter Doctor
         run: flutter doctor -v
+      # ======================================
+      # 4.5. local.properties の作成(CI環境用)
+      # ======================================
+      - name: 📝 Create local.properties for CI
+        run: |
+          echo "Creating android/local.properties for CI environment..."
+          cat > android/local.properties << EOF
+          flutter.sdk=$FLUTTER_ROOT
+          sdk.dir=$ANDROID_HOME
+          EOF
+          echo "✅ local.properties created:"
+          cat android/local.properties
 
       - name: 📦 Get Dependencies
         run: flutter pub get
