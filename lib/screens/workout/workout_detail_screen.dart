@@ -48,6 +48,21 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     }
   }
 
+  // ✅ v1.0.168: 腹筋系種目かどうかを判定
+  bool _isAbsExercise(String exerciseName) {
+    const absExercises = [
+      'クランチ',
+      'レッグレイズ',
+      'プランク',
+      'アブローラー',
+      'ハンギングレッグレイズ',
+      'サイドプランク',
+      'バイシクルクランチ',
+      'ケーブルクランチ',
+    ];
+    return absExercises.contains(exerciseName);
+  }
+
   // メモ追加・編集ダイアログを表示
   Future<void> _showNoteDialog() async {
     final controller = TextEditingController(text: _workoutNote?.content ?? '');
@@ -295,11 +310,11 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(
+                        SizedBox(
                           width: 60,
                           child: Text(
-                            '回数',
-                            style: TextStyle(
+                            _isAbsExercise(exercise.name) ? '秒数' : '回数',
+                            style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                               color: Colors.grey,
@@ -369,7 +384,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                             SizedBox(
                               width: 60,
                               child: Text(
-                                '${set.actualReps ?? set.targetReps} 回',
+                                (set.isTimeMode ?? false)
+                                    ? '${set.actualReps ?? set.targetReps}秒'
+                                    : '${set.actualReps ?? set.targetReps}回',
                                 style: const TextStyle(fontSize: 13),
                               ),
                             ),

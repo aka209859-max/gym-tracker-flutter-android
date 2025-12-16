@@ -175,6 +175,31 @@ class GooglePlace {
     }
   }
   
+  /// JSON形式に変換（Hiveキャッシュ用）
+  Map<String, dynamic> toJson() {
+    return {
+      'place_id': placeId,
+      'name': name,
+      'vicinity': address,
+      'geometry': {
+        'location': {
+          'lat': latitude,
+          'lng': longitude,
+        },
+      },
+      'rating': rating,
+      'user_ratings_total': userRatingsTotal,
+      'photos': photoReference != null 
+          ? [{'photo_reference': photoReference}] 
+          : null,
+      'opening_hours': openNow != null 
+          ? {'open_now': openNow} 
+          : null,
+      'price_level': priceLevel,
+      'types': types,
+    };
+  }
+  
   /// 既存のGymモデルに変換（互換性のため）
   Map<String, dynamic> toGymCompatible() {
     return {
@@ -191,7 +216,7 @@ class GooglePlace {
       'phoneNumber': null, // Google Places API Details呼び出しが必要
       'openingHours': openNow == true ? '営業中' : openNow == false ? '営業時間外' : '営業時間不明',
       'imageUrl': photoReference != null 
-          ? 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=$photoReference&key=AIzaSyA9XmQSHA1llGg7gihqjmOOIaLA856fkLc'
+          ? 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=$photoReference&key=AIzaSyBRJG8v0euVbxbMNbwXownQJA3_Ra8EzMM'
           : 'https://via.placeholder.com/400x300?text=No+Image',
     };
   }

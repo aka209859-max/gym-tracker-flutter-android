@@ -12,7 +12,7 @@ import 'ai_response_optimizer.dart';
 /// トレーニング効果分析サービスクラス
 class TrainingAnalysisService {
   // Gemini API設定（AIコーチ専用キー）
-  static const String _apiKey = 'AIzaSyA9XmQSHA1llGg7gihqjmOOIaLA856fkLc';
+  static const String _apiKey = 'AIzaSyAFVfcWzXDTtc9Rk3Zr5OGRx63FXpMAHqY';
   static const String _apiUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 
@@ -359,7 +359,10 @@ ${ScientificDatabase.getSystemPrompt()}
     try {
       final response = await http.post(
         Uri.parse('$_apiUrl?key=$_apiKey'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          // Note: Gemini API does NOT support X-Ios-Bundle-Identifier header
+        },
         body: jsonEncode({
           'contents': [
             {

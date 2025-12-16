@@ -40,6 +40,13 @@ class AICreditService {
       final plan = await _subscriptionService.getCurrentPlan();
       print('🔍 [canUseAI] 現在のプラン: $plan');
       
+      // 🎁 永年プラン保持者チェック（最優先）
+      final hasLifetime = await _subscriptionService.hasLifetimePlan();
+      if (hasLifetime) {
+        print('✅ [canUseAI] 永年Proプラン保持者 - AI無制限');
+        return CanUseAIResult(allowed: true);
+      }
+      
       // 🛡️ Phase 2: Pro会員のレート制限チェック
       if (plan == SubscriptionType.pro) {
         final rateLimitResult = await _abusePreventionService.checkRateLimit(user.uid);

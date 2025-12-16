@@ -617,7 +617,10 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
                     Wrap(
                       spacing: 4,
                       runSpacing: 4,
-                      children: profile.trainingGoals.take(3).map((goal) {
+                      children: profile.trainingGoals
+                          .where((goal) => goal != null && goal.isNotEmpty)
+                          .take(3)
+                          .map((goal) {
                         return Chip(
                           label: Text(
                             _trainingGoals[goal] ?? goal,
@@ -652,12 +655,24 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
   }
 
   void _navigateToProfileDetail(PartnerProfile profile) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PartnerProfileDetailScreen(profile: profile),
-      ),
-    );
+    try {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PartnerProfileDetailScreen(profile: profile),
+        ),
+      );
+    } catch (e) {
+      print('❌ プロフィール詳細画面へのナビゲーションエラー: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('エラーが発生しました: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _navigateToProfileEdit() async {

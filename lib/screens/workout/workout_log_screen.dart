@@ -24,6 +24,8 @@ class WorkoutLogScreen extends StatefulWidget {
 
 class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
   bool _isInitializing = true;
+  List<QueryDocumentSnapshot>? _cachedWorkouts; // ✅ キャッシュデータ保持
+  bool _isLoadingFromServer = false; // ✅ サーバー読み込み状態
 
   @override
   void initState() {
@@ -216,7 +218,7 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
 
       final snapshot = await FirebaseFirestore.instance
           .collection('workout_logs')
-          .where('userId', isEqualTo: user.uid)
+          .where('user_id', isEqualTo: user.uid)
           .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(todayStart))
           .get();
       
@@ -354,22 +356,69 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
     );
   }
 
+  /// ✅ キャッシュファースト: まずキャッシュから読み込み、次にサーバーから
+  Future<void> _loadWorkoutsWithCache(User user) async {
+    try {
+      // Step 1: キャッシュから即座に読み込み
+      final cacheSnapshot = await FirebaseFirestore.instance
+          .collection('workout_logs')
+          .where('user_id', isEqualTo: user.uid)
+          .get(const GetOptions(source: Source.cache));
+      
+      if (cacheSnapshot.docs.isNotEmpty && mounted) {
+        setState(() {
+          _cachedWorkouts = cacheSnapshot.docs;
+        });
+        print('✅ キャッシュから${cacheSnapshot.docs.length}件読み込み');
+      }
+      
+      // Step 2: バックグラウンドでサーバーから最新取得
+      setState(() => _isLoadingFromServer = true);
+      
+      final serverSnapshot = await FirebaseFirestore.instance
+          .collection('workout_logs')
+          .where('user_id', isEqualTo: user.uid)
+          .get(const GetOptions(source: Source.server));
+      
+      if (mounted) {
+        setState(() {
+          _cachedWorkouts = serverSnapshot.docs;
+          _isLoadingFromServer = false;
+        });
+        print('✅ サーバーから${serverSnapshot.docs.length}件読み込み');
+      }
+    } catch (e) {
+      print('❌ データ読み込みエラー: $e');
+      if (mounted) {
+        setState(() => _isLoadingFromServer = false);
+      }
+    }
+  }
+
   /// 自己記録とトレーナー記録を統合して表示
   Widget _buildCombinedWorkoutList(User user) {
+    // 初回読み込み
+    if (_cachedWorkouts == null) {
+      _loadWorkoutsWithCache(user);
+      // ✅ スケルトンスクリーン表示
+      return _buildSkeletonScreen();
+    }
+    
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('workout_logs')
           .where('user_id', isEqualTo: user.uid)
           .snapshots(),
       builder: (context, personalSnapshot) {
-        if (personalSnapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+        // ✅ キャッシュがある場合はスケルトンを表示しない
+        if (personalSnapshot.connectionState == ConnectionState.waiting && _cachedWorkouts == null) {
+          return _buildSkeletonScreen();
         }
 
-        // 自己記録を取得
+        // ✅ 自己記録を取得（キャッシュまたはストリーム）
         final personalWorkouts = personalSnapshot.hasData
             ? personalSnapshot.data!.docs
-            : <QueryDocumentSnapshot>[];
+            : (_cachedWorkouts ?? <QueryDocumentSnapshot>[]);
 
         // トレーナー記録を取得（FutureBuilder使用）
         return FutureBuilder<List<TrainerWorkoutRecord>>(
@@ -438,12 +487,47 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
             // 最新30件のみ表示
             final displayList = combinedList.take(30).toList();
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: displayList.length,
-              itemBuilder: (context, index) {
-                return displayList[index].widget;
-              },
+            return Stack(
+              children: [
+                ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: displayList.length,
+                  itemBuilder: (context, index) {
+                    return displayList[index].widget;
+                  },
+                ),
+                // ✅ サーバー読み込み中インジケーター（控えめ）
+                if (_isLoadingFromServer)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '更新中',
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
             );
           },
         );
@@ -479,6 +563,91 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
       print('❌ トレーナー記録取得エラー: $e');
       return []; // エラー時は空リスト返却（自己記録は表示継続）
     }
+  }
+
+  /// ✅ スケルトンスクリーン（ローディング代替）
+  Widget _buildSkeletonScreen() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: 5, // 仮の件数
+      itemBuilder: (context, index) {
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 日付部分のスケルトン
+                Row(
+                  children: [
+                    Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 150,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      width: 60,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // 部位チップのスケルトン
+                Container(
+                  width: 80,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // 種目情報のスケルトン
+                Row(
+                  children: [
+                    Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 120,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   /// Layer 2-5 クイックアクセスバー

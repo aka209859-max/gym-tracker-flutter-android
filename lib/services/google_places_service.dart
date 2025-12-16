@@ -58,7 +58,12 @@ class GooglePlacesService {
         print('   Proxy URL: $url');
       }
 
-      final response = await http.get(url);
+      final response = await http.get(
+        url,
+        headers: {
+          'X-Ios-Bundle-Identifier': 'com.nexa.gymmatch',
+        },
+      );
 
       if (kDebugMode) {
         print('   Status Code: ${response.statusCode}');
@@ -193,7 +198,12 @@ class GooglePlacesService {
         print('   Proxy URL: $url');
       }
 
-      final response = await http.get(url);
+      final response = await http.get(
+        url,
+        headers: {
+          'X-Ios-Bundle-Identifier': 'com.nexa.gymmatch',
+        },
+      );
 
       if (kDebugMode) {
         print('   Status Code: ${response.statusCode}');
@@ -241,26 +251,78 @@ class GooglePlacesService {
     }
   }
 
-  /// ジムの詳細情報を取得（Place Details API）
+  /// ジムの詳細情報を取得（Place Details API - コスト最適化版）
+  /// 
+  /// 💰 コスト最適化:
+  /// - Hiveキャッシュで重複API呼び出しを削減（30日TTL）
+  /// - フィールドマスキングで高コストフィールド（photos）をオプション化
+  /// - 月額$2.98削減/1000ユーザー（photosなし時）
   /// 
   /// [placeId] Google Places ID
-  Future<Map<String, dynamic>> getGymDetails(String placeId) async {
+  /// [includePhotos] 写真を含めるか（デフォルト: false）
+  ///   - false: Basic Data ($0.017/1000) のみ
+  ///   - true: Contact Data ($3.00/1000) を含む
+  /// [forceRefresh] キャッシュを無視して強制再取得
+  Future<Map<String, dynamic>> getGymDetails(
+    String placeId, {
+    bool includePhotos = false,
+    bool forceRefresh = false,
+  }) async {
     try {
+      // 🚀 キャッシュチェック（30日TTL）
+      if (!forceRefresh) {
+        final cached = _cacheService.getCachedPlaceDetails(placeId);
+        if (cached != null) {
+          if (kDebugMode) {
+            print('🚀 Using cached place details (API call saved!): $placeId');
+          }
+          return cached;
+        }
+      }
+
+      // 💰 フィールドマスキング（コスト最適化）
+      // Basic Data: name, address, phone, hours, website, rating ($0.017/1000)
+      final baseFields = 'name,formatted_address,formatted_phone_number,opening_hours,website,rating,user_ratings_total,price_level';
+      
+      // Contact Data: photos ($3.00/1000 - 約176倍高い！)
+      final photoFields = includePhotos ? ',photos' : '';
+      
       final url = Uri.parse(
         '${ApiKeys.placesApiBaseUrl}/details/json'
         '?place_id=$placeId'
-        '&fields=name,formatted_address,formatted_phone_number,opening_hours,website,rating,user_ratings_total,photos,price_level'
+        '&fields=$baseFields$photoFields' // ← 動的フィールド選択
         '&language=${ApiKeys.defaultLanguage}'
         '&key=${ApiKeys.googlePlacesApiKey}',
       );
 
-      final response = await http.get(url);
+      if (kDebugMode) {
+        print('🌐 Google Places API (Place Details)');
+        print('   Place ID: $placeId');
+        print('   Include Photos: $includePhotos');
+        print('   Expected Cost: ${includePhotos ? "\$0.003" : "\$0.000017"} per request');
+      }
+
+      final response = await http.get(
+        url,
+        headers: {
+          'X-Ios-Bundle-Identifier': 'com.nexa.gymmatch',
+        },
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         
         if (data['status'] == 'OK') {
-          return data['result'] as Map<String, dynamic>;
+          final result = data['result'] as Map<String, dynamic>;
+          
+          // 🎯 Hiveにキャッシュ（30日TTL - Google規約準拠）
+          _cacheService.cachePlaceDetails(placeId, result);
+          
+          if (kDebugMode) {
+            print('   ✅ Place details retrieved and cached');
+          }
+          
+          return result;
         } else {
           throw Exception('Google Places API error: ${data['status']}');
         }

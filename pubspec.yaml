@@ -12,7 +12,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.0.100+100
+version: 1.0.254+279
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
@@ -32,6 +32,7 @@ dependencies:
   cloud_firestore: 5.4.3
   firebase_auth: 5.3.1
   firebase_storage: 12.3.2
+  firebase_analytics: 11.3.3  # ✅ v1.0.164: Analytics追加
 
   # Google Maps integration
   google_maps_flutter: 2.10.0
@@ -45,12 +46,14 @@ dependencies:
   intl: 0.20.2
   url_launcher: ^6.3.1
   crypto: ^3.0.3
+  package_info_plus: ^8.1.2  # App version info
 
   # Local storage
   shared_preferences: 2.5.3
   hive: 2.2.3
   hive_flutter: 1.1.0
   path_provider: ^2.1.4
+  connectivity_plus: ^6.1.2  # ✅ v1.0.177: Network connectivity detection
 
   # UI enhancements
   cupertino_icons: ^1.0.8

@@ -4,19 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:firebase_analytics/firebase_analytics.dart';  // ✅ v1.0.164: Analytics追加
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'firebase_options.dart';
 import 'services/offline_service.dart';
+import 'services/search_cache_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/map_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/workout/workout_log_screen.dart';
+import 'screens/workout/workout_history_screen.dart'; // ✅ v1.0.241: トレーニング履歴タブ
+import 'screens/workout/ai_coaching_screen_tabbed.dart';
 
 import 'screens/password_gate_screen.dart';
 import 'screens/developer_menu_screen.dart';
 import 'screens/workout/workout_memo_list_screen.dart';
+import 'screens/workout/add_workout_screen.dart'; // 🔧 v1.0.224: AIコーチ連携
 import 'screens/personal_factors_screen.dart';
 import 'screens/subscription_screen.dart';
 import 'providers/gym_provider.dart';
@@ -100,6 +106,25 @@ void main() async {
       print('❌ 匿名認証エラー: $authError');
     }
     
+    // ✅ v1.0.164: Firebase Analytics初期化
+    try {
+      final analytics = FirebaseAnalytics.instance;
+      print('📊 Firebase Analytics初期化成功');
+      print('   Analytics ID: ${analytics.app.options.projectId}');
+      
+      // 初回起動イベントを送信
+      await analytics.logEvent(
+        name: 'app_open',
+        parameters: {
+          'platform': defaultTargetPlatform.toString(),
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      );
+      print('✅ Analytics初回イベント送信完了');
+    } catch (analyticsError) {
+      print('❌ Analytics初期化エラー: $analyticsError');
+    }
+    
   } catch (e, stackTrace) {
     // Firebase設定エラー時はオフラインモードで起動
     print('❌ Firebase初期化エラー（オフラインモードで起動）: $e');
@@ -141,8 +166,32 @@ void main() async {
   try {
     await OfflineService.initialize();
     print('✅ オフラインサービス初期化成功');
+    
+    // ✅ v1.0.161: 起動時に同期待ちデータを自動同期
+    if (firebaseInitialized) {
+      final pendingCount = await OfflineService.getPendingSyncCount();
+      if (pendingCount > 0) {
+        print('📤 同期待ちデータ: $pendingCount件');
+        try {
+          await OfflineService.syncPendingData();
+          print('✅ オフラインデータ同期完了');
+        } catch (e) {
+          print('⚠️ 同期エラー（次回リトライ）: $e');
+        }
+      } else {
+        print('📭 同期待ちデータなし');
+      }
+    }
   } catch (e) {
     print('❌ オフラインサービス初期化エラー: $e');
+  }
+  
+  // 💰 検索キャッシュサービス初期化（Hive - コスト最適化）
+  try {
+    await SearchCacheService().init();
+    print('✅ 検索キャッシュサービス初期化成功（Google Maps API コスト削減）');
+  } catch (e) {
+    print('❌ 検索キャッシュサービス初期化エラー: $e');
   }
   
   // 💰 RevenueCat・広告・トライアル初期化（バックグラウンドで並列実行）
@@ -240,6 +289,8 @@ class GymMatchApp extends StatelessWidget {
               '/workout-memo': (context) => const WorkoutMemoListScreen(),
               '/personal-factors': (context) => const PersonalFactorsScreen(),
               '/subscription': (context) => const SubscriptionScreen(),
+              // 🔧 v1.0.224: AIコーチからのトレーニング記録画面遷移
+              '/add-workout': (context) => const AddWorkoutScreen(),
             },
             onUnknownRoute: (settings) {
               return MaterialPageRoute(
@@ -262,9 +313,11 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
-    const HomeScreen(),  // トレーニング記録画面（筋トレMEMO風）
-    const MapScreen(),  // ジムマップ（カスタム混雑度表示）
-    const ProfileScreen(),  // プロフィール
+    const HomeScreen(),  // ホーム（カレンダー・統計・AI提案）
+    const WorkoutHistoryScreen(),  // トレーニング履歴（部位別・PR・メモ・週次）
+    const AICoachingScreenTabbed(),  // AI機能（メニュー生成・成長予測・効果分析）
+    const MapScreen(),  // ジム検索（リアルタイム混雑度）
+    const ProfileScreen(),  // プロフィール・設定
   ];
 
   @override
@@ -296,14 +349,32 @@ class _MainScreenState extends State<MainScreen> {
                 },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.event_note_outlined),
-            selectedIcon: Icon(Icons.event_note),
-            label: '記録',
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'ホーム',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.history),
+            selectedIcon: Icon(Icons.history),
+            label: '履歴',
+          ),
+          NavigationDestination(
+            icon: Badge(
+              label: Text('AI', style: TextStyle(fontSize: 8)),
+              backgroundColor: Colors.deepPurple,
+              child: Icon(Icons.psychology_outlined),
+            ),
+            selectedIcon: Badge(
+              label: Text('AI', style: TextStyle(fontSize: 8)),
+              backgroundColor: Colors.deepPurple,
+              child: Icon(Icons.psychology),
+            ),
+            label: 'AI機能',
           ),
           NavigationDestination(
             icon: Icon(Icons.map_outlined),
             selectedIcon: Icon(Icons.map),
-            label: 'ジムマップ',
+            label: 'ジム検索',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),

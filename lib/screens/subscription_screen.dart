@@ -25,6 +25,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   bool _isLoading = true;
   List<StoreProduct> _availableProducts = [];
   bool _isYearlySelected = true; // デフォルトで年額を選択（CEO戦略）
+  bool _hasLifetimePlan = false; // 永年プラン保持フラグ
 
   @override
   void initState() {
@@ -38,6 +39,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     });
 
     try {
+      // 永年プランチェック（最優先）
+      final hasLifetime = await _subscriptionService.hasLifetimePlan();
+      
       // RevenueCatから最新のサブスクリプション状態を同期
       final plan = await _revenueCatService.syncSubscriptionStatus();
       
@@ -52,6 +56,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       
       setState(() {
         _currentPlan = plan;
+        _hasLifetimePlan = hasLifetime;
         _isLoading = false;
       });
     } catch (e) {
@@ -60,8 +65,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       }
       // エラー時はローカルプランを使用
       final plan = await _subscriptionService.getCurrentPlan();
+      final hasLifetime = await _subscriptionService.hasLifetimePlan();
       setState(() {
         _currentPlan = plan;
+        _hasLifetimePlan = hasLifetime;
         _isLoading = false;
       });
     }
@@ -247,16 +254,62 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              _subscriptionService.getPlanPrice(_currentPlan),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+            // 永年プラン表示
+            if (_hasLifetimePlan) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.amber, Colors.orange],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.orange.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.stars, color: Colors.white, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      '永年Proプラン（∞）',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+              const SizedBox(height: 12),
+              const Text(
+                'AI機能無制限 | 広告なし | すべての機能を永久利用',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+              ),
+            ] else ...[
+              Text(
+                _subscriptionService.getPlanPrice(_currentPlan),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
             
-            // ✅ プラン管理ボタン（有料プランのみ）
-            if (_currentPlan != SubscriptionType.free) ...[
+            // ✅ プラン管理ボタン（有料プランのみ、永年プランは除外）
+            if (_currentPlan != SubscriptionType.free && !_hasLifetimePlan) ...[
               const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 12),

@@ -73,12 +73,23 @@ class _PartnerProfileDetailScreenState extends State<PartnerProfileDetailScreen>
   
   /// ✅ Pro Plan権限チェック
   Future<void> _checkPermissions() async {
-    final result = await _searchService.canSendMatchRequest();
-    if (mounted) {
-      setState(() {
-        _canSendRequest = result['canSend'] == true;
-        _permissionMessage = result['reason'];
-      });
+    try {
+      final result = await _searchService.canSendMatchRequest();
+      if (mounted) {
+        setState(() {
+          _canSendRequest = result['canSend'] == true;
+          _permissionMessage = result['reason'];
+        });
+      }
+    } catch (e) {
+      // エラー時は無料ユーザーとして扱う（安全側に倒す）
+      print('⚠️ 権限チェックエラー: $e');
+      if (mounted) {
+        setState(() {
+          _canSendRequest = false;
+          _permissionMessage = 'マッチングリクエスト送信はProプラン限定機能です。';
+        });
+      }
     }
   }
 
@@ -135,11 +146,18 @@ class _PartnerProfileDetailScreenState extends State<PartnerProfileDetailScreen>
 
   @override
   Widget build(BuildContext context) {
+    // 🔧 CRITICAL: 全体をエラーバウンダリでラップ
     return Scaffold(
       appBar: AppBar(
         title: const Text('プロフィール詳細'),
       ),
-      body: SingleChildScrollView(
+      body: _buildBody(),
+    );
+  }
+  
+  Widget _buildBody() {
+    try {
+      return SingleChildScrollView(
         child: Column(
           children: [
             // ヘッダー部分
@@ -158,9 +176,12 @@ class _PartnerProfileDetailScreenState extends State<PartnerProfileDetailScreen>
                   
                   _buildSection(
                     'トレーニング目標',
-                    widget.profile.trainingGoals
-                        .map((goal) => _trainingGoals[goal] ?? goal)
-                        .join(', '),
+                    widget.profile.trainingGoals.isNotEmpty
+                        ? widget.profile.trainingGoals
+                            .where((goal) => goal != null && goal.isNotEmpty)
+                            .map((goal) => _trainingGoals[goal] ?? goal)
+                            .join(', ')
+                        : '未設定',
                   ),
                   const SizedBox(height: 24),
                   
@@ -172,23 +193,33 @@ class _PartnerProfileDetailScreenState extends State<PartnerProfileDetailScreen>
                   
                   _buildSection(
                     '好きな部位',
-                    widget.profile.preferredExercises.join(', '),
+                    widget.profile.preferredExercises.isNotEmpty
+                        ? widget.profile.preferredExercises
+                            .where((ex) => ex != null && ex.isNotEmpty)
+                            .join(', ')
+                        : '未設定',
                   ),
                   const SizedBox(height: 24),
                   
                   _buildSection(
                     '利用可能な曜日',
-                    widget.profile.availableDays
-                        .map((day) => _weekDays[day] ?? day)
-                        .join('、'),
+                    widget.profile.availableDays.isNotEmpty
+                        ? widget.profile.availableDays
+                            .where((day) => day != null && day.isNotEmpty)
+                            .map((day) => _weekDays[day] ?? day)
+                            .join('、')
+                        : '未設定',
                   ),
                   const SizedBox(height: 24),
                   
                   _buildSection(
                     '利用可能な時間帯',
-                    widget.profile.availableTimeSlots
-                        .map((slot) => _timeSlots[slot] ?? slot)
-                        .join('、'),
+                    widget.profile.availableTimeSlots.isNotEmpty
+                        ? widget.profile.availableTimeSlots
+                            .where((slot) => slot != null && slot.isNotEmpty)
+                            .map((slot) => _timeSlots[slot] ?? slot)
+                            .join('、')
+                        : '未設定',
                   ),
                   const SizedBox(height: 24),
                   
@@ -206,8 +237,39 @@ class _PartnerProfileDetailScreenState extends State<PartnerProfileDetailScreen>
             ),
           ],
         ),
-      ),
-    );
+      );
+    } catch (e, stackTrace) {
+      print('❌ プロフィール詳細画面ビルドエラー: $e');
+      print('スタックトレース: $stackTrace');
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text(
+                'プロフィールの表示中にエラーが発生しました',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                e.toString(),
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('戻る'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildHeader() {

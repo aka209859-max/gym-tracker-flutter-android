@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -31,7 +32,7 @@ class _AICoachingScreenState extends State<AICoachingScreen> {
     '脚': false,
     '肩': false,
     '腕': false,
-    '体幹': false,
+    '腹筋': false,
     '有酸素': false,
     '初心者': false,
   };
@@ -573,10 +574,14 @@ class _AICoachingScreenState extends State<AICoachingScreen> {
       final startTime = DateTime.now();
       ConsoleLogger.info('Gemini APIでメニュー生成開始: ${bodyParts.join(', ')}', tag: 'AI_COACHING');
 
-      // Gemini 2.0 Flash API呼び出し
+      // Gemini 2.0 Flash Exp API呼び出し（10秒タイムアウト）
       final response = await http.post(
-        Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=AIzaSyA9XmQSHA1llGg7gihqjmOOIaLA856fkLc'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=AIzaSyAFVfcWzXDTtc9Rk3Zr5OGRx63FXpMAHqY'),
+        headers: {
+          'Content-Type': 'application/json',
+          // Note: Gemini API does NOT support X-Ios-Bundle-Identifier header
+          // Use API Key restrictions in Google Cloud Console instead
+        },
         body: jsonEncode({
           'contents': [
             {
@@ -594,6 +599,12 @@ class _AICoachingScreenState extends State<AICoachingScreen> {
             'maxOutputTokens': 2048,  // 初心者向け詳細メニューに対応（1024→2048）
           }
         }),
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          AppLogger.warning('Gemini API タイムアウト - フォールバックを使用', tag: 'AI_COACHING');
+          throw TimeoutException('API request timed out');
+        },
       );
 
       if (response.statusCode == 200) {
@@ -620,14 +631,104 @@ class _AICoachingScreenState extends State<AICoachingScreen> {
         AppLogger.performance('AI Menu Generation', duration);
         AppLogger.info('メニュー生成成功', tag: 'AI_COACHING');
       } else {
+        AppLogger.warning('Gemini API エラー: ${response.statusCode} - フォールバックを使用', tag: 'AI_COACHING');
         throw Exception('API Error: ${response.statusCode}');
       }
+    } on TimeoutException catch (e) {
+      AppLogger.warning('タイムアウト - 科学的根拠ベースのメニューを生成', tag: 'AI_COACHING');
+      _generateFallbackMenu(bodyParts);
     } catch (e) {
-      AppLogger.error('メニュー生成エラー', tag: 'AI_COACHING', error: e);
-      setState(() {
-        _errorMessage = 'メニュー生成に失敗しました: $e';
-        _isGenerating = false;
-      });
+      AppLogger.error('メニュー生成エラー - フォールバックを使用', tag: 'AI_COACHING', error: e);
+      _generateFallbackMenu(bodyParts);
+    }
+  }
+
+  /// フォールバックメニュー生成（AI失敗時）
+  void _generateFallbackMenu(List<String> bodyParts) {
+    final isBeginner = bodyParts.contains('初心者');
+    final targetParts = bodyParts.where((part) => part != '初心者').toList();
+    
+    final buffer = StringBuffer();
+    buffer.writeln('# 科学的根拠に基づくトレーニングメニュー\n');
+    buffer.writeln('💡 AIが一時的に利用できないため、科学的研究に基づいた推奨メニューを提案します。\n');
+    
+    if (targetParts.isEmpty) {
+      // 全身トレーニング
+      buffer.writeln('## 全身バランストレーニング\n');
+      if (isBeginner) {
+        buffer.writeln('### 1. スクワット');
+        buffer.writeln('- セット数: 3セット');
+        buffer.writeln('- 回数: 10-12回');
+        buffer.writeln('- 休憩: 90秒');
+        buffer.writeln('- ポイント: フォーム重視、軽い重量から\n');
+        
+        buffer.writeln('### 2. ベンチプレス');
+        buffer.writeln('- セット数: 3セット');
+        buffer.writeln('- 回数: 10-12回');
+        buffer.writeln('- 休憩: 90秒\n');
+        
+        buffer.writeln('### 3. ラットプルダウン');
+        buffer.writeln('- セット数: 3セット');
+        buffer.writeln('- 回数: 10-12回');
+        buffer.writeln('- 休憩: 60秒\n');
+      } else {
+        buffer.writeln('### 1. スクワット');
+        buffer.writeln('- セット数: 4-5セット');
+        buffer.writeln('- 回数: 6-10回');
+        buffer.writeln('- 休憩: 2-3分\n');
+        
+        buffer.writeln('### 2. ベンチプレス');
+        buffer.writeln('- セット数: 4-5セット');
+        buffer.writeln('- 回数: 6-10回');
+        buffer.writeln('- 休憩: 2-3分\n');
+        
+        buffer.writeln('### 3. デッドリフト');
+        buffer.writeln('- セット数: 3-4セット');
+        buffer.writeln('- 回数: 5-8回');
+        buffer.writeln('- 休憩: 3-4分\n');
+      }
+    } else {
+      // 部位別トレーニング
+      for (final part in targetParts) {
+        buffer.writeln('## $part トレーニング\n');
+        _addBodyPartExercises(buffer, part, isBeginner);
+      }
+    }
+    
+    buffer.writeln('\n---');
+    buffer.writeln('📚 科学的根拠: Schoenfeld et al. 2017, ACSM Guidelines 2009');
+    buffer.writeln('💡 より詳細な提案が必要な場合は、後ほど再度お試しください。');
+    
+    setState(() {
+      _generatedMenu = buffer.toString();
+      _isGenerating = false;
+    });
+  }
+  
+  /// 部位別エクササイズを追加
+  void _addBodyPartExercises(StringBuffer buffer, String bodyPart, bool isBeginner) {
+    final exercises = {
+      '胸': ['ベンチプレス', 'ダンベルフライ', 'ケーブルクロスオーバー'],
+      '背中': ['デッドリフト', 'ラットプルダウン', 'ベントオーバーロウ'],
+      '脚': ['スクワット', 'レッグプレス', 'レッグカール'],
+      '肩': ['ショルダープレス', 'サイドレイズ', 'リアデルトフライ'],
+      '腕': ['バーベルカール', 'トライセプスエクステンション', 'ハンマーカール'],
+      '腹筋': ['クランチ', 'プランク', 'レッグレイズ'],
+    };
+    
+    final targetExercises = exercises[bodyPart] ?? ['基本種目'];
+    
+    for (int i = 0; i < targetExercises.length && i < 3; i++) {
+      buffer.writeln('### ${i + 1}. ${targetExercises[i]}');
+      if (isBeginner) {
+        buffer.writeln('- セット数: 2-3セット');
+        buffer.writeln('- 回数: 10-15回');
+        buffer.writeln('- 休憩: 90秒\n');
+      } else {
+        buffer.writeln('- セット数: 3-4セット');
+        buffer.writeln('- 回数: 8-12回');
+        buffer.writeln('- 休憩: 60-90秒\n');
+      }
     }
   }
 
@@ -661,7 +762,7 @@ class _AICoachingScreenState extends State<AICoachingScreen> {
 - よくある間違いと注意事項
 
 【条件】
-- 全身をバランスよく鍛える（胸・背中・脚・肩・腕）
+- 全身をバランスよく鍛える（胸・背中・脚・肩・腕・腹筋）
 - 基本種目中心（マシンとフリーウェイト組み合わせ）
 - 30-45分で完了
 - 怪我のリスクが少ない種目

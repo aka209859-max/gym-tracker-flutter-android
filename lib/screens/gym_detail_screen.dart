@@ -31,7 +31,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
   final VisitHistoryService _visitHistoryService = VisitHistoryService();
   final CrowdLevelService _crowdLevelService = CrowdLevelService();
   bool _isCheckedIn = false;
-  bool _isFavorite = false;
+  bool? _isFavorite; // null = ロード中、true/false = 確定
   int? _currentCrowdLevel; // Google Places API混雑度
 
   @override
@@ -101,7 +101,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
   }
 
   Future<void> _toggleFavorite() async {
-    if (_isFavorite) {
+    if (_isFavorite == true) {
       // お気に入りから削除
       final success = await _favoritesService.removeFavorite(widget.gym.id);
       if (success && mounted) {
@@ -285,11 +285,11 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _toggleFavorite,
-        backgroundColor: _isFavorite ? Colors.pink : Colors.grey[300],
-        foregroundColor: _isFavorite ? Colors.white : Colors.grey[700],
-        icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border),
-        label: Text(_isFavorite ? 'お気に入り登録済み' : 'お気に入りに追加'),
+        onPressed: _isFavorite == null ? null : _toggleFavorite,
+        backgroundColor: _isFavorite == true ? Colors.pink : Colors.grey[300],
+        foregroundColor: _isFavorite == true ? Colors.white : Colors.grey[700],
+        icon: Icon(_isFavorite == true ? Icons.favorite : Icons.favorite_border),
+        label: Text(_isFavorite == true ? 'お気に入り登録済み' : _isFavorite == null ? '読み込み中...' : 'お気に入りに追加'),
       ),
     );
   }
@@ -848,14 +848,15 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: () {
-                  // TODO: お気に入り機能
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('お気に入りに追加しました')),
-                  );
-                },
-                icon: const Icon(Icons.favorite_border),
-                label: const Text('お気に入り'),
+                onPressed: _isFavorite == null ? null : _toggleFavorite,
+                icon: Icon(_isFavorite == true ? Icons.favorite : Icons.favorite_border),
+                label: Text(_isFavorite == true ? 'お気に入り済み' : 'お気に入り'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _isFavorite == true ? Colors.pink : null,
+                  side: BorderSide(
+                    color: _isFavorite == true ? Colors.pink : Colors.grey,
+                  ),
+                ),
               ),
             ),
           ],
@@ -864,25 +865,20 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
     );
   }
 
-  /// ジムをシェアする（正直な「作りました！」スタイル）
+  /// ジムをシェアする
   Future<void> _shareGym() async {
     try {
       final gym = widget.gym;
       
-      // シンプルで正直なツイート文
-      final tweetText = '''GPS×混雑度でジム探しアプリ作りました💪
+      // トレーニング報告用のシンプルなツイート文
+      final tweetText = '''📍 ${gym.name}
 
-GYM MATCH
-
-📍 ${gym.name}
 ⭐ ${gym.rating.toStringAsFixed(1)}/5.0 (${gym.reviewCount}件のレビュー)
 📍 ${gym.address}
 
-まだβ版ですが、使ってみてください！
+#筋トレ''';
 
-#個人開発 #Flutter #GYM_MATCH #ジム''';
-
-      // テキストのみシェア（画像生成は将来実装）
+      // テキストのみシェア
       await _shareService.shareText(
         tweetText,
         subject: 'GYM MATCH - ${gym.name}',

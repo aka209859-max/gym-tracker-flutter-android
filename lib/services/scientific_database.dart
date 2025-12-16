@@ -218,31 +218,51 @@ class ScientificDatabase {
 
   /// 筋力向上率の計算（月ごと）
   /// 
-  /// 注意: これは複利計算用の月次成長率です
-  /// 4ヶ月の累積成長率から逆算した現実的な値
+  /// 🔧 v1.0.226+244: Conservative growth rates based on academic report
+  /// レポート分析: 週次成長率をベースに、より保守的な月次レートを算出
+  /// - Beginner: Weekly 1.5%-2.5% → Monthly ~5% (conservative)
+  /// - Intermediate: Weekly 0.4%-0.8% → Monthly ~2%
+  /// - Advanced: Weekly 0.15%-0.25% → Monthly ~0.8%
   static double getMonthlyGrowthRate(String level) {
     switch (level) {
       case '初心者':
-        // 4ヶ月で約30%成長 → 月次7.5%に相当
-        // (1.075)^4 = 1.335 ≈ +33.5%
-        return 0.075; // 月+7.5%（現実的な複利成長率）
+        // 🔧 Conservative: 週1.5-2.5% → 月約5%（保守的推定）
+        // (1.05)^4 = 1.215 ≈ +21.5% over 4 months
+        // 根拠: レポートの週次下限値 + 安全マージン
+        return 0.05; // 月+5%（旧: 7.5%）
       case '中級者':
-        // 4ヶ月で約15%成長 → 月次3.5%に相当
-        // (1.035)^4 = 1.148 ≈ +14.8%
-        return 0.035; // 月+3.5%
+        // 🔧 Conservative: 週0.4-0.8% → 月約2%
+        // (1.02)^4 = 1.082 ≈ +8.2% over 4 months
+        return 0.02; // 月+2%（旧: 3.5%）
       case '上級者':
-        // 4ヶ月で約5%成長 → 月次1.2%に相当
-        // (1.012)^4 = 1.049 ≈ +4.9%
-        return 0.012; // 月+1.2%
+        // 🔧 Conservative: 週0.15-0.25% → 月約0.8%
+        // (1.008)^4 = 1.032 ≈ +3.2% over 4 months
+        return 0.008; // 月+0.8%（旧: 1.2%）
       default:
-        return 0.075; // デフォルトは初心者
+        return 0.05; // デフォルトは初心者
     }
   }
 
   /// 週ごとの筋力向上率（女性の上半身特化）
+  /// 
+  /// 🔧 v1.0.226+244: More conservative weekly rates based on report
   static double getWeeklyGrowthRate(String level, String gender, String bodyPart) {
-    // 女性の上半身は男性より成長率が高い（Jung 2023, Roberts 2020）
-    // ただし週+7.2%は初期の成長率で、平均ではない
+    // レポートベースの週次成長率（Table 3より）
+    double baseWeeklyRate;
+    switch (level) {
+      case '初心者':
+        baseWeeklyRate = gender == '女性' ? 0.020 : 0.015; // 2.0% vs 1.5%
+        break;
+      case '中級者':
+        baseWeeklyRate = gender == '女性' ? 0.005 : 0.004; // 0.5% vs 0.4%
+        break;
+      case '上級者':
+        baseWeeklyRate = 0.0015; // 0.15%（性差なし）
+        break;
+      default:
+        baseWeeklyRate = 0.015;
+    }
+    
     final monthlyRate = getMonthlyGrowthRate(level);
     
     // 上半身部位の判定（胸、腕、肩、三角筋）
@@ -251,13 +271,14 @@ class ScientificDatabase {
                         bodyPart.contains('肩') || 
                         bodyPart.contains('三角筋');
     
-    if (gender == '女性' && isUpperBody) {
-      // 女性の上半身は通常より20%高い成長率（Roberts 2020, ES=-0.60）
-      return (monthlyRate * 1.2) / 4.0; // 1ヶ月 = 約4週間
+    if (gender == '女性' && isUpperBody && level == '初心者') {
+      // 🔧 v1.0.226+244: 女性の上半身初心者のみ1.2倍ボーナス（Roberts 2020）
+      // レポート Section 3.2: 女性・初心者・上半身の特異的補正
+      return baseWeeklyRate * 1.2;
     }
 
-    // 通常の計算（月次レートから週次へ変換）
-    return monthlyRate / 4.0; // 1ヶ月 = 約4週間
+    // 通常はベース週次レートをそのまま使用
+    return baseWeeklyRate;
   }
 
   /// 推奨トレーニングボリューム（週あたりセット数）
@@ -381,6 +402,80 @@ class ScientificDatabase {
   /// Schoenfeld 2017: セット追加ごとに+0.37%の成長
   static double calculateVolumeEffect(int currentSets, int additionalSets) {
     return additionalSets * 0.0037; // +0.37% per set
+  }
+
+  /// Weight Ratioによる客観的レベル判定
+  /// 
+  /// 🔧 v1.0.227: レポート Section 2 準拠（Latella 2020, van den Hoek 2024）
+  /// 
+  /// ユーザーの自己申告を排除し、客観的な体重比でレベルを判定
+  static String detectLevelFromWeightRatio({
+    required double oneRM,
+    required double bodyWeight,
+    required String exerciseName,
+    required String gender,
+  }) {
+    final weightRatio = oneRM / bodyWeight;
+    
+    // 種目を判定
+    final isBenchPress = exerciseName.contains('胸') || 
+                         exerciseName.contains('大胸筋') ||
+                         exerciseName.contains('上腕');
+    final isSquat = exerciseName.contains('脚') || 
+                    exerciseName.contains('大腿') ||
+                    exerciseName.contains('スクワット');
+    final isDeadlift = exerciseName.contains('背中') || 
+                       exerciseName.contains('広背筋') ||
+                       exerciseName.contains('デッドリフト');
+    
+    // レポート Table 1-3 の閾値に基づく判定
+    if (isBenchPress || (!isSquat && !isDeadlift)) {
+      // ベンチプレス基準（デフォルト）
+      if (gender == '男性') {
+        if (weightRatio >= 1.95) return 'エリート';
+        if (weightRatio >= 1.60) return '上級者';
+        if (weightRatio >= 1.20) return '中級者';
+        if (weightRatio >= 0.80) return '初心者';
+        return '未経験・初期';
+      } else {
+        if (weightRatio >= 1.35) return 'エリート';
+        if (weightRatio >= 1.00) return '上級者';
+        if (weightRatio >= 0.80) return '中級者';
+        if (weightRatio >= 0.50) return '初心者';
+        return '未経験・初期';
+      }
+    } else if (isSquat) {
+      // スクワット基準
+      if (gender == '男性') {
+        if (weightRatio >= 2.83) return 'エリート';
+        if (weightRatio >= 2.10) return '上級者';
+        if (weightRatio >= 1.50) return '中級者';
+        if (weightRatio >= 1.00) return '初心者';
+        return '未経験・初期';
+      } else {
+        if (weightRatio >= 2.26) return 'エリート';
+        if (weightRatio >= 1.50) return '上級者';
+        if (weightRatio >= 1.10) return '中級者';
+        if (weightRatio >= 0.70) return '初心者';
+        return '未経験・初期';
+      }
+    } else if (isDeadlift) {
+      // デッドリフト基準
+      if (gender == '男性') {
+        if (weightRatio >= 3.25) return 'エリート';
+        if (weightRatio >= 2.40) return '上級者';
+        if (weightRatio >= 1.80) return '中級者';
+        return '初心者';
+      } else {
+        if (weightRatio >= 2.66) return 'エリート';
+        if (weightRatio >= 1.80) return '上級者';
+        if (weightRatio >= 1.30) return '中級者';
+        return '初心者';
+      }
+    }
+    
+    // フォールバック
+    return '初心者';
   }
 
   /// 年齢補正係数

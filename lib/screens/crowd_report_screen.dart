@@ -245,11 +245,9 @@ class _CrowdReportScreenState extends State<CrowdReportScreen> {
     });
     
     try {
-      // 1. プロバイダー経由で混雑度を更新（既存処理）
-      Provider.of<GymProvider>(context, listen: false)
-          .updateCrowdLevel(widget.gym.id, _selectedCrowdLevel);
-      
-      // 2. 🎁 インセンティブ報酬を付与
+      // 🎁 混雑度報告 + インセンティブ報酬を付与
+      // Note: GymProviderの更新は削除（Google Places gym IDと互換性なし）
+      // Firebase経由で混雑度を保存し、次回のジム読み込み時に反映される
       final result = await _incentiveService.submitCrowdReport(
         gymId: widget.gym.id,
         crowdLevel: _selectedCrowdLevel,

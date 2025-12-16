@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart'; // debugPrint用
 
 /// トレーナー共有トレーニング記録サービス
 class TrainerWorkoutService {
@@ -209,9 +210,4 @@ class TrainerBodyMetrics {
       muscleMass: map['muscleMass']?.toDouble(),
     );
   }
-}
-
-void debugPrint(String message) {
-  // For development purposes
-  print(message);
 }

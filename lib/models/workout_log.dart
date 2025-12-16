@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/exercise_master_data.dart'; // 🔧 v1.0.243
 
 /// トレーニングログのモデル
 class WorkoutLog {
@@ -42,16 +43,21 @@ class WorkoutLog {
   }
 
   factory WorkoutLog.fromFirestore(Map<String, dynamic> data, String id) {
+    // 🔧 v1.0.216: user_id (snake_case) と userId (camelCase) の両方に対応
+    final userId = data['user_id'] as String? ?? data['userId'] as String? ?? '';
+    
+    // 🔧 v1.0.216: sets と exercises の両方に対応
+    final rawSets = data['sets'] as List<dynamic>? ?? data['exercises'] as List<dynamic>? ?? [];
+    
     return WorkoutLog(
       id: id,
-      userId: data['userId'] ?? '',
+      userId: userId,
       date: (data['date'] as Timestamp).toDate(),
       gymId: data['gymId'] ?? '',
       gymName: data['gymName'],
-      exercises: (data['exercises'] as List<dynamic>?)
-              ?.map((e) => Exercise.fromMap(e as Map<String, dynamic>))
-              .toList() ??
-          [],
+      exercises: rawSets
+              .map((e) => Exercise.fromMap(e as Map<String, dynamic>))
+              .toList(),
       notes: data['notes'],
       isAutoCompleted: data['isAutoCompleted'] ?? false,
       consecutiveDays: data['consecutiveDays'] ?? 1,
@@ -81,13 +87,38 @@ class Exercise {
   }
 
   factory Exercise.fromMap(Map<String, dynamic> map) {
+    // 🔧 v1.0.216: exercise_name と name の両方に対応
+    final exerciseName = map['exercise_name'] as String? ?? map['name'] as String? ?? '';
+    
+    // 🔧 v1.0.216: add_workout_screenのデータ形式に対応（setsがない場合は自分自身をセットとして扱う）
+    List<WorkoutSet> workoutSets;
+    if (map.containsKey('sets') && map['sets'] is List) {
+      // 新しいフォーマット: exercises 配列に sets 配列
+      workoutSets = (map['sets'] as List<dynamic>)
+          .map((s) => WorkoutSet.fromMap(s as Map<String, dynamic>))
+          .toList();
+    } else if (map.containsKey('weight') && map.containsKey('reps')) {
+      // add_workout_screenのフォーマット: 各セットが個別のオブジェクト
+      workoutSets = [WorkoutSet.fromMap(map)];
+    } else {
+      workoutSets = [];
+    }
+    
+    // 🔧 v1.0.245: bodyPartのランタイム補完強化 (Problem 1 fix)
+    String? bodyPart = map['bodyPart'] ?? map['muscle_group'];
+    
+    // bodyPartがnull、または'その他'の場合、ExerciseMasterDataで再評価
+    if (bodyPart == null || bodyPart == 'その他') {
+      bodyPart = ExerciseMasterData.getBodyPartByName(exerciseName);
+    }
+    
+    // それでもnullなら'その他'（ExerciseMasterDataはデフォルトで'その他'を返すので通常不要）
+    bodyPart ??= 'その他';
+    
     return Exercise(
-      name: map['name'] ?? '',
-      bodyPart: map['bodyPart'] ?? '',
-      sets: (map['sets'] as List<dynamic>?)
-              ?.map((s) => WorkoutSet.fromMap(s as Map<String, dynamic>))
-              .toList() ??
-          [],
+      name: exerciseName,
+      bodyPart: bodyPart,
+      sets: workoutSets,
     );
   }
 }
@@ -112,6 +143,8 @@ class WorkoutSet {
   final int? dropsetLevel;      // ドロップセットのレベル (1, 2, 3...)
   final int? rpe;               // RPE (Rate of Perceived Exertion) 1-10
   final bool? hasAssist;        // 補助有無
+  final bool isCardio;          // 🔧 v1.0.243: 有酸素運動フラグ
+  final bool isTimeMode;        // 🔧 v1.0.243: 時間モード（秒数 vs 回数）
 
   WorkoutSet({
     required this.targetReps,
@@ -123,6 +156,8 @@ class WorkoutSet {
     this.dropsetLevel,
     this.rpe,
     this.hasAssist,
+    this.isCardio = false,    // デフォルトは筋トレ
+    this.isTimeMode = false,  // デフォルトは回数モード
   });
 
   Map<String, dynamic> toMap() {
@@ -137,25 +172,34 @@ class WorkoutSet {
       'dropsetLevel': dropsetLevel,
       'rpe': rpe,
       'hasAssist': hasAssist,
+      'isCardio': isCardio,      // 🔧 v1.0.243
+      'isTimeMode': isTimeMode,  // 🔧 v1.0.243
     };
   }
 
   factory WorkoutSet.fromMap(Map<String, dynamic> map) {
+    // 🔧 v1.0.216: add_workout_screen.dartのデータ形式に対応
+    // targetReps → reps, actualReps → reps, has_assist → hasAssist
+    final reps = map['reps'] as int? ?? map['targetReps'] as int? ?? map['actualReps'] as int? ?? 0;
+    final weight = (map['weight'] as num?)?.toDouble();
+    
     return WorkoutSet(
-      targetReps: map['targetReps'] ?? 0,
-      actualReps: map['actualReps'],
-      weight: map['weight']?.toDouble(),
+      targetReps: reps,
+      actualReps: map['is_completed'] == true ? reps : null,
+      weight: weight,
       completedAt: map['completedAt'] != null
           ? (map['completedAt'] as Timestamp).toDate()
           : null,
       setType: SetType.values.firstWhere(
-        (e) => e.name == map['setType'],
+        (e) => e.name == (map['setType'] ?? map['set_type']),
         orElse: () => SetType.normal,
       ),
       supersetPairId: map['supersetPairId'],
       dropsetLevel: map['dropsetLevel'],
       rpe: map['rpe'],
       hasAssist: map['hasAssist'] ?? map['has_assist'],
+      isCardio: map['isCardio'] ?? map['is_cardio'] ?? false,       // 🔧 v1.0.243: 両形式対応
+      isTimeMode: map['isTimeMode'] ?? map['is_time_mode'] ?? false, // 🔧 v1.0.243: 両形式対応
     );
   }
 

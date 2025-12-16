@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../services/onboarding_service.dart';
+import '../services/version_check_service.dart';
+import '../widgets/update_dialog.dart';
 import 'onboarding/onboarding_screen.dart';
 
 /// スプラッシュスクリーン
@@ -52,9 +54,27 @@ class _SplashScreenState extends State<SplashScreen>
     // アニメーション開始
     _animationController.forward();
 
-    // 2秒後に初回起動判定 → オンボーディングorホーム画面に遷移
+    // 2秒後に初回起動判定 → バージョンチェック → オンボーディングorホーム画面に遷移
     Timer(const Duration(seconds: 2), () async {
       if (mounted) {
+        // 🔍 バージョンチェック
+        final versionCheck = await VersionCheckService().checkVersion();
+        
+        if (!mounted) return;
+        
+        // アップデートが必要な場合、ダイアログを表示
+        if (versionCheck.shouldUpdate) {
+          await UpdateDialog.show(context, versionCheck);
+          
+          // 強制アップデートの場合はここで終了（ホーム画面に進まない）
+          if (versionCheck.isForceUpdate) {
+            return;
+          }
+        }
+        
+        if (!mounted) return;
+        
+        // 初回起動判定
         final isCompleted = await _onboardingService.isOnboardingCompleted();
         
         if (!mounted) return;

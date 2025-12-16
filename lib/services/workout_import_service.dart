@@ -9,7 +9,7 @@ import 'package:csv/csv.dart';
 /// トレーニングデータを自動抽出
 class WorkoutImportService {
   // Gemini API設定（写真取り込み専用：無料枠モデル使用）
-  static const String _apiKey = 'AIzaSyA9XmQSHA1llGg7gihqjmOOIaLA856fkLc';
+  static const String _apiKey = 'AIzaSyAFVfcWzXDTtc9Rk3Zr5OGRx63FXpMAHqY';
   static const String _apiUrl = 
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 
@@ -71,7 +71,10 @@ class WorkoutImportService {
         // Gemini APIリクエスト
         final response = await http.post(
           Uri.parse('$_apiUrl?key=$_apiKey'),
-          headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Ios-Bundle-Identifier': 'com.nexa.gymmatch',
+          },
           body: jsonEncode({
             'contents': [
               {

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../models/personal_record.dart';
+import '../../services/exercise_master_data.dart'; // 🔧 v1.0.245: Problem 3 fix
 
 /// パーソナルレコード画面
 class PersonalRecordsScreen extends StatefulWidget {
@@ -43,6 +44,7 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen>
   }
 
   /// Firestoreからトレーニング履歴を読み取り、種目リストを作成
+  /// 🔧 v1.0.251: 部位別にグルーピングして取得
   Future<void> _loadExercisesFromHistory() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -54,6 +56,7 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen>
       }
 
       // workout_logs コレクションから全トレーニングを取得
+      // 🔧 v1.0.216: user_id (snake_case) を使用（add_workout_screen.dartと一致）
       final workoutSnapshot = await FirebaseFirestore.instance
           .collection('workout_logs')
           .where('user_id', isEqualTo: user.uid)
@@ -64,11 +67,13 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen>
 
       for (final doc in workoutSnapshot.docs) {
         final data = doc.data();
-        final sets = data['sets'] as List<dynamic>? ?? [];
+        // 🔧 v1.0.216: sets 配列を使用（add_workout_screen.dartと一致）
+        final exercises = data['sets'] as List<dynamic>? ?? [];
         
-        for (final set in sets) {
-          if (set is Map<String, dynamic>) {
-            final name = set['exercise_name'] as String?;
+        for (final exercise in exercises) {
+          if (exercise is Map<String, dynamic>) {
+            // 🔧 v1.0.216: exercise_name フィールドを使用（add_workout_screen.dartと一致）
+            final name = exercise['exercise_name'] as String?;
             if (name != null && name.isNotEmpty) {
               exerciseSet.add(name);
             }
@@ -145,6 +150,7 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen>
     );
   }
 
+  // 🔧 v1.0.251: 部位別カテゴリー表示へ変更
   Widget _buildMainContent(User user) {
     // 種目リスト読み込み中
     if (_isLoadingExercises) {
@@ -189,9 +195,150 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen>
       );
     }
 
+    // 🔧 v1.0.251: 部位別カテゴリー表示（胸・背中・肩・二頭・三頭・腹筋・脚）
+    return Scaffold(
+      appBar: AppBar(title: const Text('パーソナルレコード')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildBodyPartCategory(user.uid, '胸', Icons.fitness_center, Colors.red),
+          _buildBodyPartCategory(user.uid, '背中', Icons.fitness_center, Colors.blue),
+          _buildBodyPartCategory(user.uid, '肩', Icons.fitness_center, Colors.orange),
+          _buildBodyPartCategory(user.uid, '二頭', Icons.fitness_center, Colors.purple),
+          _buildBodyPartCategory(user.uid, '三頭', Icons.fitness_center, Colors.pink),
+          _buildBodyPartCategory(user.uid, '腹筋', Icons.fitness_center, Colors.green),
+          _buildBodyPartCategory(user.uid, '脚', Icons.fitness_center, Colors.brown),
+          _buildBodyPartCategory(user.uid, '有酸素', Icons.directions_run, Colors.teal),
+        ],
+      ),
+    );
+  }
+
+  // 🔧 v1.0.253: すべての部位を常に表示（記録なしでも表示）
+  Widget _buildBodyPartCategory(String userId, String bodyPart, IconData icon, Color color) {
+    // この部位に属する種目をフィルタリング
+    final bodyPartExercises = _exercises.where((exerciseName) {
+      final detectedBodyPart = ExerciseMasterData.getBodyPartByName(exerciseName);
+      return detectedBodyPart == bodyPart;
+    }).toList();
+
+    // 🔧 v1.0.253: 記録がなくても常に表示（0種目として表示）
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: color,
+          ),
+        ),
+        title: Text(
+          bodyPart,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        subtitle: Text('${bodyPartExercises.length}種目'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          // 🔧 v1.0.253: 記録がない場合も遷移可能（空の一覧画面）
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ExerciseListScreen(
+                userId: userId,
+                bodyPart: bodyPart,
+                exercises: bodyPartExercises,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // 🔧 v1.0.245: PRカードウィジェット（Problem 3 fix）
+  Widget _buildPRCard(String userId, String exerciseName) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.purple.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            ExerciseMasterData.isCardioExercise(exerciseName)
+                ? Icons.directions_run
+                : Icons.fitness_center,
+            color: Colors.purple,
+          ),
+        ),
+        title: Text(
+          exerciseName,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: const Text('タップして推移を確認'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          // 詳細画面（グラフ）へ遷移
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PRDetailScreen(
+                userId: userId,
+                exerciseName: exerciseName,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// 🔧 v1.0.245: Problem 3 fix - PR詳細画面（グラフ表示）
+class PRDetailScreen extends StatefulWidget {
+  final String userId;
+  final String exerciseName;
+
+  const PRDetailScreen({
+    super.key,
+    required this.userId,
+    required this.exerciseName,
+  });
+
+  @override
+  State<PRDetailScreen> createState() => _PRDetailScreenState();
+}
+
+class _PRDetailScreenState extends State<PRDetailScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final List<String> _periods = ['月別', '3ヶ月', '6ヶ月', '9ヶ月', '1年'];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: _periods.length, vsync: this);
+    _tabController.index = 1; // デフォルト3ヶ月
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('パーソナルレコード'),
+        title: Text(widget.exerciseName),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -201,41 +348,15 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen>
           tabs: _periods.map((p) => Tab(text: p)).toList(),
         ),
       ),
-      body: Column(
-        children: [
-          // 種目選択
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: DropdownButtonFormField<String>(
-              value: _selectedExercise,
-              decoration: const InputDecoration(
-                labelText: '種目を選択',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.fitness_center),
-              ),
-              items: _exercises
-                  .map((ex) => DropdownMenuItem(value: ex, child: Text(ex)))
-                  .toList(),
-              onChanged: (value) {
-                setState(() => _selectedExercise = value!);
-              },
-            ),
-          ),
-
-          // タブビュー
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: _periods.map((period) {
-                return _PeriodView(
-                  userId: user.uid,
-                  exercise: _selectedExercise ?? '',
-                  period: period,
-                );
-              }).toList(),
-            ),
-          ),
-        ],
+      body: TabBarView(
+        controller: _tabController,
+        children: _periods.map((period) {
+          return _PeriodView(
+            userId: widget.userId,
+            exercise: widget.exerciseName,
+            period: period,
+          );
+        }).toList(),
       ),
     );
   }
@@ -299,8 +420,11 @@ class _PeriodView extends StatelessWidget {
                           showTitles: true,
                           reservedSize: 40,
                           getTitlesWidget: (value, meta) {
+                            // 🔧 v1.0.246: 有酸素運動の場合は「分」、筋トレは「kg」
+                            final isCardio = data.isNotEmpty && data.first.isCardio;
+                            final unit = isCardio ? '分' : 'kg';
                             return Text(
-                              '${value.toInt()}kg',
+                              '${value.toInt()}$unit',
                               style: const TextStyle(fontSize: 10),
                             );
                           },
@@ -365,6 +489,7 @@ class _PeriodView extends StatelessWidget {
     );
   }
 
+  // 🔧 v1.0.246: workout_logsから実際のトレーニングデータを取得
   Future<List<PersonalRecord>> _fetchPRData() async {
     final now = DateTime.now();
     DateTime startDate;
@@ -389,32 +514,100 @@ class _PeriodView extends StatelessWidget {
         startDate = DateTime(now.year, now.month - 3, now.day);
     }
 
-    // インデックス不要のシンプルなクエリ（where 1つのみ）
-    final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('personalRecords')
-        .where('exerciseName', isEqualTo: exercise)
-        .get();
+    try {
+      // workout_logsコレクションから取得
+      final snapshot = await FirebaseFirestore.instance
+          .collection('workout_logs')
+          .where('user_id', isEqualTo: userId)
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .get();
 
-    // メモリ内でフィルタリングとソート
-    final records = snapshot.docs
-        .map((doc) => PersonalRecord.fromFirestore(
-            doc.data() as Map<String, dynamic>, doc.id))
-        .where((record) => record.achievedAt.isAfter(startDate))
-        .toList();
-    
-    // 日付順にソート
-    records.sort((a, b) => a.achievedAt.compareTo(b.achievedAt));
-    
-    return records;
+      debugPrint('📊 PR記録取得: ${snapshot.docs.length}件のworkout_logs (種目: $exercise)');
+
+      // 各ワークアウトログから指定種目のPRを抽出
+      final List<PersonalRecord> records = [];
+      int totalSetsChecked = 0;
+      int matchedSets = 0;
+      
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final sets = data['sets'] as List<dynamic>? ?? [];
+        final date = (data['date'] as Timestamp?)?.toDate() ?? DateTime.now();
+        
+        for (final set in sets) {
+          totalSetsChecked++;
+          if (set is Map<String, dynamic>) {
+            final exerciseName = set['exercise_name'] as String?;
+            
+            // 指定種目のみ抽出（nullチェック追加）
+            if (exerciseName == exercise && exerciseName != null) {
+              matchedSets++;
+              debugPrint('  ✅ マッチした種目: $exerciseName (weight: ${set['weight']}, reps: ${set['reps']})');
+              
+              final weight = (set['weight'] as num?)?.toDouble() ?? 0.0;
+              final reps = (set['reps'] as int?) ?? 0;
+              final isCardio = set['is_cardio'] as bool? ?? ExerciseMasterData.isCardioExercise(exerciseName); // 🔧 v1.0.251: 後方互換性
+              // 🔧 v1.0.253: 完了/未完了に関わらずホーム画面に表示される = PRに反映
+              // final isCompleted = set['is_completed'] as bool? ?? true; // 不要になった
+              
+              // 🔧 v1.0.253: 完了フラグをチェックしない（ホーム画面に表示されていればPRに反映）
+              // - 有酸素: 時間(weight)が0より大きい、または回数(reps)が0より大きい
+              // - 筋トレ: 回数(reps)が0より大きい（自重の場合weight=0も許可）
+              final hasValidData = isCardio 
+                  ? (weight > 0 || reps > 0) // 有酸素: 時間または距離/回数
+                  : (reps > 0); // 筋トレ: 回数があればOK（自重でもweight=0を許可）
+              
+              if (hasValidData) {
+                // 有酸素運動の場合は1RM計算しない（時間×距離で表示）
+                final calculated1RM = isCardio 
+                    ? weight // 有酸素は時間をそのまま使用
+                    : _calculate1RM(weight, reps);
+                
+                records.add(PersonalRecord(
+                  id: '${doc.id}_${set['exercise_name']}_${date.millisecondsSinceEpoch}',
+                  userId: userId,
+                  exerciseName: exerciseName,
+                  weight: weight,
+                  reps: reps,
+                  calculated1RM: calculated1RM,
+                  achievedAt: date,
+                  isCardio: isCardio,
+                ));
+              }
+            }
+          }
+        }
+      }
+      
+      // 日付順にソート
+      records.sort((a, b) => a.achievedAt.compareTo(b.achievedAt));
+      
+      debugPrint('✅ ${exercise}のPR記録: ${records.length}件 (確認したセット数: $totalSetsChecked, マッチした種目: $matchedSets)');
+      return records;
+      
+    } catch (e) {
+      debugPrint('❌ PR記録取得エラー: $e');
+      return [];
+    }
+  }
+  
+  // 1RM計算（Epley式）
+  double _calculate1RM(double weight, int reps) {
+    if (reps == 1) return weight;
+    return weight * (1 + reps / 30.0);
   }
 
   Widget _buildGrowthStats(List<PersonalRecord> data) {
     final start = data.first;
     final current = data.last;
-    final growthKg = current.calculated1RM - start.calculated1RM;
-    final growthPercent = (growthKg / start.calculated1RM) * 100;
+    final isCardio = start.isCardio;  // 🔧 v1.0.246: 有酸素運動判定
+    
+    final growthValue = current.calculated1RM - start.calculated1RM;
+    final growthPercent = (growthValue / start.calculated1RM) * 100;
+    
+    // 🔧 v1.0.246: 有酸素は「時間」、筋トレは「1RM」
+    final label = isCardio ? '時間' : '1RM';
+    final unit = isCardio ? '分' : 'kg';
 
     return Card(
       margin: const EdgeInsets.all(16),
@@ -424,7 +617,7 @@ class _PeriodView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '$periodの成長',
+              '${period}の成長',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -433,13 +626,13 @@ class _PeriodView extends StatelessWidget {
               children: [
                 Column(
                   children: [
-                    const Text(
-                      '開始時 (1RM)',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    Text(
+                      '開始時 ($label)',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${start.calculated1RM.toStringAsFixed(1)}kg',
+                      '${start.calculated1RM.toStringAsFixed(1)}$unit',
                       style: const TextStyle(
                           fontSize: 20, fontWeight: FontWeight.bold),
                     ),
@@ -448,13 +641,13 @@ class _PeriodView extends StatelessWidget {
                 const Icon(Icons.arrow_forward, size: 32, color: Colors.grey),
                 Column(
                   children: [
-                    const Text(
-                      '現在 (1RM)',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    Text(
+                      '現在 ($label)',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${current.calculated1RM.toStringAsFixed(1)}kg',
+                      '${current.calculated1RM.toStringAsFixed(1)}$unit',
                       style: const TextStyle(
                           fontSize: 20, fontWeight: FontWeight.bold),
                     ),
@@ -474,7 +667,7 @@ class _PeriodView extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '+${growthKg.toStringAsFixed(1)}kg (+${growthPercent.toStringAsFixed(1)}%)',
+                    '+${growthValue.toStringAsFixed(1)}$unit (+${growthPercent.toStringAsFixed(1)}%)',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -511,17 +704,29 @@ class _PeriodView extends StatelessWidget {
             itemBuilder: (context, index) {
               final record = data[data.length - 1 - index]; // 新しい順
 
+              // 🔧 v1.0.246: 有酸素運動は「時間 × 距離」、筋トレは「重量 × 回数」
+              final isCardio = record.isCardio;
+              final title = isCardio
+                  ? '${record.weight.toStringAsFixed(1)}分 × ${record.reps}km'
+                  : '${record.weight}kg × ${record.reps}回';
+              final subtitle = isCardio
+                  ? '合計時間: ${record.calculated1RM.toStringAsFixed(1)}分'
+                  : '1RM推定: ${record.calculated1RM.toStringAsFixed(1)}kg';
+              
               return ListTile(
                 leading: CircleAvatar(
-                  child: Text('${index + 1}'),
+                  backgroundColor: isCardio ? Colors.orange : Colors.blue,
+                  child: Icon(
+                    isCardio ? Icons.directions_run : Icons.fitness_center,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
                 title: Text(
-                  '${record.weight}kg × ${record.reps}回',
+                  title,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                subtitle: Text(
-                  '1RM推定: ${record.calculated1RM.toStringAsFixed(1)}kg',
-                ),
+                subtitle: Text(subtitle),
                 trailing: Text(
                   DateFormat('MM/dd').format(record.achievedAt),
                   style: const TextStyle(color: Colors.grey),
@@ -531,6 +736,92 @@ class _PeriodView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// 🔧 v1.0.251: 部位別の種目一覧画面
+class ExerciseListScreen extends StatelessWidget {
+  final String userId;
+  final String bodyPart;
+  final List<String> exercises;
+
+  const ExerciseListScreen({
+    super.key,
+    required this.userId,
+    required this.bodyPart,
+    required this.exercises,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('$bodyPart - PR記録'),
+      ),
+      body: exercises.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.fitness_center, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'まだ$bodyPartの記録がありません',
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'トレーニングを記録すると、ここに表示されます',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: exercises.length,
+              itemBuilder: (context, index) {
+                final exerciseName = exercises[index];
+                final isCardio = ExerciseMasterData.isCardioExercise(exerciseName);
+                
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: (isCardio ? Colors.teal : Colors.purple).withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isCardio ? Icons.directions_run : Icons.fitness_center,
+                        color: isCardio ? Colors.teal : Colors.purple,
+                      ),
+                    ),
+                    title: Text(
+                      exerciseName,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: const Text('タップして推移を確認'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      // 詳細画面（グラフ）へ遷移
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PRDetailScreen(
+                            userId: userId,
+                            exerciseName: exerciseName,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
     );
   }
 }

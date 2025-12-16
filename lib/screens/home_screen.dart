@@ -13,6 +13,10 @@ import 'workout/ai_coaching_screen_tabbed.dart';
 import 'workout/template_screen.dart';
 import 'workout/workout_log_screen.dart';
 import 'workout/statistics_dashboard_screen.dart';
+import 'workout/personal_records_screen.dart';
+import 'workout/body_part_tracking_screen.dart';
+import 'workout/workout_memo_list_screen.dart';
+import 'workout/weekly_reports_screen.dart';
 import 'achievements_screen.dart';
 import 'goals_screen.dart';
 import '../models/workout_log.dart' as workout_models;
@@ -24,6 +28,7 @@ import '../services/workout_share_service.dart';
 import '../services/enhanced_share_service.dart';
 import '../services/fatigue_management_service.dart';
 import '../services/advanced_fatigue_service.dart';
+import '../services/exercise_master_data.dart';
 import '../models/user_profile.dart';
 import '../widgets/workout_share_card.dart';
 import '../widgets/workout_share_image.dart';
@@ -59,8 +64,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   // トレーニング記録がある日付のセット
   Set<DateTime> _workoutDates = {};
   
+  // ✅ v1.0.178: オフ日のセット
+  Set<DateTime> _restDays = {};
+  
   // 種目ごとの展開状態を管理
   Map<String, bool> _expandedExercises = {};
+  
+  // 🔧 v1.0.248: ワークアウトタイプフィルター（ホーム画面：筋トレ/有酸素の2部屋制）
+  String _homeWorkoutFilter = 'strength'; // 'strength', 'cardio' (デフォルト: 筋トレ)
   
   // 統計データ
   double _last7DaysVolume = 0.0;
@@ -81,6 +92,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final AdMobService _adMobService = AdMobService();
   BannerAd? _bannerAd;
   bool _isAdLoaded = false;
+  bool _isPremiumUser = false; // 🔧 v1.0.225-fix: 有料プラン判定用
   
   // Task 16: バッジシステム
   final AchievementService _achievementService = AchievementService();
@@ -137,6 +149,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // 空セットをクリーンアップしてからデータ読み込み
     _cleanupEmptySets().then((_) {
       _loadWorkoutDates(); // トレーニング記録がある日付を読み込む
+      _loadRestDays(); // ✅ v1.0.178: オフ日を読み込む
       _loadWorkoutsForSelectedDay();
       _loadBadgeStats();
       _loadActiveGoals();
@@ -158,8 +171,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _checkAndShowReferralBanner();
     });
     
-    // 📱 バナー広告をロード
-    _loadBannerAd();
+    // 🔧 v1.0.225-fix: プラン状態をチェックしてから広告を読み込む
+    _checkPremiumStatus();
     
     // 🔔 混雑度アラート監視開始（Premium/Pro限定）
     _startCrowdAlertMonitoring();
@@ -467,7 +480,43 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
   
-  /// バナー広告を読み込む
+  /// 🔧 v1.0.225-fix: プラン状態をチェック
+  Future<void> _checkPremiumStatus() async {
+    try {
+      final subscriptionService = SubscriptionService();
+      
+      // 永年プランチェック
+      final hasLifetime = await subscriptionService.hasLifetimePlan();
+      if (hasLifetime) {
+        setState(() {
+          _isPremiumUser = true;
+        });
+        debugPrint('✅ 永年Proプラン保持者 - 広告非表示');
+        return;
+      }
+      
+      // 通常のプランチェック
+      final currentPlan = await subscriptionService.getCurrentPlan();
+      setState(() {
+        _isPremiumUser = currentPlan != SubscriptionType.free;
+      });
+      
+      debugPrint('📊 現在のプラン: $currentPlan (広告表示: ${!_isPremiumUser})');
+      
+      // 無料プランの場合のみ広告をロード
+      if (!_isPremiumUser) {
+        await _loadBannerAd();
+      }
+    } catch (e) {
+      debugPrint('⚠️ プラン状態チェックエラー: $e');
+      // エラー時は念のため広告を表示しない
+      setState(() {
+        _isPremiumUser = true;
+      });
+    }
+  }
+  
+  /// バナー広告を読み込む（無料プランのみ）
   Future<void> _loadBannerAd() async {
     await _adMobService.loadBannerAd(
       onAdLoaded: (ad) {
@@ -580,6 +629,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       // アプリが foreground に戻った時に自動リフレッシュ
       print('🔄 アプリがアクティブになりました - データを再読み込み');
       _loadWorkoutDates(); // トレーニング記録日付も再読み込み
+      _loadRestDays(); // ✅ v1.0.178: オフ日も再読み込み
       _loadWorkoutsForSelectedDay();
       _loadStatistics(); // 統計データも再読み込み
     }
@@ -740,6 +790,43 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       
     } catch (e) {
       print('❌ トレーニング記録日付の取得エラー: $e');
+    }
+  }
+
+  /// ✅ v1.0.178: オフ日を読み込む
+  Future<void> _loadRestDays() async {
+    final user = firebase_auth.FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    
+    try {
+      print('📅 オフ日を取得中...');
+      
+      // 全オフ日を取得
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('rest_days')
+          .where('user_id', isEqualTo: user.uid)
+          .get();
+      
+      final restDays = <DateTime>{};
+      for (final doc in querySnapshot.docs) {
+        final data = doc.data();
+        final date = (data['date'] as Timestamp?)?.toDate();
+        
+        if (date != null) {
+          // 時刻を正規化（日付のみを使用）
+          final normalizedDate = DateTime(date.year, date.month, date.day);
+          restDays.add(normalizedDate);
+        }
+      }
+      
+      print('✅ オフ日: ${restDays.length}日');
+      
+      setState(() {
+        _restDays = restDays;
+      });
+      
+    } catch (e) {
+      print('❌ オフ日の取得エラー: $e');
     }
   }
 
@@ -989,7 +1076,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       appBar: AppBar(
         centerTitle: true,
         title: const Text(
-          'トレーニング記録',
+          'ホーム',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -1065,7 +1152,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             _buildMonthlySummary(theme),
             
             // 📱 バナー広告表示（無料プランのみ）
-            if (_isAdLoaded && _bannerAd != null)
+            // 🔧 v1.0.225-fix: 有料プラン（永年含む）は広告非表示
+            if (!_isPremiumUser && _isAdLoaded && _bannerAd != null)
               Container(
                 margin: const EdgeInsets.only(top: 16, bottom: 16),
                 alignment: Alignment.center,
@@ -2009,6 +2097,51 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         onPageChanged: (focusedDay) {
           _focusedDay = focusedDay;
         },
+        // ✅ v1.0.178: カスタムビルダーでオフ日を表示
+        calendarBuilders: CalendarBuilders(
+          markerBuilder: (context, day, events) {
+            final normalizedDay = DateTime(day.year, day.month, day.day);
+            
+            // オフ日の場合はグリーンで「オフ」と表示
+            if (_restDays.contains(normalizedDay)) {
+              return Positioned(
+                bottom: 2,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'オフ',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              );
+            }
+            
+            // トレーニング日の場合はオレンジのドット
+            if (events.isNotEmpty) {
+              return Positioned(
+                bottom: 4,
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.secondary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              );
+            }
+            
+            return null;
+          },
+        ),
         calendarStyle: CalendarStyle(
           todayDecoration: BoxDecoration(
             color: theme.colorScheme.primary.withValues(alpha: 0.7),
@@ -2018,9 +2151,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             color: theme.colorScheme.primary,
             shape: BoxShape.circle,
           ),
-          markerDecoration: BoxDecoration(
-            color: theme.colorScheme.secondary,
-            shape: BoxShape.circle,
+          markerDecoration: const BoxDecoration(
+            color: Colors.transparent,  // ✅ v1.0.178: カスタムマーカーを使用するため透明に
           ),
           markersMaxCount: 1,
           todayTextStyle: const TextStyle(
@@ -2095,6 +2227,132 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   icon: Icon(Icons.calculate, size: 18, color: theme.colorScheme.primary),
                   label: const Text(
                     'RM計算',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(color: theme.colorScheme.primary, width: 2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // パーソナルレコード & 部位別トラッキング
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PersonalRecordsScreen(),
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.emoji_events, size: 18, color: theme.colorScheme.primary),
+                  label: const Text(
+                    'PR記録',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(color: theme.colorScheme.primary, width: 2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const BodyPartTrackingScreen(),
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.accessibility_new, size: 18, color: theme.colorScheme.primary),
+                  label: const Text(
+                    '部位別',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(color: theme.colorScheme.primary, width: 2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // トレーニングメモ & 週次レポート
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const WorkoutMemoListScreen(),
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.note_alt, size: 18, color: theme.colorScheme.primary),
+                  label: const Text(
+                    'メモ',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: BorderSide(color: theme.colorScheme.primary, width: 2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const WeeklyReportsScreen(),
+                      ),
+                    );
+                  },
+                  icon: Icon(Icons.analytics, size: 18, color: theme.colorScheme.primary),
+                  label: const Text(
+                    '週次',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -2197,6 +2455,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // Epley式: 1RM = 重量 × (1 + 回数 / 30)
     // 高回数でも正確に計算できる
     return weight * (1 + reps / 30.0);
+  }
+
+  /// v1.0.170: 懸垂種目の判定
+  bool _isPullUpExercise(String exerciseName) {
+    final pullUpKeywords = ['懸垂', 'チンニング', 'プルアップ'];
+    return pullUpKeywords.any((keyword) => exerciseName.contains(keyword));
+  }
+
+  /// v1.0.170: 腹筋種目の判定
+  bool _isAbsExercise(String exerciseName) {
+    final absExercises = [
+      'クランチ', 'レッグレイズ', 'プランク', 'アブローラー',
+      'ハンギングレッグレイズ', 'サイドプランク', 'バイシクルクランチ', 'ケーブルクランチ'
+    ];
+    return absExercises.any((abs) => exerciseName.contains(abs));
+  }
+  
+  /// v1.0.185: 腹筋種目のデフォルト時間モード判定
+  /// ユーザーが秒数入力した場合は「秒」表記にするため、デフォルトで全ての腹筋を秒数モードとして扱う
+  /// （過去のis_time_mode=nullデータとの互換性のため）
+  bool _getDefaultTimeMode(String exerciseName) {
+    // 腹筋種目は全て秒数モードをデフォルトとする
+    return _isAbsExercise(exerciseName);
   }
   
   // ワークアウトセット削除（ワンタップ削除）
@@ -2568,6 +2849,32 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ],
                 ),
                 const SizedBox(height: 12),
+                
+                // 🔧 v1.0.248: ワークアウトタイプフィルター（筋トレ/有酸素の2部屋制）
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(
+                      value: 'strength',
+                      label: Text('筋トレ', style: TextStyle(fontSize: 13)),
+                      icon: Icon(Icons.fitness_center, size: 18),
+                    ),
+                    ButtonSegment(
+                      value: 'cardio',
+                      label: Text('有酸素', style: TextStyle(fontSize: 13)),
+                      icon: Icon(Icons.directions_run, size: 18),
+                    ),
+                  ],
+                  selected: {_homeWorkoutFilter},
+                  onSelectionChanged: (Set<String> newSelection) {
+                    setState(() {
+                      _homeWorkoutFilter = newSelection.first;
+                    });
+                  },
+                  style: ButtonStyle(
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                const SizedBox(height: 8),
               ],
             ),
           ),
@@ -2665,20 +2972,54 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
           
           // 種目ごとのセクション
-          ...exerciseGroups.entries.map((entry) {
+          ...exerciseGroups.entries.where((entry) {
+            // 🔧 v1.0.248: ワークアウトタイプフィルター適用（筋トレ/有酸素の2部屋制）
+            final exerciseName = entry.key;
+            final sets = entry.value;
+            
+            // 🔧 v1.0.248: is_cardioフラグがない古いデータにも対応
+            // 1. まずis_cardioフラグをチェック
+            // 2. フラグがなければExerciseMasterDataで判定
+            bool isCardio = false;
+            if (sets.isNotEmpty) {
+              final firstSet = sets.first;
+              if (firstSet['is_cardio'] != null) {
+                // フラグが存在する場合はそれを使用
+                isCardio = firstSet['is_cardio'] as bool;
+              } else {
+                // フラグがない古いデータの場合、ExerciseMasterDataで判定
+                isCardio = ExerciseMasterData.isCardioExercise(exerciseName);
+              }
+            }
+            
+            switch (_homeWorkoutFilter) {
+              case 'strength':
+                return !isCardio;
+              case 'cardio':
+                return isCardio;
+              default:
+                return !isCardio; // デフォルトは筋トレ表示
+            }
+          }).map((entry) {
             final exerciseName = entry.key;
             final sets = entry.value;
             final isExpanded = _expandedExercises[exerciseName] ?? true;
             
-            // muscle_groupを取得（有酸素判定用）
-            // ワークアウト全体のmuscle_groupを取得（セットではなくワークアウトレベル）
-            final muscleGroup = _selectedDayWorkouts.isNotEmpty 
-                ? (_selectedDayWorkouts.first['muscle_group'] as String? ?? '') 
-                : '';
-            final isCardio = muscleGroup == '有酸素';
+            // 🔧 v1.0.249: 後方互換性のあるis_cardio判定（表示用）
+            bool isCardio = false;
+            if (sets.isNotEmpty) {
+              final firstSet = sets.first;
+              if (firstSet['is_cardio'] != null) {
+                // フラグが存在する場合はそれを使用
+                isCardio = firstSet['is_cardio'] as bool;
+              } else {
+                // フラグがない古いデータの場合、ExerciseMasterDataで判定
+                isCardio = ExerciseMasterData.isCardioExercise(exerciseName);
+              }
+            }
             
             if (kDebugMode) {
-              print('種目: $exerciseName, muscle_group: $muscleGroup, isCardio: $isCardio');
+              print('種目: $exerciseName, isCardio: $isCardio (後方互換性判定)');
             }
             
             // 合計セット数、合計レップ数を計算
@@ -2730,58 +3071,58 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       onLongPress: () {
                         _showEditDeleteMenu(workoutId, exerciseName);
                       },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color(0xFF2E3192), // 深い青紫
-                            Color(0xFFE85D75), // オレンジがかった赤
-                          ],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            isExpanded ? Icons.expand_less : Icons.expand_more,
-                            color: Colors.white,
-                            size: 20,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Color(0xFF2E3192), // 深い青紫
+                              Color(0xFFE85D75), // オレンジがかった赤
+                            ],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              exerciseName,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              isExpanded ? Icons.expand_less : Icons.expand_more,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                exerciseName,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
-                          ),
-                          // 編集ボタン（トレーニング記録画面に遷移）
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.white, size: 18),
-                            padding: const EdgeInsets.all(4),
-                            constraints: const BoxConstraints(),
-                            onPressed: () async {
-                              if (mounted) {
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const WorkoutLogScreen(),
-                                  ),
-                                );
-                                _loadWorkoutsForSelectedDay();
-                              }
-                            },
-                            tooltip: 'トレーニング記録を編集',
-                          ),
-                        ],
+                            // 編集ボタン（トレーニング記録画面に遷移）
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.white, size: 18),
+                              padding: const EdgeInsets.all(4),
+                              constraints: const BoxConstraints(),
+                              onPressed: () async {
+                                if (mounted) {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const WorkoutLogScreen(),
+                                    ),
+                                  );
+                                  _loadWorkoutsForSelectedDay();
+                                }
+                              },
+                              tooltip: 'トレーニング記録を編集',
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ),
+                    ),  // InkWell closing
                   
                   // セットリスト（展開時のみ表示）
                   if (isExpanded) ...[
@@ -2789,71 +3130,97 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
                       color: Colors.grey[100],
-                      child: Row(
-                        children: [
-                          const SizedBox(
-                            width: 24,
-                            child: Text(
-                              'セット',
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              isCardio ? '時間' : '重さ',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              isCardio ? '距離' : '回数',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ),
-                          if (!isCardio)
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                'RM',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[700],
+                      child: Builder(
+                        builder: (context) {
+                          // ✅ v1.0.186: 種目の最初のセットからis_time_modeを取得
+                          bool isTimeMode = sets.isNotEmpty && (sets.first['is_time_mode'] == true);
+                          
+                          // is_time_modeフィールドが null または false の場合、種目名から判定
+                          if (sets.isNotEmpty && sets.first['is_time_mode'] != true) {
+                            final exerciseNameForMode = sets.first['exercise_name'] ?? exerciseName;
+                            isTimeMode = _getDefaultTimeMode(exerciseNameForMode);
+                          }
+                          
+                          // 🔧 v1.0.249: 有酸素運動の2列目ヘッダーを「距離」または「回数」に分ける
+                          String secondColumnHeader;
+                          if (isCardio) {
+                            // 有酸素運動の場合、距離を使うか回数を使うかを判定
+                            secondColumnHeader = ExerciseMasterData.cardioUsesDistance(exerciseName) 
+                                ? '距離' 
+                                : '回数';
+                          } else if (isTimeMode) {
+                            secondColumnHeader = '秒数';  // 秒数モード（腹筋等）
+                          } else {
+                            secondColumnHeader = '回数';  // 通常の回数
+                          }
+                          
+                          return Row(
+                            children: [
+                              const SizedBox(
+                                width: 24,
+                                child: Text(
+                                  'セット',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black54,
+                                  ),
                                 ),
                               ),
-                            ),
-                          if (isCardio) const Spacer(flex: 2),
-                          const SizedBox(
-                            width: 24,
-                            child: Text(
-                              '補助',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black54,
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  isCardio ? '時間' : '重さ',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black54,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 28),
-                        ],
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  secondColumnHeader,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ),
+                              if (!isCardio)
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    'RM',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ),
+                              if (isCardio) const Spacer(flex: 2),
+                              const SizedBox(
+                                width: 24,
+                                child: Text(
+                                  '補助',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 28),
+                            ],
+                          );
+                        },
                       ),
                     ),
                     
@@ -2922,16 +3289,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    isCardio 
-                                      ? '${set['weight']} 分' 
-                                      : (set['is_bodyweight_mode'] == true && set['weight'] == 0.0)
-                                        ? '自重'
-                                        : '${set['weight']} Kg',
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  Builder(
+                                    builder: (context) {
+                                      final weight = set['weight'];
+                                      final isBodyweightMode = set['is_bodyweight_mode'] == true;
+                                      final isAbs = _isAbsExercise(exerciseName);
+                                      
+                                      // デバッグ出力
+                                      debugPrint('🏋️ 重量表示: $exerciseName - weight: $weight, isBodyweightMode: $isBodyweightMode, isAbs: $isAbs');
+                                      
+                                      if (isCardio) {
+                                        return Text('$weight 分', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold));
+                                      } else if (isAbs && (isBodyweightMode || weight == 0.0)) {
+                                        return const Text('自重', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold));
+                                      } else if (isBodyweightMode && weight == 0.0) {
+                                        return const Text('自重', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold));
+                                      } else {
+                                        return Text('$weight Kg', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold));
+                                      }
+                                    }
                                   ),
                                 ],
                               ),
@@ -2941,12 +3317,48 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    isCardio ? '${set['reps']} km' : '${set['reps']} 回',
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  Builder(
+                                    builder: (context) {
+                                      final reps = set['reps'];
+                                      // ✅ v1.0.184: exercise_nameを親スコープから取得（より確実）
+                                      final setExerciseName = set['exercise_name'] ?? exerciseName;
+                                      
+                                      // ✅ v1.0.182: is_time_modeフィールドがない場合、種目名から判定
+                                      // ✅ v1.0.186: is_time_modeフィールドの優先順位
+                                      // 1. is_time_mode == true の場合は秒数モード
+                                      // 2. is_time_mode が null または false の場合、種目名から判定
+                                      bool isTimeMode = set['is_time_mode'] == true;
+                                      if (set['is_time_mode'] != true) {
+                                        // フィールドが null または false の場合、種目名から判定
+                                        // 腹筋種目は秒数モードをデフォルトとする
+                                        isTimeMode = _getDefaultTimeMode(setExerciseName);
+                                      }
+                                      
+                                      debugPrint('📊 表示: $setExerciseName - isTimeMode: $isTimeMode, reps: $reps, is_time_mode field: ${set['is_time_mode']}');
+                                      
+                                      // 🔧 v1.0.249: 有酸素運動の表示を「距離」または「回数」に分ける
+                                      String displayText;
+                                      if (isCardio) {
+                                        // 有酸素運動の場合
+                                        if (ExerciseMasterData.cardioUsesDistance(setExerciseName)) {
+                                          displayText = '$reps km';  // 距離を使う有酸素（ランニング等）
+                                        } else {
+                                          displayText = '$reps 回';  // 回数を使う有酸素（バーピー等）
+                                        }
+                                      } else if (isTimeMode) {
+                                        displayText = '${reps}秒';   // 秒数モード（腹筋等）
+                                      } else {
+                                        displayText = '$reps 回';    // 通常の回数
+                                      }
+                                      
+                                      return Text(
+                                        displayText,
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      );
+                                    }
                                   ),
                                 ],
                               ),
@@ -3001,14 +3413,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         final workoutId = sets.isNotEmpty ? sets.first['workout_id'] as String? : null;
                         
                         // 最後のセットの重量・回数を取得（前回の記録として使用）
-                        final lastWeight = sets.isNotEmpty ? (sets.last['weight'] as num?)?.toDouble() ?? 0.0 : 0.0;
+                        // ✅ v1.0.175: 自重モード（懸垂）の場合は additional_weight を使用（体重の2重加算防止）
+                        final isBodyweightMode = sets.isNotEmpty && sets.last['is_bodyweight_mode'] == true;
+                        final isPullUpExercise = _isPullUpExercise(exerciseName);
+                        final lastWeight = sets.isNotEmpty 
+                            ? (isBodyweightMode && isPullUpExercise
+                                ? (sets.last['additional_weight'] as num?)?.toDouble() ?? 0.0  // 懸垂: 追加重量のみ
+                                : (sets.last['weight'] as num?)?.toDouble() ?? 0.0)            // その他: 通常の重量
+                            : 0.0;
                         final lastReps = sets.isNotEmpty ? sets.last['reps'] as int? ?? 10 : 10;
+                        final lastIsTimeMode = sets.isNotEmpty && sets.last['is_time_mode'] == true;  // ✅ v1.0.176: is_time_mode を引き継ぐ
                         
                         final templateData = {
                           'muscle_group': muscleGroup,
                           'exercise_name': exerciseName,
                           'last_weight': lastWeight,
                           'last_reps': lastReps,
+                          'is_time_mode': lastIsTimeMode,  // ✅ v1.0.176: 秒数モードを引き継ぐ
                           'existing_workout_id': workoutId,  // 既存記録ID
                         };
                         
@@ -3242,11 +3663,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               final weight = set['weight'] as num?;
                               final reps = set['reps'] as num?;
                               
-                              // 有酸素運動の場合は「時間(分) × 距離(km)」表示
-                              final isCardio = muscleGroup == '有酸素';
+                              // ✅ v1.0.186: is_time_mode が null/false でも種目名から判定
+                              bool isTimeMode = set['is_time_mode'] == true;
+                              if (set['is_time_mode'] != true && exerciseName != null) {
+                                isTimeMode = _getDefaultTimeMode(exerciseName);
+                              }
+                              
+                              // 🔧 v1.0.243: セットのis_cardioフラグで判定（muscle_groupではなく）
+                              final isCardio = set['is_cardio'] as bool? ?? false;
                               final displayText = isCardio
                                   ? '• $exerciseName: ${weight?.toInt() ?? 0}分 × ${reps?.toInt() ?? 0}km'
-                                  : '• $exerciseName: ${weight?.toInt() ?? 0}kg × ${reps?.toInt() ?? 0}回';
+                                  : isTimeMode
+                                    ? '• $exerciseName: ${weight?.toInt() ?? 0}kg × ${reps?.toInt() ?? 0}秒'  // ✅ 秒数表示
+                                    : '• $exerciseName: ${weight?.toInt() ?? 0}kg × ${reps?.toInt() ?? 0}回';
                               
                               return Padding(
                                 padding: const EdgeInsets.only(left: 8, bottom: 4),
@@ -3651,10 +4080,96 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
             ),
             const SizedBox(height: 24),
-            // 編集ボタン
+            // 📊 4機能へのナビゲーション
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                '統計・分析',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.emoji_events, color: Colors.amber),
+              title: const Text('PR記録'),
+              subtitle: const Text('パーソナルレコード'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PersonalRecordsScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.pie_chart, color: Colors.green),
+              title: const Text('部位別'),
+              subtitle: const Text('部位別トラッキング'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BodyPartTrackingScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.note, color: Colors.blue),
+              title: const Text('メモ'),
+              subtitle: const Text('トレーニングメモ'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WorkoutMemoListScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.analytics, color: Colors.purple),
+              title: const Text('週次'),
+              subtitle: const Text('週次レポート'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const WeeklyReportsScreen(),
+                  ),
+                );
+              },
+            ),
+            const Divider(height: 32),
+            // 編集・削除（将来実装）
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'その他',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
             ListTile(
               leading: const Icon(Icons.edit, color: Colors.blue),
               title: const Text('編集'),
+              subtitle: const Text('次のアップデートで実装予定'),
+              enabled: false,
               onTap: () {
                 Navigator.pop(context);
                 _editWorkout(workoutId);

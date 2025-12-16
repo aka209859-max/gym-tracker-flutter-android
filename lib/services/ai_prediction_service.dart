@@ -1,6 +1,6 @@
 /// 📈 AI成長予測サービス
 /// 
-/// Gemini 2.0 Flash APIと科学的根拠データベースを活用し、
+/// Gemini 2.5 Flash APIと科学的根拠データベースを活用し、
 /// ユーザーの筋力成長を予測するサービス
 library;
 
@@ -13,7 +13,7 @@ import 'ai_response_optimizer.dart';
 /// AI成長予測サービスクラス
 class AIPredictionService {
   // Gemini API設定（AIコーチ専用キー）
-  static const String _apiKey = 'AIzaSyA9XmQSHA1llGg7gihqjmOOIaLA856fkLc';
+  static const String _apiKey = 'AIzaSyAFVfcWzXDTtc9Rk3Zr5OGRx63FXpMAHqY';
   static const String _apiUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 
@@ -26,6 +26,7 @@ class AIPredictionService {
   /// [age] 年齢
   /// [bodyPart] 対象部位（胸/背中/脚/腕/肩）
   /// [monthsAhead] 予測期間（月数、デフォルト4ヶ月）
+  /// [rpe] RPE（自覚的強度、6-10、デフォルト8）
   static Future<Map<String, dynamic>> predictGrowth({
     required double currentWeight,
     required String level,
@@ -34,6 +35,7 @@ class AIPredictionService {
     required int age,
     required String bodyPart,
     int monthsAhead = 4,
+    int rpe = 8,
   }) async {
     try {
       // 基本的な成長率を計算
@@ -43,10 +45,24 @@ class AIPredictionService {
       // 年齢補正
       final ageAdjustment = ScientificDatabase.getAgeAdjustmentFactor(age);
 
-      // 予測値の計算（複利計算）
-      // 月次成長率を使った現実的な予測
-      final predictedWeight =
-          currentWeight * math.pow(1 + monthlyRate * ageAdjustment, monthsAhead);
+      // 🆕 v1.0.228: RPE（自覚的強度）による補正係数
+      // RPE 6-7（余裕）: 1.1x、RPE 8-9（適正）: 1.0x、RPE 10（限界）: 0.8x
+      final rpeAdjustment = _getRpeAdjustment(rpe);
+
+      // 🆕 v1.0.228: 非線形ピリオダイゼーション（週次計算）
+      // 4週間サイクル: 3週Loading + 1週Deload
+      final totalWeeks = monthsAhead * 4;
+      double predictedWeight = currentWeight;
+      
+      for (int week = 1; week <= totalWeeks; week++) {
+        // 4週目ごとにDeload（成長率0%）、それ以外はLoading
+        final isDeloadWeek = week % 4 == 0;
+        final effectiveRate = isDeloadWeek 
+            ? 0.0 // Deload: 維持（成長なし）
+            : weeklyRate * ageAdjustment * (week <= 4 ? rpeAdjustment : 1.0); // 最初の1ヶ月のみRPE補正
+        
+        predictedWeight *= (1 + effectiveRate);
+      }
 
       // 信頼区間の計算
       final confidenceInterval =
@@ -70,6 +86,7 @@ class AIPredictionService {
         weeklyRate: weeklyRate,
         recommendedVolume: recommendedVolume,
         recommendedFreq: recommendedFreq,
+        rpe: rpe,
       );
 
       return {
@@ -87,6 +104,8 @@ class AIPredictionService {
         'recommendedFrequency': recommendedFreq,
         'aiAnalysis': aiAnalysis,
         'scientificBasis': _getScientificBasis(level, gender, bodyPart),
+        'rpe': rpe,
+        'rpeAdjustment': rpeAdjustment,
       };
     } catch (e, stackTrace) {
       print('❌❌❌ predictGrowth全体エラー: $e');
@@ -96,6 +115,17 @@ class AIPredictionService {
         'error': 'AI予測の生成に失敗しました: $e',
       };
     }
+  }
+
+  /// RPE（自覚的強度）による補正係数を計算
+  /// 
+  /// RPE 6-7（余裕あり）: 1.1x - まだ伸ばせる
+  /// RPE 8-9（適正）: 1.0x - 計画通り
+  /// RPE 10（限界・潰れた）: 0.8x - オーバーワーク気味、伸びが鈕化
+  static double _getRpeAdjustment(int rpe) {
+    if (rpe <= 7) return 1.1; // 余裕あり
+    if (rpe >= 10) return 0.8; // 限界
+    return 1.0; // 適正
   }
 
   /// AIによる詳細な分析を取得
@@ -112,6 +142,7 @@ class AIPredictionService {
     required double weeklyRate,
     required Map<String, int> recommendedVolume,
     required Map<String, dynamic> recommendedFreq,
+    int rpe = 8,
   }) async {
     // キャッシュキーを生成
     final cacheKey = AIResponseOptimizer.generateCacheKey({
@@ -175,7 +206,10 @@ ${ScientificDatabase.getSystemPrompt()}
     try {
       final response = await http.post(
         Uri.parse('$_apiUrl?key=$_apiKey'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          // Note: Gemini API does NOT support X-Ios-Bundle-Identifier header
+        },
         body: jsonEncode({
           'contents': [
             {
@@ -304,7 +338,8 @@ ${ScientificDatabase.getSystemPrompt()}
     return basis;
   }
 
-  /// 月次の予測カーブを生成（グラフ用）
+  /// 🆕 v1.0.228: 非線形ピリオダイゼーション対応の予測カーブを生成（グラフ用）
+  /// 週次計算で「波のある成長曲線」を描画（4週目、 8週目で踊り場）
   static List<Map<String, dynamic>> generatePredictionCurve({
     required double currentWeight,
     required String level,
@@ -312,31 +347,38 @@ ${ScientificDatabase.getSystemPrompt()}
     required int age,
     required String bodyPart,
     int monthsAhead = 4,
+    int rpe = 8,
   }) {
     final curve = <Map<String, dynamic>>[];
-    final monthlyRate = ScientificDatabase.getMonthlyGrowthRate(level);
+    final weeklyRate = ScientificDatabase.getWeeklyGrowthRate(level, gender, bodyPart);
     final ageAdjustment = ScientificDatabase.getAgeAdjustmentFactor(age);
+    final rpeAdjustment = _getRpeAdjustment(rpe);
 
-    // 女性の上半身は特別補正
-    double genderBonus = 1.0;
-    final isUpperBody = bodyPart.contains('胸') || 
-                        bodyPart.contains('腕') || 
-                        bodyPart.contains('肩') || 
-                        bodyPart.contains('三角筋');
+    // 週次データポイントを生成（4週間ごとのサイクル）
+    double currentWeightValue = currentWeight;
+    final totalWeeks = monthsAhead * 4;
     
-    if (gender == '女性' && isUpperBody) {
-      genderBonus = 1.2; // +20%ボーナス（Roberts 2020）
-    }
+    // 初期値（0週目）
+    curve.add({
+      'week': 0,
+      'weight': currentWeight.roundToDouble(),
+      'lower': (currentWeight * 0.95).roundToDouble(),
+      'upper': (currentWeight * 1.05).roundToDouble(),
+    });
 
-    // 月ごとの予測値を計算
-    for (int month = 0; month <= monthsAhead; month++) {
-      final weight = currentWeight *
-          math.pow(1 + monthlyRate * ageAdjustment * genderBonus, month);
-      final ci = ScientificDatabase.calculateConfidenceInterval(weight, level);
+    for (int week = 1; week <= totalWeeks; week++) {
+      // 4週目ごとにDeload（成長率0%）
+      final isDeloadWeek = week % 4 == 0;
+      final effectiveRate = isDeloadWeek
+          ? 0.0 // Deload: 維持
+          : weeklyRate * ageAdjustment * (week <= 4 ? rpeAdjustment : 1.0);
+
+      currentWeightValue *= (1 + effectiveRate);
+      final ci = ScientificDatabase.calculateConfidenceInterval(currentWeightValue, level);
 
       curve.add({
-        'month': month,
-        'weight': weight.roundToDouble(),
+        'week': week,
+        'weight': currentWeightValue.roundToDouble(),
         'lower': ci['lower']!.roundToDouble(),
         'upper': ci['upper']!.roundToDouble(),
       });

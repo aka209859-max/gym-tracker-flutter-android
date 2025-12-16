@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 /// プラン種類
 enum SubscriptionType {
@@ -10,25 +12,91 @@ enum SubscriptionType {
   pro        // プロプラン
 }
 
-/// 有料プラン管理サービス
+/// 有料プラン管理サービス（シングルトン）
+/// 
+/// 🎯 最適化戦略:
+/// - アプリ全体で1つのインスタンスを共有
+/// - メモリキャッシュをアプリ起動中保持
+/// - 初回取得後は即座にレスポンス（0ms）
 class SubscriptionService {
+  // ✅ Singleton パターン
+  static final SubscriptionService _instance = SubscriptionService._internal();
+  factory SubscriptionService() => _instance;
+  SubscriptionService._internal();
+  
   static const String _subscriptionKey = 'subscription_status';
   static const String _subscriptionTypeKey = 'subscription_type';
   static const String _cachedPlanKey = 'cached_subscription_plan';
   static const String _cacheTimestampKey = 'cached_plan_timestamp';
   static const int _cacheValidityMinutes = 60; // キャッシュ有効期限: 60分
   
-  SubscriptionType? _memoryCache; // メモリキャッシュ
+  // 永年プラン（非消耗型IAP）の製品ID
+  static const String lifetimeProProductId = 'com.gymmatch.app.lifetime_pro';
+  
+  // ✅ static メモリキャッシュ（アプリ全体で共有）
+  static SubscriptionType? _memoryCache;
+  static DateTime? _memoryCacheTimestamp;
+  
+  /// 永年プラン（非消耗型IAP）を保持しているかチェック
+  Future<bool> hasLifetimePlan() async {
+    try {
+      // 🔧 タイムアウト追加: 5秒以内に取得できない場合はスキップ
+      final customerInfo = await Purchases.getCustomerInfo().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          print('⏱️ RevenueCat タイムアウト - キャッシュ使用');
+          throw TimeoutException('RevenueCat timeout');
+        },
+      );
+      
+      // 非消耗型購入履歴から永年プランをチェック
+      final hasLifetime = customerInfo.nonSubscriptionTransactions.any(
+        (transaction) => transaction.productIdentifier == lifetimeProProductId
+      );
+      
+      if (hasLifetime) {
+        print('✅ 永年Proプラン保持者');
+        return true;
+      }
+      
+      // Entitlement 'pro' が永年プランで有効化されているかもチェック
+      final proEntitlement = customerInfo.entitlements.all['pro'];
+      if (proEntitlement?.isActive == true) {
+        // 非サブスクリプション（永年プラン）かチェック
+        final isSubscription = proEntitlement?.periodType != null;
+        if (!isSubscription) {
+          print('✅ 永年Proプラン保持者（Entitlement経由）');
+          return true;
+        }
+      }
+      
+      return false;
+    } catch (e) {
+      print('⚠️ 永年プランチェックエラー: $e');
+      return false;
+    }
+  }
   
   /// 現在のプラン種類を取得（Firestore優先、キャッシュフォールバック）
   Future<SubscriptionType> getCurrentPlan() async {
     try {
-      // 0. メモリキャッシュチェック（最速）
-      if (_memoryCache != null) {
-        return _memoryCache!;
+      // 1. メモリキャッシュチェック（最速）- 最優先
+      if (_memoryCache != null && _memoryCacheTimestamp != null) {
+        // キャッシュが有効期限内か確認（60分）
+        final now = DateTime.now();
+        final cacheAge = now.difference(_memoryCacheTimestamp!);
+        
+        if (cacheAge.inMinutes < _cacheValidityMinutes) {
+          print('⚡ メモリキャッシュ使用: $_memoryCache (キャッシュ年齢: ${cacheAge.inMinutes}分)');
+          return _memoryCache!;
+        } else {
+          print('⏰ メモリキャッシュ期限切れ - 再取得');
+          _memoryCache = null;
+          _memoryCacheTimestamp = null;
+        }
       }
       
-      // 1. Firestoreから取得を試行（ログインユーザー）
+      // 2. Firestoreから取得を試行（ログインユーザー）
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         // 🔧 FIX: 匿名ユーザーも含めてFirestoreから取得
@@ -37,7 +105,14 @@ class SubscriptionService {
           final userDoc = await FirebaseFirestore.instance
               .collection('users')
               .doc(user.uid)
-              .get(const GetOptions(source: Source.serverAndCache)); // キャッシュ利用
+              .get(const GetOptions(source: Source.serverAndCache))
+              .timeout(
+                const Duration(seconds: 3),
+                onTimeout: () {
+                  print('⏱️ Firestore timeout - キャッシュ使用');
+                  throw TimeoutException('Firestore timeout');
+                },
+              );
           
           if (userDoc.exists) {
             final data = userDoc.data();
@@ -56,11 +131,16 @@ class SubscriptionService {
               }
             }
             
-            // メモリキャッシュに保存
+            // メモリキャッシュに保存（タイムスタンプ付き）
             _memoryCache = plan;
+            _memoryCacheTimestamp = DateTime.now();
             
             // SharedPreferencesキャッシュに保存
             await _savePlanCache(plan);
+            
+            // 🔧 CRITICAL: RevenueCatチェックは非同期でバックグラウンド実行
+            // UIブロックしない + クラッシュを防ぐ
+            _checkLifetimePlanInBackground();
             
             return plan;
           }
@@ -71,12 +151,23 @@ class SubscriptionService {
           if (cachedPlan != null) {
             print('📦 キャッシュからプラン取得: $cachedPlan');
             _memoryCache = cachedPlan;
+            _memoryCacheTimestamp = DateTime.now();
+            
+            // バックグラウンドでRevenueCatチェック
+            _checkLifetimePlanInBackground();
+            
             return cachedPlan;
           }
         }
       }
       
-      // 2. デフォルト: Freeプラン
+      // 3. デフォルト: Freeプラン
+      _memoryCache = SubscriptionType.free;
+      _memoryCacheTimestamp = DateTime.now();
+      
+      // バックグラウンドでRevenueCatチェック
+      _checkLifetimePlanInBackground();
+      
       return SubscriptionType.free;
     } catch (e) {
       print('❌ プラン取得エラー: $e');
@@ -85,10 +176,33 @@ class SubscriptionService {
       if (cachedPlan != null) {
         print('📦 エラー時キャッシュ使用: $cachedPlan');
         _memoryCache = cachedPlan;
+        _memoryCacheTimestamp = DateTime.now();
         return cachedPlan;
       }
+      
+      _memoryCache = SubscriptionType.free;
+      _memoryCacheTimestamp = DateTime.now();
       return SubscriptionType.free;
     }
+  }
+  
+  /// バックグラウンドで永年プランをチェック（非ブロッキング）
+  void _checkLifetimePlanInBackground() {
+    // UIをブロックしない非同期実行
+    Future.delayed(Duration.zero, () async {
+      try {
+        final hasLifetime = await hasLifetimePlan();
+        if (hasLifetime && _memoryCache != SubscriptionType.pro) {
+          print('🔄 永年プラン検出 - メモリキャッシュ更新');
+          _memoryCache = SubscriptionType.pro;
+          _memoryCacheTimestamp = DateTime.now();
+          await _savePlanCache(SubscriptionType.pro);
+        }
+      } catch (e) {
+        print('⚠️ バックグラウンド永年プランチェックエラー: $e');
+        // エラーは無視（既存のプランを維持）
+      }
+    });
   }
   
   /// プランをキャッシュに保存

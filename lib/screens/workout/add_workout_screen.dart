@@ -11,6 +11,8 @@ import 'package:vibration/vibration.dart'; // バイブレーション用
 import '../debug_log_screen.dart';
 import '../../services/review_request_service.dart';
 import '../../services/enhanced_share_service.dart';
+import '../../services/offline_service.dart'; // ✅ v1.0.161: オフライン対応
+import '../../services/exercise_master_data.dart'; // FIX: Problem 2 - Add ExerciseMasterData import
 
 // SetType enum
 enum SetType {
@@ -30,6 +32,8 @@ class WorkoutSet {
   bool hasAssist;
   SetType setType;
   bool isBodyweightMode; // 自重モード (true: 自重, false: 荷重)
+  bool isTimeMode; // 時間モード (true: 秒数, false: 回数) - v1.0.169: 腹筋用
+  bool isCardio; // 🔧 v1.0.226+242: 有酸素運動フラグ（セット作成時に固定）
   
   WorkoutSet({
     required this.exerciseName,
@@ -39,6 +43,8 @@ class WorkoutSet {
     this.hasAssist = false,
     this.setType = SetType.normal,
     this.isBodyweightMode = true, // デフォルトは自重モード
+    this.isTimeMode = false, // デフォルトは回数モード
+    this.isCardio = false, // 🔧 v1.0.226+242: デフォルトは筋トレ
   });
 }
 
@@ -51,6 +57,12 @@ class AddWorkoutScreen extends StatefulWidget {
   State<AddWorkoutScreen> createState() => _AddWorkoutScreenState();
 }
 
+// 🔧 v1.0.248: ワークアウトタイプフィルター（筋トレ/有酸素の2部屋制）
+enum WorkoutTypeFilter {
+  strength, // 筋トレ（デフォルト）
+  cardio,   // 有酸素
+}
+
 class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
   DateTime _selectedDate = DateTime.now();
   String? _selectedMuscleGroup;
@@ -60,12 +72,16 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
   int _endMinute = 0;
   final List<WorkoutSet> _sets = [];
   
+  // 🔧 v1.0.248: ワークアウトタイプフィルター（デフォルト: 筋トレ）
+  WorkoutTypeFilter _workoutTypeFilter = WorkoutTypeFilter.strength;
+  
   // タイマー関連
   Timer? _restTimer;
   int _restSeconds = 0;
   bool _isResting = false;
   int _selectedRestDuration = 90;
   final List<int> _restDurations = [30, 60, 90, 120];
+  bool _isRestDialogShowing = false; // ✅ v1.0.162: ダイアログ表示状態フラグ
   
   // 前回記録データ
   Map<String, Map<String, dynamic>> _lastWorkoutData = {};
@@ -73,14 +89,23 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
   // メモ機能
   final TextEditingController _memoController = TextEditingController();
   
+  // ✅ v1.0.158: ユーザーの最新体重（懸垂の自重計算用）
+  double? _userBodyweight;
+  
+  // 🔧 v1.0.222: AIコーチからのデータ
+  Map<String, dynamic>? _aiCoachData;
+  bool _isFromAICoach = false;
+  
+  // 🔧 v1.0.221: 二頭筋・三頭筋の種目を詳細化（Deep Search結果反映）
   final Map<String, List<String>> _muscleGroupExercises = {
-    '胸': ['ベンチプレス', 'ダンベルプレス', 'インクラインプレス', 'ケーブルフライ', 'ディップス'],
-    '脚': ['スクワット', 'レッグプレス', 'レッグエクステンション', 'レッグカール', 'カーフレイズ'],
-    '背中': ['デッドリフト', 'ラットプルダウン', 'ベントオーバーロウ', 'シーテッドロウ', '懸垂'],
-    '肩': ['ショルダープレス', 'サイドレイズ', 'フロントレイズ', 'リアデルトフライ', 'アップライトロウ'],
-    '二頭': ['バーベルカール', 'ダンベルカール', 'ハンマーカール', 'プリチャーカール', 'ケーブルカール'],
-    '三頭': ['トライセプスエクステンション', 'スカルクラッシャー', 'ケーブルプッシュダウン', 'ディップス', 'キックバック'],
-    '有酸素': ['ランニング', 'サイクリング', 'エアロバイク', 'ステッパー', '水泳'],
+    '胸': ['ベンチプレス', 'ダンベルプレス', 'インクラインプレス', 'デクラインプレス', 'ダンベルフライ', 'インクラインフライ', 'ケーブルクロスオーバー', 'ケーブルフライ', 'ディップス', 'チェストプレスマシン', 'ペックフライマシン'],
+    '脚': ['バーベルスクワット', 'フロントスクワット', 'ブルガリアンスクワット', 'スクワット', 'レッグプレス', 'レッグエクステンション', 'レッグカール', 'ルーマニアンデッドリフト', 'ランジ', 'レッグアブダクション', 'レッグアダクション', 'カーフレイズ', 'ヒップスラスト'],
+    '背中': ['デッドリフト', 'ラットプルダウン', 'ラットプルダウン（ワイド）', 'ラットプルダウン（ナロー）', 'チンニング', '懸垂', 'ベントオーバーロウ', 'ワンハンドダンベルロウ', 'Tバーロウ', 'シーテッドロウ', 'ケーブルロウ', 'バックエクステンション', 'シュラッグ'],
+    '肩': ['ショルダープレス', 'ダンベルショルダープレス', 'マシンショルダープレス', 'サイドレイズ', 'ケーブルサイドレイズ', 'フロントレイズ', 'リアレイズ', 'リアデルトフライ', 'ケーブルリアレイズ', 'アップライトロウ', 'フェイスプル'],
+    '二頭': ['バーベルカール', 'EZバーカール', 'ダンベルカール', 'ダンベルカール（オルタネイト）', 'ハンマーカール', 'プリチャーカール', 'インクラインダンベルカール', 'コンセントレーションカール', 'ケーブルカール', 'チンアップ（逆手懸垂）', '21カール', 'ドラッグカール', 'ゾットマンカール', 'マシンアームカール'],
+    '三頭': ['トライセプスプレスダウン', 'ケーブルプレスダウン', 'ライイングトライセプスエクステンション', 'スカルクラッシャー', 'オーバーヘッドトライセプスエクステンション', 'ディップス', 'トライセプスキックバック', 'キックバック', 'クローズグリップベンチプレス', 'ケーブルオーバーヘッドエクステンション', 'リバースグリッププレスダウン', 'ダンベルトライセプスエクステンション', 'JMプレス', 'ダイヤモンドプッシュアップ', 'ベンチディップス', 'マシンディップス'],
+    '腹筋': ['クランチ', 'レッグレイズ', 'ハンギングレッグレイズ', 'プランク', 'サイドプランク', 'アブローラー', 'ケーブルクランチ', 'バイシクルクランチ', 'ロシアンツイスト', 'マウンテンクライマー', 'ドラゴンフラッグ', 'アブドミナルクランチマシン'],
+    '有酸素': ['ランニング', 'ランニング（トレッドミル）', 'ジョギング', 'ジョギング（屋外）', 'サイクリング', 'エアロバイク', 'ステッパー', '水泳', 'ローイングマシン', 'ウォーキング', 'ウォーキング（トレッドミル）', 'インターバルラン', 'クロストレーナー', 'バトルロープ', 'バーピージャンプ', 'マウンテンクライマー', 'マウンテンクライマー（高強度）'],
   };
   
   // 有酸素運動かどうかを判定
@@ -94,6 +119,21 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     final pullUpVariations = ['懸垂', 'チンニング', 'プルアップ', 'チンアップ', 'ワイドグリッププルアップ'];
     return pullUpVariations.any((variation) => exerciseName.contains(variation));
   }
+  
+  // ✅ v1.0.167: 腹筋系種目かどうかを判定（懸垂と同じUI: 自重/重さ/秒数）
+  bool _isAbsExercise(String exerciseName) {
+    final absExercises = _muscleGroupExercises['腹筋'] ?? [];
+    return absExercises.contains(exerciseName);
+  }
+
+  /// v1.0.169: 腹筋種目のデフォルト時間モード判定（プランク系は秒数、その他は回数）
+  /// v1.0.185: 腹筋種目のデフォルト時間モード判定
+  /// ユーザーが秒数入力した場合は「秒」表記にするため、デフォルトで全ての腹筋を秒数モードとして扱う
+  /// （過去のis_time_mode=nullデータとの互換性のため）
+  bool _getDefaultTimeMode(String exerciseName) {
+    // 腹筋種目は全て秒数モードをデフォルトとする
+    return _isAbsExercise(exerciseName);
+  }
 
   @override
   void initState() {
@@ -101,7 +141,250 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     _autoLoginIfNeeded();
     _loadCustomExercises();
     _loadLastWorkoutData();
+    _loadUserBodyweight(); // ✅ v1.0.158: 体重を取得
     _applyTemplateDataIfProvided();
+    
+    // 🔧 v1.0.222: AI Coach データの初期化は didChangeDependencies で行う
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // 🔧 v1.0.222: AI Coach からのデータを取得
+    if (!_isFromAICoach) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null && args['fromAICoach'] == true) {
+        _aiCoachData = args;
+        _isFromAICoach = true;
+        _initializeFromAICoach(args);
+      }
+    }
+  }
+  
+  /// 🔧 v1.0.222: AIコーチからのデータで初期化
+  /// ParsedExerciseリストを受け取り、1RM計算と推奨重量/回数でセットを自動生成
+  Future<void> _initializeFromAICoach(Map<String, dynamic> args) async {
+    try {
+      debugPrint('🤖 AIコーチデータから初期化開始');
+      
+      final selectedExercises = args['selectedExercises'] as List?;
+      final userLevel = args['userLevel'] as String?;
+      // v1.0.225-hotfix: Map形式の履歴データに対応
+      final exerciseHistory = args['exerciseHistory'] as Map<String, dynamic>?;
+      
+      if (selectedExercises == null || selectedExercises.isEmpty) {
+        debugPrint('⚠️ 選択された種目がありません');
+        return;
+      }
+      
+      debugPrint('📋 選択種目: ${selectedExercises.length}件');
+      debugPrint('🎯 ユーザーレベル: $userLevel');
+      // v1.0.225-hotfix2: Map形式の履歴データに対応（Null安全性）
+      if (exerciseHistory != null && exerciseHistory is Map) {
+        debugPrint('📊 履歴データ: ${exerciseHistory.keys.length}種目');
+      } else {
+        debugPrint('📊 履歴データ: なし');
+      }
+      
+      // 各種目ごとに1RMを計算してセットを生成
+      for (var exercise in selectedExercises) {
+        // ParsedExerciseオブジェクトからデータを取得
+        final exerciseName = _getPropertyValue(exercise, 'name') as String;
+        final bodyPart = _getPropertyValue(exercise, 'bodyPart') as String;
+        final aiWeight = _getPropertyValue(exercise, 'weight') as double?;
+        final aiReps = _getPropertyValue(exercise, 'reps') as int?;
+        final aiSets = _getPropertyValue(exercise, 'sets') as int?;
+        final isCardio = _getPropertyValue(exercise, 'isCardio') as bool? ?? false; // 🔧 v1.0.242+266: AI Coachから直接取得
+        
+        debugPrint('  🏋️ 種目: $exerciseName (部位: $bodyPart, 有酸素: $isCardio)');
+        
+        // 1. 履歴から1RMを計算
+        final oneRM = _calculate1RMFromHistory(exerciseName, exerciseHistory);
+        debugPrint('    💪 推定1RM: ${oneRM?.toStringAsFixed(1) ?? "なし"}kg');
+        
+        // 2. レベルと1RMに基づいて推奨重量・回数を決定
+        final recommendation = _getRecommendedWeightAndReps(
+          userLevel ?? '初心者',
+          oneRM,
+          aiWeight,
+          aiReps,
+        );
+        
+        final weight = recommendation['weight'] as double;
+        final reps = recommendation['reps'] as int;
+        final sets = aiSets ?? 3; // デフォルト3セット
+        
+        debugPrint('    ✅ 推奨: ${weight}kg × ${reps}回 × ${sets}セット');
+        
+        // 3. セットを自動生成
+        setState(() {
+          // 最初のセットの部位を選択
+          if (_selectedMuscleGroup == null) {
+            _selectedMuscleGroup = bodyPart;
+          }
+          
+          for (int i = 0; i < sets; i++) {
+            _sets.add(WorkoutSet(
+              exerciseName: exerciseName,
+              weight: weight,
+              reps: reps,
+              isBodyweightMode: false,
+              isTimeMode: false,
+              isCardio: isCardio, // 🔧 v1.0.242+266: ParsedExercise.isCardioを直接使用
+            ));
+          }
+        });
+      }
+      
+      debugPrint('✅ AIコーチデータ初期化完了: ${_sets.length}セット生成');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('AIコーチの推奨メニューを読み込みました (${selectedExercises.length}種目)'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ AIコーチデータ初期化エラー: $e');
+      debugPrint('スタックトレース: $stackTrace');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('AIコーチデータの読み込みに失敗しました: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+  
+  /// オブジェクトから動的にプロパティを取得（ParsedExerciseクラス対応）
+  dynamic _getPropertyValue(dynamic obj, String propertyName) {
+    if (obj is Map) {
+      return obj[propertyName];
+    }
+    // ParsedExerciseオブジェクトの場合
+    switch (propertyName) {
+      case 'name':
+        return (obj as dynamic).name;
+      case 'bodyPart':
+        return (obj as dynamic).bodyPart;
+      case 'weight':
+        return (obj as dynamic).weight;
+      case 'reps':
+        return (obj as dynamic).reps;
+      case 'sets':
+        return (obj as dynamic).sets;
+      default:
+        return null;
+    }
+  }
+  
+  /// 🔧 v1.0.222: 過去30日の履歴から種目別の1RMを取得
+  /// AIコーチが既に計算した1RMを使用（Epley formula: 1RM = weight × (1 + reps / 30)）
+  double? _calculate1RMFromHistory(String exerciseName, dynamic history) {
+    if (history == null) {
+      debugPrint('    ⚠️ 履歴データなし');
+      return null;
+    }
+    
+    // AIコーチから渡される形式: Map<String, Map<String, dynamic>>
+    if (history is Map<String, dynamic>) {
+      final exerciseData = history[exerciseName] as Map<String, dynamic>?;
+      if (exerciseData != null) {
+        final oneRM = exerciseData['max1RM'] as double?;
+        if (oneRM != null && oneRM > 0) {
+          debugPrint('    ✅ 1RM取得成功: ${oneRM.toStringAsFixed(1)}kg');
+          return oneRM;
+        }
+      }
+    }
+    
+    // 履歴がList形式の場合（後方互換性のため）
+    if (history is List) {
+      double maxOneRM = 0.0;
+      
+      for (var log in history) {
+        final exercises = log['exercises'] as List<dynamic>?;
+        if (exercises == null) continue;
+        
+        for (var exercise in exercises) {
+          final name = exercise['name'] as String?;
+          if (name != exerciseName) continue;
+          
+          final sets = exercise['sets'] as List<dynamic>?;
+          if (sets == null) continue;
+          
+          for (var set in sets) {
+            final weight = (set['weight'] as num?)?.toDouble() ?? 0.0;
+            final reps = (set['reps'] as num?)?.toInt() ?? 0;
+            
+            if (weight > 0 && reps > 0 && reps <= 15) {
+              // Brzycki式で1RMを計算
+              final oneRM = reps == 1 ? weight : weight * (36 / (37 - reps));
+              if (oneRM > maxOneRM) {
+                maxOneRM = oneRM;
+              }
+            }
+          }
+        }
+      }
+      
+      return maxOneRM > 0 ? maxOneRM : null;
+    }
+    
+    debugPrint('    ⚠️ 履歴形式が不正');
+    return null;
+  }
+  
+  /// 🔧 v1.0.222: レベルと1RMに基づいて推奨重量と回数を決定
+  Map<String, dynamic> _getRecommendedWeightAndReps(
+    String userLevel,
+    double? oneRM,
+    double? aiWeight,
+    int? aiReps,
+  ) {
+    // 1RMがない場合はAIの提案値を使う、それもなければデフォルト値
+    if (oneRM == null || oneRM == 0) {
+      return {
+        'weight': aiWeight ?? 10.0,
+        'reps': aiReps ?? 10,
+      };
+    }
+    
+    // レベル別の推奨強度（%1RM）と回数
+    double percentage;
+    int reps;
+    
+    switch (userLevel) {
+      case '初心者':
+        percentage = 0.65; // 65%
+        reps = 12;
+        break;
+      case '中級者':
+        percentage = 0.75; // 75%
+        reps = 10;
+        break;
+      case '上級者':
+        percentage = 0.80; // 80%
+        reps = 8;
+        break;
+      default:
+        percentage = 0.70;
+        reps = 10;
+    }
+    
+    final recommendedWeight = (oneRM * percentage / 2.5).round() * 2.5; // 2.5kg単位で丸める
+    
+    return {
+      'weight': recommendedWeight,
+      'reps': reps,
+    };
   }
   
   /// 未ログイン時に自動的に匿名ログイン
@@ -113,6 +396,172 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         debugPrint('✅ トレーニング記録: 匿名認証成功');
       } catch (e) {
         debugPrint('❌ トレーニング記録: 匿名認証エラー: $e');
+      }
+    }
+  }
+  
+  /// ✅ v1.0.158: body_measurementsから最新の体重を取得
+  Future<void> _loadUserBodyweight() async {
+    try {
+      final user = firebase_auth.FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        debugPrint('⚠️ 体重取得: ユーザー未ログイン');
+        return;
+      }
+      
+      debugPrint('🔍 体重記録を取得中... user_id: ${user.uid}');
+      
+      // Firestore から体重記録を取得（orderBy なしでインデックス不要）
+      final snapshot = await FirebaseFirestore.instance
+          .collection('body_measurements')
+          .where('user_id', isEqualTo: user.uid)
+          .get();
+      
+      debugPrint('📊 取得件数: ${snapshot.docs.length}');
+      
+      if (snapshot.docs.isNotEmpty) {
+        // 日付でソートして最新を取得
+        final sorted = snapshot.docs.toList()
+          ..sort((a, b) {
+            final aDate = (a.data()['date'] as Timestamp).toDate();
+            final bDate = (b.data()['date'] as Timestamp).toDate();
+            return bDate.compareTo(aDate);  // 降順
+          });
+        
+        final data = sorted.first.data();
+        final weight = data['weight'] as double?;
+        
+        if (weight != null) {
+          setState(() {
+            _userBodyweight = weight;
+          });
+          debugPrint('✅ ユーザー体重を取得: ${weight}kg');
+        } else {
+          debugPrint('⚠️ 体重データがnull');
+        }
+      } else {
+        debugPrint('⚠️ 体重記録が見つかりません（データ件数: 0）');
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ 体重取得エラー: $e');
+      debugPrint('   スタックトレース: $stackTrace');
+    }
+  }
+
+  /// ✅ v1.0.161: ネットワーク状態チェック
+  Future<bool> _checkNetworkStatus() async {
+    try {
+      debugPrint('🔍 ネットワーク状態確認中...');
+      final isOnline = await OfflineService.isOnline();
+      debugPrint(isOnline ? '🌐 オンライン' : '📴 オフライン');
+      return isOnline;
+    } catch (e) {
+      debugPrint('⚠️ ネットワークチェックエラー: $e');
+      return false; // エラー時はオフラインとみなす
+    }
+  }
+
+  /// ✅ v1.0.161: オフラインでのトレーニング保存
+  Future<void> _saveWorkoutOffline(String userId) async {
+    debugPrint('📴 オフラインモード: ローカルに保存開始');
+    debugPrint('   User ID: $userId');
+    debugPrint('   筋肉グループ: $_selectedMuscleGroup');
+    debugPrint('   セット数: ${_sets.length}');
+    
+    try {
+      // トレーニング開始時刻と終了時刻を設定
+      final now = DateTime.now();
+      final startTime = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        now.hour >= 2 ? now.hour - 2 : 0,
+        now.minute,
+      );
+      
+      final endTime = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        now.hour,
+        now.minute,
+      );
+
+      // セットデータを準備
+      final sets = _sets.map((set) {
+        double effectiveWeight = set.weight;
+        if (set.isBodyweightMode && _userBodyweight != null && _isPullUpExercise(set.exerciseName)) {
+          effectiveWeight = _userBodyweight! + set.weight;
+        }
+        
+        // 🔧 v1.0.243: 種目名から部位を逆引き
+        String bodyPart = 'その他';
+        for (final entry in _muscleGroupExercises.entries) {
+          if (entry.value.contains(set.exerciseName)) {
+            bodyPart = entry.key;
+            break;
+          }
+        }
+        
+        return {
+          'exercise_name': set.exerciseName,
+          'bodyPart': bodyPart,  // 🔧 v1.0.243: 部位情報を追加
+          'weight': effectiveWeight,
+          'reps': set.reps,
+          'is_completed': set.isCompleted,
+          'has_assist': set.hasAssist,
+          'set_type': set.setType.toString().split('.').last,
+          'is_bodyweight_mode': set.isBodyweightMode,
+          'is_time_mode': set.isTimeMode,  // v1.0.169: 秒数/回数モード
+          'is_cardio': set.isCardio,  // 🔧 v1.0.226+242: 有酸素フラグ保存
+          'user_bodyweight': set.isBodyweightMode ? _userBodyweight : null,
+          'additional_weight': set.isBodyweightMode ? set.weight : null,
+        };
+      }).toList();
+
+      // Hive にローカル保存
+      final localId = await OfflineService.saveWorkoutOffline({
+        'user_id': userId,
+        'muscle_group': _selectedMuscleGroup,
+        'date': _selectedDate,
+        'start_time': startTime,
+        'end_time': endTime,
+        'sets': sets,
+        'created_at': now,
+      });
+
+      debugPrint('✅ オフライン保存成功: $localId');
+
+      if (mounted) {
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.cloud_off, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('📴 オフライン保存しました\nオンライン復帰時に自動同期されます'),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ オフライン保存エラー: $e');
+      debugPrint('   スタックトレース: $stackTrace');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('オフライン保存エラー: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
       }
     }
   }
@@ -191,6 +640,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
       final exerciseName = widget.templateData!['exercise_name'] as String?;
       final lastWeight = widget.templateData!['last_weight'] as double?;
       final lastReps = widget.templateData!['last_reps'] as int?;
+      final lastIsTimeMode = widget.templateData!['is_time_mode'] as bool?;  // ✅ v1.0.176: is_time_mode を取得
       _existingWorkoutId = widget.templateData!['existing_workout_id'] as String?;
       
       setState(() {
@@ -208,8 +658,10 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
             final targetSets = exercise['target_sets'] as int? ?? 3;
             final targetReps = exercise['target_reps'] as int? ?? 10;
             final targetWeight = exercise['target_weight'] as double? ?? 0.0;
+            // 🔧 v1.0.226+242: 既存データとの互換性のため、is_cardioがnullの場合は種目名から自動判定
+            final isCardio = exercise['is_cardio'] as bool? ?? _isCardioExercise(name);
             
-            print('  ✅ $name: ${targetSets}セット × ${targetReps}回 @ ${targetWeight}kg');
+            print('  ✅ $name: ${targetSets}セット × ${targetReps}回 @ ${targetWeight}kg (有酸素: $isCardio)');
             
             // 各種目のtargetSets数だけセットを追加
             for (int i = 0; i < targetSets; i++) {
@@ -218,7 +670,9 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                 weight: targetWeight,
                 reps: targetReps,
                 isCompleted: false,
-                isBodyweightMode: _isPullUpExercise(name),
+                isBodyweightMode: _isPullUpExercise(name) || _isAbsExercise(name),
+                isTimeMode: _getDefaultTimeMode(name),
+                isCardio: isCardio, // 🔧 v1.0.226+242: テンプレートから読み込み or 自動判定
               ));
             }
           }
@@ -227,14 +681,18 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         }
         // ケース2: 単一種目を追加（履歴から「もう一度」の場合）
         else if (exerciseName != null) {
+          // 🔧 v1.0.226+242: 既存データとの互換性のため、is_cardioがnullの場合は種目名から自動判定
+          final lastIsCardio = widget.templateData!['is_cardio'] as bool?;
           _sets.add(WorkoutSet(
             exerciseName: exerciseName,
             weight: lastWeight ?? 0.0,
             reps: lastReps ?? 10,
             isCompleted: false,
-            isBodyweightMode: _isPullUpExercise(exerciseName),
+            isBodyweightMode: _isPullUpExercise(exerciseName) || _isAbsExercise(exerciseName),
+            isTimeMode: lastIsTimeMode ?? _getDefaultTimeMode(exerciseName),  // ✅ v1.0.176: templateData から is_time_mode を優先
+            isCardio: lastIsCardio ?? _isCardioExercise(exerciseName), // 🔧 v1.0.226+242: templateDataから読み込み or 自動判定
           ));
-          print('✅ $exerciseName に1セット追加（前回: ${lastWeight}kg × ${lastReps}reps）');
+          print('✅ $exerciseName に1セット追加（前回: ${lastWeight}kg × ${lastReps}reps, isTimeMode: ${lastIsTimeMode ?? _getDefaultTimeMode(exerciseName)}, isCardio: ${lastIsCardio ?? _isCardioExercise(exerciseName)}）');
         }
       });
       
@@ -348,32 +806,48 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         }
       }
       
-      // 懸垂の場合は自重モードをデフォルトに
-      final isPullUp = _isPullUpExercise(exerciseName);
+      // FIX: Problem 2 - Use centralized ExerciseMasterData logic
+      final isPullUp = ExerciseMasterData.isPullUpExercise(exerciseName);
+      final isAbs = ExerciseMasterData.isAbsExercise(exerciseName);
+      final isCardio = ExerciseMasterData.isCardioExercise(exerciseName);
+      
+      debugPrint('➕ セット追加: $exerciseName (有酸素: $isCardio, 腹筋: $isAbs)');
       
       _sets.add(WorkoutSet(
         exerciseName: exerciseName,
         weight: lastSet?.weight ?? _lastWorkoutData[exerciseName]?['weight']?.toDouble() ?? 0.0,
         reps: lastSet?.reps ?? _lastWorkoutData[exerciseName]?['reps'] ?? 10,
         setType: SetType.normal,
-        isBodyweightMode: lastSet?.isBodyweightMode ?? (isPullUp ? true : false),
+        isBodyweightMode: lastSet?.isBodyweightMode ?? (isPullUp || isAbs ? true : false),
+        isTimeMode: lastSet?.isTimeMode ?? (isAbs ? true : false), // 腹筋はデフォルト秒数
+        isCardio: lastSet?.isCardio ?? isCardio, // 自動判定または前回の値を継承
       ));
     });
   }
 
   void _startRestTimer() {
+    // ✅ v1.0.162: 既存のタイマーを確実に停止
+    _restTimer?.cancel();
+    
     setState(() {
       _isResting = true;
       _restSeconds = _selectedRestDuration;
     });
     
     _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      // ✅ v1.0.162: mountedチェック追加
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      
       setState(() {
         if (_restSeconds > 0) {
           _restSeconds--;
         } else {
           _stopRestTimer();
-          _notifyRestComplete(); // タイマー終了通知
+          // ✅ v1.0.162: 非同期処理を分離してsetStateとの競合を防止
+          Future.microtask(() => _notifyRestComplete());
         }
       });
     });
@@ -381,15 +855,29 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
 
   void _stopRestTimer() {
     _restTimer?.cancel();
-    setState(() {
-      _isResting = false;
-      _restSeconds = 0;
-    });
+    _restTimer = null; // ✅ v1.0.162: nullにして完全に破棄
+    
+    // ✅ v1.0.162: mountedチェック追加
+    if (mounted) {
+      setState(() {
+        _isResting = false;
+        _restSeconds = 0;
+      });
+    }
   }
   
   // タイマー終了時の通知（音声 + バイブレーション + ダイアログ）
   Future<void> _notifyRestComplete() async {
     print('🔔 タイマー終了通知開始');
+    
+    // ✅ v1.0.162: 既にダイアログが表示されている場合はスキップ
+    if (_isRestDialogShowing) {
+      print('⚠️ ダイアログ既に表示中 - スキップ');
+      return;
+    }
+    
+    // ✅ v1.0.162: 非同期処理前にmountedチェック
+    if (!mounted) return;
     
     // 1. システムサウンドを再生（イヤホン対応）
     try {
@@ -397,13 +885,23 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
       await SystemSound.play(SystemSoundType.alert);
       print('✅ システムサウンド再生成功');
       
+      // ✅ v1.0.162: 待機中にmountedチェック
+      if (!mounted) return;
+      
       // 追加で0.5秒後にもう一度鳴らす（より目立つように）
       await Future.delayed(const Duration(milliseconds: 500));
+      
+      // ✅ v1.0.162: 再度mountedチェック
+      if (!mounted) return;
+      
       await SystemSound.play(SystemSoundType.alert);
       print('✅ システムサウンド再生成功（2回目）');
     } catch (e) {
       print('❌ サウンド再生エラー: $e');
     }
+    
+    // ✅ v1.0.162: バイブレーション前にmountedチェック
+    if (!mounted) return;
     
     // 2. バイブレーション（デバイスがサポートしている場合）
     try {
@@ -419,62 +917,78 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
       print('❌ バイブレーションエラー: $e');
     }
     
+    // ✅ v1.0.162: ダイアログ表示前に最終mountedチェック
+    if (!mounted) return;
+    
     // 3. ダイアログ表示
-    if (mounted) {
-      showDialog(
-        context: context,
-        barrierDismissible: true,
-        builder: (context) => AlertDialog(
-          backgroundColor: Colors.green.shade50,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.green.shade400, width: 2),
-          ),
-          title: const Row(
-            children: [
-              Icon(Icons.alarm, color: Colors.green, size: 32),
-              SizedBox(width: 12),
-              Text(
-                '休憩終了！',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-            ],
-          ),
-          content: const Text(
-            '次のセットに進みましょう！💪',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'OK',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    _isRestDialogShowing = true; // ✅ v1.0.162: フラグを立てる
+    
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.green.shade50,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.green.shade400, width: 2),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.alarm, color: Colors.green, size: 32),
+            SizedBox(width: 12),
+            Text(
+              '休憩終了！',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
               ),
             ),
           ],
         ),
-      );
-      
-      // 5秒後に自動的にダイアログを閉じる
-      Future.delayed(const Duration(seconds: 5), () {
-        if (mounted && Navigator.canPop(context)) {
-          Navigator.pop(context);
-        }
-      });
-    }
+        content: const Text(
+          '次のセットに進みましょう！💪',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              // ✅ v1.0.162: フラグをクリアしてからダイアログを閉じる
+              _isRestDialogShowing = false;
+              Navigator.pop(dialogContext); // ✅ v1.0.162: dialogContextを使用
+              print('✅ ユーザーがOKボタンを押下 - ダイアログ閉じる');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'OK',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    ).then((_) {
+      // ✅ v1.0.162: ダイアログが閉じられた時に必ずフラグをクリア
+      _isRestDialogShowing = false;
+      print('✅ ダイアログ閉じる - フラグクリア');
+    });
+    
+    // ✅ v1.0.162: 5秒後に自動的にダイアログを閉じる（ダブルpop防止）
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted && _isRestDialogShowing && Navigator.canPop(context)) {
+        _isRestDialogShowing = false;
+        Navigator.pop(context);
+        print('✅ 自動閉じ実行（5秒経過）');
+      } else {
+        print('⚠️ 自動閉じスキップ（既に閉じられています）');
+      }
+    });
   }
 
   void _showRestTimerSettings() {
@@ -695,7 +1209,9 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         exerciseName: exerciseName, 
         weight: 0.0, 
         reps: 10,
-        isBodyweightMode: _isPullUpExercise(exerciseName),
+        isBodyweightMode: _isPullUpExercise(exerciseName) || _isAbsExercise(exerciseName),
+        isTimeMode: _getDefaultTimeMode(exerciseName),
+        isCardio: _isCardioExercise(exerciseName), // 🔧 v1.0.226+242: Fix cardio detection
       ),
     );
     
@@ -767,7 +1283,9 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           exerciseName: exerciseName, 
           weight: 0.0, 
           reps: 10,
-          isBodyweightMode: _isPullUpExercise(exerciseName),
+          isBodyweightMode: _isPullUpExercise(exerciseName) || _isAbsExercise(exerciseName),
+          isTimeMode: _getDefaultTimeMode(exerciseName),
+          isCardio: _isCardioExercise(exerciseName), // 🔧 v1.0.226+242: Fix cardio detection
         ),
       );
       final isPullUpBodyweight = _isPullUpExercise(exerciseName) && firstSet.isBodyweightMode;
@@ -909,6 +1427,83 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     }
   }
 
+  /// ✅ v1.0.178: オフ日として保存
+  Future<void> _saveRestDay(BuildContext context) async {
+    final user = firebase_auth.FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ログインが必要です')),
+      );
+      return;
+    }
+    
+    try {
+      debugPrint('📴 オフ日を保存: $_selectedDate');
+      
+      // 日付を正規化
+      final normalizedDate = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+      
+      // 既存のオフ日レコードを確認
+      final existingQuery = await FirebaseFirestore.instance
+          .collection('rest_days')
+          .where('user_id', isEqualTo: user.uid)
+          .where('date', isEqualTo: Timestamp.fromDate(normalizedDate))
+          .get();
+      
+      if (existingQuery.docs.isNotEmpty) {
+        // 既にオフ日として登録済み
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('この日は既にオフ日として登録されています'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+      
+      // Firestoreにオフ日を保存
+      await FirebaseFirestore.instance.collection('rest_days').add({
+        'user_id': user.uid,
+        'date': Timestamp.fromDate(normalizedDate),
+        'created_at': FieldValue.serverTimestamp(),
+      });
+      
+      debugPrint('✅ オフ日保存成功');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.bed, color: Colors.white),
+                SizedBox(width: 8),
+                Text('オフ日として登録しました'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // ホーム画面に戻る
+        Navigator.pop(context, true);
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ オフ日保存エラー: $e');
+      debugPrint('   スタックトレース: $stackTrace');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('オフ日の保存に失敗しました: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   /// 日付選択ダイアログを表示
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -950,6 +1545,8 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           weight: set.weight,
           reps: set.reps,
           isBodyweightMode: set.isBodyweightMode,
+          isTimeMode: set.isTimeMode,
+          isCardio: set.isCardio, // 🔧 v1.0.226+242: Preserve cardio flag
         ));
       }
     });
@@ -971,6 +1568,16 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
       final user = firebase_auth.FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
+      // ✅ v1.0.161: ネットワーク状態を確認
+      final isOnline = await _checkNetworkStatus();
+
+      if (!isOnline) {
+        // 📴 オフラインモード: ローカルに保存
+        await _saveWorkoutOffline(user.uid);
+        return;
+      }
+
+      // 🌐 オンラインモード: Firestore に保存
       // 既存記録に追記モード
       if (_existingWorkoutId != null) {
         print('🔄 既存記録に追加セットを追記: $_existingWorkoutId');
@@ -986,14 +1593,28 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           final existingSets = List<Map<String, dynamic>>.from(existingData['sets'] ?? []);
           
           // 新しいセットを既存セットの下に追加
-          final newSets = _sets.map((set) => {
-            'exercise_name': set.exerciseName,
-            'weight': set.weight,
-            'reps': set.reps,
-            'is_completed': set.isCompleted,
-            'has_assist': set.hasAssist,
-            'set_type': set.setType.toString().split('.').last,
-            'is_bodyweight_mode': set.isBodyweightMode,
+          final newSets = _sets.map((set) {
+            // ✅ v1.0.158+v1.0.170: 自重モード（懸垂のみ）の場合、体重を自動反映
+            double effectiveWeight = set.weight;
+            if (set.isBodyweightMode && _userBodyweight != null && _isPullUpExercise(set.exerciseName)) {
+              effectiveWeight = _userBodyweight! + set.weight;
+              debugPrint('✅ 既存記録追加 - 自重モード反映: ${set.exerciseName} = ${_userBodyweight}kg + ${set.weight}kg = ${effectiveWeight}kg');
+            }
+            
+            debugPrint('💾 保存データ: ${set.exerciseName} - isTimeMode: ${set.isTimeMode}, isCardio: ${set.isCardio}, reps: ${set.reps}');
+            return {
+              'exercise_name': set.exerciseName,
+              'weight': effectiveWeight,  // ✅ 自重 + 追加重量
+              'reps': set.reps,
+              'is_completed': set.isCompleted,
+              'has_assist': set.hasAssist,
+              'set_type': set.setType.toString().split('.').last,
+              'is_bodyweight_mode': set.isBodyweightMode,
+              'is_time_mode': set.isTimeMode,  // v1.0.169: 秒数/回数モード
+              'is_cardio': set.isCardio,  // 🔧 v1.0.226+242: 有酸素フラグ保存
+              'user_bodyweight': set.isBodyweightMode ? _userBodyweight : null,
+              'additional_weight': set.isBodyweightMode ? set.weight : null,
+            };
           }).toList();
           
           existingSets.addAll(newSets);
@@ -1044,28 +1665,56 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           'date': Timestamp.fromDate(_selectedDate),
           'start_time': Timestamp.fromDate(startTime),
           'end_time': Timestamp.fromDate(endTime),
-          'sets': _sets.map((set) => {
-            'exercise_name': set.exerciseName,
-            'weight': set.weight,
-            'reps': set.reps,
-            'is_completed': set.isCompleted,
-            'has_assist': set.hasAssist,
-            'set_type': set.setType.toString().split('.').last,
-            'is_bodyweight_mode': set.isBodyweightMode,
+          'sets': _sets.map((set) {
+            // ✅ v1.0.158+v1.0.170: 自重モード（懸垂のみ）の場合、体重を自動反映
+            double effectiveWeight = set.weight;
+            if (set.isBodyweightMode && _userBodyweight != null && _isPullUpExercise(set.exerciseName)) {
+              // 自重モード: ユーザー体重 + 追加重量（例: 体重70kg + プレート10kg = 80kg）
+              effectiveWeight = _userBodyweight! + set.weight;
+              debugPrint('✅ 自重モード反映: ${set.exerciseName} = ${_userBodyweight}kg (体重) + ${set.weight}kg (追加) = ${effectiveWeight}kg');
+            }
+            
+            // 🔧 v1.0.245: ExerciseMasterData を使用して部位を取得 (Problem 1 fix)
+            final bodyPart = ExerciseMasterData.getBodyPartByName(set.exerciseName);
+            
+            return {
+              'exercise_name': set.exerciseName,
+              'bodyPart': bodyPart,  // 🔧 v1.0.243: 部位情報を追加
+              'weight': effectiveWeight,  // ✅ 自重 + 追加重量
+              'reps': set.reps,
+              'is_completed': set.isCompleted,
+              'has_assist': set.hasAssist,
+              'set_type': set.setType.toString().split('.').last,
+              'is_bodyweight_mode': set.isBodyweightMode,
+              'is_time_mode': set.isTimeMode,  // v1.0.169: 秒数/回数モード
+              'is_cardio': set.isCardio,  // 🔧 v1.0.226+242: 有酸素フラグ保存
+              'user_bodyweight': set.isBodyweightMode ? _userBodyweight : null,  // ✅ 体重を記録
+              'additional_weight': set.isBodyweightMode ? set.weight : null,  // ✅ 追加重量を記録
+            };
           }).toList(),
           'created_at': FieldValue.serverTimestamp(),
         });
         
         DebugLogger.instance.log('✅ ワークアウト保存成功: Document ID = ${workoutDoc.id}');
 
-        if (_memoController.text.isNotEmpty) {
-          await FirebaseFirestore.instance.collection('workout_notes').add({
-            'user_id': user.uid,
-            'workout_session_id': workoutDoc.id,
-            'content': _memoController.text,
-            'created_at': Timestamp.now(),
-            'updated_at': Timestamp.now(),
-          });
+        // FIX: Problem 4 - メモ保存の強化
+        if (_memoController.text.trim().isNotEmpty) {
+          try {
+            final noteId = DateTime.now().millisecondsSinceEpoch.toString();
+            await FirebaseFirestore.instance
+                .collection('workout_notes')
+                .doc(noteId)
+                .set({
+              'user_id': user.uid,
+              'workout_session_id': workoutDoc.id, // 正しいIDを使用
+              'content': _memoController.text.trim(),
+              'created_at': FieldValue.serverTimestamp(),
+              'updated_at': FieldValue.serverTimestamp(),
+            });
+            debugPrint('✅ メモ保存完了: $noteId -> workout_session: ${workoutDoc.id}');
+          } catch (e) {
+            debugPrint('❌ メモ保存エラー: $e');
+          }
         }
       }
 
@@ -1198,6 +1847,18 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                       ],
                     ),
                   ),
+                  // ✅ v1.0.178: オフボタン
+                  OutlinedButton.icon(
+                    onPressed: () => _saveRestDay(context),
+                    icon: const Icon(Icons.bed, size: 18),
+                    label: const Text('オフ'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.green,
+                      side: const BorderSide(color: Colors.green),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   OutlinedButton.icon(
                     onPressed: () => _selectDate(context),
                     icon: const Icon(Icons.edit_calendar, size: 18),
@@ -1322,16 +1983,55 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
               const Divider(height: 32, thickness: 2),
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(
-                  'セット',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                child: Row(
+                  children: [
+                    const Text(
+                      'セット',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    // 🔧 v1.0.248: ワークアウトタイプフィルタータブ（筋トレ/有酸素の2部屋制）
+                    SegmentedButton<WorkoutTypeFilter>(
+                      segments: const [
+                        ButtonSegment(
+                          value: WorkoutTypeFilter.strength,
+                          label: Text('筋トレ', style: TextStyle(fontSize: 13)),
+                          icon: Icon(Icons.fitness_center, size: 18),
+                        ),
+                        ButtonSegment(
+                          value: WorkoutTypeFilter.cardio,
+                          label: Text('有酸素', style: TextStyle(fontSize: 13)),
+                          icon: Icon(Icons.directions_run, size: 18),
+                        ),
+                      ],
+                      selected: {_workoutTypeFilter},
+                      onSelectionChanged: (Set<WorkoutTypeFilter> newSelection) {
+                        setState(() {
+                          _workoutTypeFilter = newSelection.first;
+                        });
+                      },
+                      style: ButtonStyle(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               
-              // 種目ごとにグループ化
+              // 種目ごとにグループ化 + フィルタリング
               ...() {
+                // 🔧 v1.0.248: フィルターに基づいてセットを絞り込み（筋トレ/有酸素の2部屋制）
+                final filteredSets = _sets.where((set) {
+                  switch (_workoutTypeFilter) {
+                    case WorkoutTypeFilter.strength:
+                      return !set.isCardio;
+                    case WorkoutTypeFilter.cardio:
+                      return set.isCardio;
+                  }
+                }).toList();
+                
                 final exerciseGroups = <String, List<WorkoutSet>>{};
-                for (var set in _sets) {
+                for (var set in filteredSets) {
                   exerciseGroups.putIfAbsent(set.exerciseName, () => []).add(set);
                 }
                 
@@ -1456,6 +2156,74 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
             
             // 💡初回記録 or 前回記録バナー
             const SizedBox(height: 8),
+            
+            // 🔧 v1.0.222: AIコーチからの場合は1RM情報も表示
+            if (_isFromAICoach) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.shade300),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text('🤖', style: TextStyle(fontSize: 16)),
+                        const SizedBox(width: 8),
+                        Text(
+                          'AIコーチの推奨',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Builder(
+                      builder: (context) {
+                        // v1.0.225-hotfix: Map形式の履歴データに対応
+                        final exerciseHistory = _aiCoachData?['exerciseHistory'];
+                        final oneRM = _calculate1RMFromHistory(exerciseName, exerciseHistory);
+                        final userLevel = _aiCoachData?['userLevel'] as String? ?? '初心者';
+                        
+                        if (oneRM != null && oneRM > 0) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '推定1RM: ${oneRM.toStringAsFixed(1)}kg',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green.shade900,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'あなたのレベル ($userLevel) に合わせた重量・回数を設定しています',
+                                style: TextStyle(fontSize: 11, color: Colors.green.shade700),
+                              ),
+                            ],
+                          );
+                        } else {
+                          return Text(
+                            '履歴データから最適な重量・回数を推奨しています',
+                            style: TextStyle(fontSize: 11, color: Colors.green.shade700),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            
             if (lastData == null) ...[
               // 初回記録の場合
               Container(
@@ -1567,8 +2335,8 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
               ),
               const SizedBox(width: 12),
               
-              // 懸垂の場合は自重/荷重モード切り替えを含む特別なUI
-              if (_isPullUpExercise(set.exerciseName))
+              // 懸垂または腹筋の場合は自重/荷重モード切り替えを含む特別なUI
+              if (_isPullUpExercise(set.exerciseName) || _isAbsExercise(set.exerciseName))
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1621,7 +2389,10 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                                   width: !set.isBodyweightMode ? 2 : 1,
                                 ),
                               ),
-                              child: const Text('荷重', style: TextStyle(fontSize: 12)),
+                              child: Text(
+                                _isAbsExercise(set.exerciseName) ? '重さ' : '荷重', 
+                                style: const TextStyle(fontSize: 12)
+                              ),
                             ),
                           ),
                         ],
@@ -1631,10 +2402,10 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                       if (!set.isBodyweightMode)
                         TextFormField(
                           key: ValueKey('weight_${globalIndex}_${set.weight}'),
-                          decoration: const InputDecoration(
-                            labelText: '荷重 (kg)',
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: InputDecoration(
+                            labelText: _isAbsExercise(set.exerciseName) ? '重さ (kg)' : '荷重 (kg)',
+                            border: const OutlineInputBorder(),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           ),
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           initialValue: set.weight == 0.0 ? '' : set.weight.toString(),
@@ -1664,6 +2435,61 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                             ),
                           ),
                         ),
+                      // v1.0.169: 腹筋種目の場合、回数/秒数切り替えボタンを追加
+                      if (_isAbsExercise(set.exerciseName)) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    set.isTimeMode = false;
+                                  });
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: !set.isTimeMode 
+                                      ? const Color(0xFF4CAF50) 
+                                      : Colors.white,
+                                  foregroundColor: !set.isTimeMode 
+                                      ? Colors.white 
+                                      : const Color(0xFF4CAF50),
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  side: BorderSide(
+                                    color: const Color(0xFF4CAF50),
+                                    width: !set.isTimeMode ? 2 : 1,
+                                  ),
+                                ),
+                                child: const Text('回数', style: TextStyle(fontSize: 12)),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    set.isTimeMode = true;
+                                  });
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: set.isTimeMode 
+                                      ? const Color(0xFF4CAF50) 
+                                      : Colors.white,
+                                  foregroundColor: set.isTimeMode 
+                                      ? Colors.white 
+                                      : const Color(0xFF4CAF50),
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  side: BorderSide(
+                                    color: const Color(0xFF4CAF50),
+                                    width: set.isTimeMode ? 2 : 1,
+                                  ),
+                                ),
+                                child: const Text('秒数', style: TextStyle(fontSize: 12)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 )
@@ -1673,7 +2499,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                   child: TextFormField(
                     key: ValueKey('weight_${globalIndex}_${set.weight}'),
                     decoration: InputDecoration(
-                      labelText: _isCardioExercise(set.exerciseName) ? '時間 (分)' : '重量 (kg)',
+                      labelText: set.isCardio ? '時間 (分)' : '重量 (kg)', // 🔧 v1.0.226+242: Use stored flag
                       border: const OutlineInputBorder(),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
@@ -1691,12 +2517,16 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                 ),
               const SizedBox(width: 8),
               
-              // 有酸素運動の場合は「距離（km）」、それ以外は「回数」
+              // 有酸素運動の場合は距離ベースかレップスベースかで分ける、腹筋の場合は「秒数/回数」、それ以外は「回数」
               Expanded(
                 child: TextFormField(
                   key: ValueKey('reps_${globalIndex}_${set.reps}'),
                   decoration: InputDecoration(
-                    labelText: _isCardioExercise(set.exerciseName) ? '距離 (km)' : '回数',
+                    labelText: set.isCardio // 🔧 v1.0.226+242: Use stored flag
+                        ? (ExerciseMasterData.cardioUsesDistance(set.exerciseName) ? '距離 (km)' : '回数') // 🔧 v1.0.251: Distance vs Reps for cardio
+                        : _isAbsExercise(set.exerciseName)
+                            ? (set.isTimeMode ? '秒数' : '回数')
+                            : '回数',
                     border: const OutlineInputBorder(),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
@@ -1853,6 +2683,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     
     final weight = (lastData['weight'] ?? 0).toDouble();
     final reps = (lastData['reps'] ?? 0).toInt();
+    final isTimeMode = lastData['is_time_mode'] == true;  // ✅ v1.0.181: 秒数モード対応
     
     final date = lastData['date'] as DateTime?;
     final dateStr = date != null 
@@ -1860,7 +2691,10 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         : '不明';
     
     // シンプルに前回の1セットのみ表示（前々回は表示しない）
-    return '前回 $dateStr: ${weight}kg × ${reps}回';
+    // ✅ v1.0.181: 秒数モードの場合は「秒」と表示
+    return isTimeMode
+        ? '前回 $dateStr: ${weight}kg × ${reps}秒'
+        : '前回 $dateStr: ${weight}kg × ${reps}回';
   }
   
   // 🎯 Phase 1: トレーニング記録後のAI導線ポップアップ

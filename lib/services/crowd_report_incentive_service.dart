@@ -29,11 +29,17 @@ class CrowdReportIncentiveService {
       
       // 1. 混雑度をFirestoreに保存（set with merge to avoid permission errors）
       try {
+        if (kDebugMode) {
+          print('📊 Updating crowd level for gym: $gymId -> Level: $crowdLevel');
+        }
         await _firestore.collection('gyms').doc(gymId).set({
           'currentCrowdLevel': crowdLevel,
           'lastCrowdUpdate': FieldValue.serverTimestamp(),
           'last_reporter_id': user.uid,
         }, SetOptions(merge: true));
+        if (kDebugMode) {
+          print('✅ Crowd level updated successfully for gym: $gymId');
+        }
       } catch (e) {
         if (kDebugMode) {
           print('⚠️ Gym update skipped (may not have permission): $e');
