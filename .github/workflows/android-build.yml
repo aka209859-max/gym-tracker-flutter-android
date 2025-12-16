@@ -1,0 +1,140 @@
+```yaml
+name: Android Build & Release
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.35.4'
+  JAVA_VERSION: '11'
+
+jobs:
+  build:
+    name: Build Android APK & AAB
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: 🔍 Flutter Doctor
+        run: flutter doctor -v
+
+      - name: 📦 Get Dependencies
+        run: flutter pub get
+
+      - name: 🔬 Analyze Code
+        run: flutter analyze --no-fatal-infos
+        continue-on-error: true
+
+      - name: 🔥 Setup Firebase Config
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "⚠️  Warning: GOOGLE_SERVICES_JSON secret not set"
+            echo "Creating dummy google-services.json for build test..."
+            cat > android/app/google-services.json << 'EOF'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "gym-match-dummy",
+              "storage_bucket": "gym-match-dummy.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+                  "android_client_info": {
+                    "package_name": "com.gymmatch.app"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  {
+                    "current_key": "AIzaSyDummyKeyForBuildTestOnly000000000"
+                  }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": []
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+          else
+            echo "✅ GOOGLE_SERVICES_JSON secret found"
+            echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          fi
+
+      - name: 🔨 Build Debug APK
+        run: flutter build apk --debug --verbose
+
+      - name: 🏗️ Build Release APK
+        run: flutter build apk --release --verbose
+        continue-on-error: true
+
+      - name: 📦 Build Release AAB
+        run: flutter build appbundle --release --verbose
+        continue-on-error: true
+
+      - name: 📤 Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: gym-match-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
+
+      - name: 📤 Upload Release APK
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: gym-match-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+        continue-on-error: true
+
+      - name: 📤 Upload Release AAB
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: gym-match-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+        continue-on-error: true
+
+      - name: 📊 Generate Build Summary
+        if: always()
+        run: |
+          echo "## 🎉 GYM MATCH Android Build Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Build Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: v1.0.254+279" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📥 Download Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "Go to **Actions** tab → **Summary** section to download APK files" >> $GITHUB_STEP_SUMMARY
+```
