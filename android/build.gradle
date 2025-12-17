@@ -5,6 +5,22 @@ allprojects {
     }
 }
 
+// Java toolchain configuration
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                if (project.android.hasProperty('compileOptions')) {
+                    project.android.compileOptions {
+                        sourceCompatibility JavaVersion.VERSION_11
+                        targetCompatibility JavaVersion.VERSION_11
+                    }
+                }
+            }
+        }
+    }
+}
+
 def newBuildDir = rootProject.layout.buildDirectory.dir("../../build").get()
 rootProject.layout.buildDirectory = newBuildDir
 
