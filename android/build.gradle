@@ -5,7 +5,7 @@ allprojects {
     }
 }
 
-// Java toolchain configuration
+// Java and Kotlin toolchain configuration for all subprojects
 subprojects {
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
@@ -16,6 +16,13 @@ subprojects {
                         targetCompatibility JavaVersion.VERSION_11
                     }
                 }
+            }
+        }
+        
+        // Force Kotlin JVM target to 11 for all subprojects
+        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+            kotlinOptions {
+                jvmTarget = "11"
             }
         }
     }
