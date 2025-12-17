@@ -108,16 +108,85 @@ flutter build appbundle --release
 
 ## 🏪 Google Play Store リリース
 
-### 内部テスト
+### 📋 事前準備（必須）
+
+#### 1. Google Play Console アカウント作成
+- **URL**: https://play.google.com/console/
+- **費用**: 25ドル（一度のみ）
+- **必要情報**:
+  - Googleアカウント
+  - クレジットカード
+  - 開発者名（個人 or 企業）
+
+#### 2. アプリ登録
+1. **アプリ作成**
+   - アプリ名: `GYM MATCH`
+   - デフォルト言語: 日本語
+   - タイプ: アプリ（ゲーム以外）
+   - 無料 or 有料: 無料（アプリ内課金あり）
+
+2. **パッケージ名**: `com.gymmatch.app`
+   - ⚠️ 一度設定すると変更不可
+
+#### 3. AdMob設定（広告収益化）
+- **URL**: https://admob.google.com/
+- **必要な作業**:
+  1. AdMobアカウント作成
+  2. Androidアプリ登録
+  3. 広告ユニットID取得（バナー、リワード、インタースティシャル）
+  4. `AndroidManifest.xml` と広告サービスファイルに本番AdMob IDを設定
+  5. 支払い情報登録（1,000円以上で支払い）
+
+現在の設定:
+```
+📍 AndroidManifest.xml: テスト用AdMob Application ID使用中
+📍 lib/services/ad_service.dart: Android広告ID要設定
+📍 lib/services/admob_service.dart: Android広告ID要設定
+📍 lib/services/reward_ad_service.dart: Android広告ID要設定
+```
+
+#### 4. Firebase設定（プッシュ通知・分析）
+- **URL**: https://console.firebase.google.com/
+- **既存設定**: `google-services.json` 設定済み
+- **確認項目**:
+  - ✅ Firebase Authentication有効化
+  - ✅ Cloud Firestore有効化
+  - ✅ Firebase Storage有効化
+  - ⚠️ Firebase Cloud Messaging（プッシュ通知）有効化 → 未設定
+
+#### 5. Google Maps API（ジム検索機能）
+- **URL**: https://console.cloud.google.com/
+- **必要なAPI**:
+  - ✅ Maps SDK for Android（有効化必要）
+  - ✅ Places API（有効化必要）
+  - ⚠️ APIキーの制限設定（パッケージ名: `com.gymmatch.app`）
+
+#### 6. ストアリスティング準備
+- **短い説明**（80文字以内）
+- **完全な説明**（4000文字以内）
+- **スクリーンショット**:
+  - 携帯電話: 2-8枚（1080x1920推奨）
+  - 7インチタブレット: 任意
+  - 10インチタブレット: 任意
+- **アイコン**: 512x512 PNG（既存: `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png`）
+- **機能グラフィック**: 1024x500 JPG/PNG
+- **プライバシーポリシーURL**: https://gym-match-e560d.web.app/privacy_policy.html
+
+---
+
+### 🚀 内部テスト
 1. Google Play Consoleにアクセス
 2. 内部テストトラックを作成
-3. AABファイルをアップロード
+3. AABファイルをアップロード (`flutter build appbundle --release`)
+4. テスターのメールアドレスを登録
+5. テストリンクを共有
 
-### 本番リリース
-1. ストアリスティング作成
-2. スクリーンショット準備
-3. プライバシーポリシー設定
-4. 審査提出
+### 📦 本番リリース
+1. ストアリスティング作成（上記準備項目）
+2. コンテンツレーティング（質問票回答）
+3. ターゲット年齢層・コンテンツ選択
+4. データセーフティ（データ収集・使用の説明）
+5. 審査提出（通常1-3日）
 
 ---
 
