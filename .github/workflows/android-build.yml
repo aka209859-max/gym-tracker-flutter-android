@@ -21,7 +21,7 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      - name: ☕ Setup Java
+      - name: ☁ESetup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -38,7 +38,7 @@ jobs:
       - name: 🔍 Flutter Doctor
         run: flutter doctor -v
       # ======================================
-      # 4.5. local.properties の作成(CI環境用)
+      # 4.5. local.properties の作�E(CI環墁E��)
       # ======================================
       - name: 📝 Create local.properties for CI
         run: |
@@ -47,7 +47,7 @@ jobs:
           flutter.sdk=$FLUTTER_ROOT
           sdk.dir=$ANDROID_HOME
           EOF
-          echo "✅ local.properties created:"
+          echo "✁Elocal.properties created:"
           cat android/local.properties
 
       - name: 📦 Get Dependencies
@@ -62,9 +62,9 @@ jobs:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           if [ -z "$GOOGLE_SERVICES_JSON" ]; then
-            echo "⚠️  Warning: GOOGLE_SERVICES_JSON secret not set"
+            echo "⚠�E�E Warning: GOOGLE_SERVICES_JSON secret not set"
             echo "Creating dummy google-services.json for build test..."
-            # インデントを維持するために cat の書き方を調整しています
+            # インチE��トを維持するために cat の書き方を調整してぁE��ぁE
             cat > android/app/google-services.json << 'EOF'
           {
             "project_info": {
@@ -97,14 +97,14 @@ jobs:
           }
           EOF
           else
-            echo "✅ GOOGLE_SERVICES_JSON secret found"
+            echo "✁EGOOGLE_SERVICES_JSON secret found"
             echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
           fi
 
       - name: 🔨 Build Debug APK
-        run: flutter build apk --debug --verbose
+        run: flutter build apk --debug
 
-      - name: 🏗️ Build Release APK
+      - name: 🏗�E�EBuild Release APK
         run: flutter build apk --release --verbose
         continue-on-error: true
 
@@ -143,9 +143,9 @@ jobs:
           echo "## 🎉 GYM MATCH Android Build Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 Build Information" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version**: v1.0.254+279" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: v1.0.255+280" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📥 Download Artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "Go to **Actions** tab → **Summary** section to download APK files" >> $GITHUB_STEP_SUMMARY
+          echo "Go to **Actions** tab ↁE**Summary** section to download APK files" >> $GITHUB_STEP_SUMMARY
