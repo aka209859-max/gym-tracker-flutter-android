@@ -20,19 +20,29 @@ class DefaultFirebaseOptions {
       return web;
     }
     switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return android;
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
         return macos;
-      case TargetPlatform.android:
       case TargetPlatform.windows:
       case TargetPlatform.linux:
       default:
         throw UnsupportedError(
-          'DefaultFirebaseOptions are only configured for iOS, macOS, and Web platforms.',
+          'DefaultFirebaseOptions are only configured for Android, iOS, macOS, and Web platforms.',
         );
     }
   }
+
+  // Android Platform Configuration (GYM MATCH Production)
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyC5YDenesI08o8eGY9uk-UeQx9qsHM0ys0',
+    appId: '1:506175392633:android:ca432eae3f8c466806fda8',
+    messagingSenderId: '506175392633',
+    projectId: 'gym-match-e560d',
+    storageBucket: 'gym-match-e560d.firebasestorage.app',
+  );
 
   // Web Platform Configuration (GYM MATCH Production)
   static const FirebaseOptions web = FirebaseOptions(
