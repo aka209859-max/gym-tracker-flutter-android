@@ -20,14 +20,14 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen>
   String? _selectedExercise;
   bool _isLoadingExercises = true;
 
-  final List<String> _periods = ['月別', '3ヶ月', '6ヶ月', '9ヶ月', '1年'];
+  final List<String> _periods = ['1ヶ月', '2ヶ月', '3ヶ月', '6ヶ月', '9ヶ月', '1年'];
   List<String> _exercises = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _periods.length, vsync: this);
-    _tabController.index = 1; // デフォルト3ヶ月
+    _tabController.index = 2; // デフォルト3ヶ月（インデックス2）
     _autoLoginIfNeeded();
     _loadExercisesFromHistory();
   }
@@ -319,13 +319,13 @@ class PRDetailScreen extends StatefulWidget {
 class _PRDetailScreenState extends State<PRDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final List<String> _periods = ['月別', '3ヶ月', '6ヶ月', '9ヶ月', '1年'];
+  final List<String> _periods = ['1ヶ月', '2ヶ月', '3ヶ月', '6ヶ月', '9ヶ月', '1年'];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _periods.length, vsync: this);
-    _tabController.index = 1; // デフォルト3ヶ月
+    _tabController.index = 2; // デフォルト3ヶ月（インデックス2）
   }
 
   @override
@@ -495,8 +495,11 @@ class _PeriodView extends StatelessWidget {
     DateTime startDate;
 
     switch (period) {
-      case '月別':
+      case '1ヶ月':
         startDate = DateTime(now.year, now.month - 1, now.day);
+        break;
+      case '2ヶ月':
+        startDate = DateTime(now.year, now.month - 2, now.day);
         break;
       case '3ヶ月':
         startDate = DateTime(now.year, now.month - 3, now.day);

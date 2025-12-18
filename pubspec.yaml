@@ -3,9 +3,9 @@ description: "GYM MATCH - Android版 | フィットネストレーニング記�
 publish_to: 'none'
 
 # Android Version Control
-# version: 1.0.254 (versionName in build.gradle)
-# build: 279 (versionCode in build.gradle)
-version: 1.0.254+279
+# version: 1.0.255 (versionName in build.gradle)
+# build: 280 (versionCode in build.gradle)
+version: 1.0.255+280
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
