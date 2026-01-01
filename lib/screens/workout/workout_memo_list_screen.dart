@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -101,23 +102,23 @@ class _WorkoutMemoListScreenState extends State<WorkoutMemoListScreen> {
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('メモを編集'),
+        title: Text(AppLocalizations.of(context)!.edit),
         content: TextField(
           controller: controller,
           maxLines: 5,
-          decoration: const InputDecoration(
-            hintText: 'メモを入力してください',
+          decoration: InputDecoration(
+            hintText: AppLocalizations.of(context)!.workout_01411783,
             border: OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('保存'),
+            child: Text(AppLocalizations.of(context)!.saveWorkout),
           ),
         ],
       ),
@@ -131,14 +132,14 @@ class _WorkoutMemoListScreenState extends State<WorkoutMemoListScreen> {
         await _noteService.updateNote(note.id, result);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('メモを更新しました')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.noteUpdated)),
           );
           _loadMemosWithWorkouts(); // リロード
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('エラー: $e')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.error)),
           );
         }
       }
@@ -150,12 +151,12 @@ class _WorkoutMemoListScreenState extends State<WorkoutMemoListScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('メモを削除'),
-        content: const Text('このメモを削除してもよろしいですか？'),
+        title: Text(AppLocalizations.of(context)!.workout_c1cd0279),
+        content: Text(AppLocalizations.of(context)!.delete),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('キャンセル'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -163,7 +164,7 @@ class _WorkoutMemoListScreenState extends State<WorkoutMemoListScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('削除'),
+            child: Text(AppLocalizations.of(context)!.remove),
           ),
         ],
       ),
@@ -174,14 +175,14 @@ class _WorkoutMemoListScreenState extends State<WorkoutMemoListScreen> {
         await _noteService.deleteNote(noteId);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('メモを削除しました')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.delete)),
           );
           _loadMemosWithWorkouts(); // リロード
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('削除エラー: $e')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.delete)),
           );
         }
       }
@@ -192,7 +193,7 @@ class _WorkoutMemoListScreenState extends State<WorkoutMemoListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('トレーニングメモ'),
+        title: Text(AppLocalizations.of(context)!.trainingMemo),
         backgroundColor: Colors.purple,
         foregroundColor: Colors.white,
       ),
@@ -210,15 +211,15 @@ class _WorkoutMemoListScreenState extends State<WorkoutMemoListScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'メモはまだありません',
+                        AppLocalizations.of(context)!.workout_b19f3279,
                         style: TextStyle(
                           fontSize: 18,
                           color: Colors.grey.shade600,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Text(
-                        'トレーニング記録の詳細画面から\nメモを追加できます',
+                        AppLocalizations.of(context)!.addWorkout,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
@@ -240,7 +241,7 @@ class _WorkoutMemoListScreenState extends State<WorkoutMemoListScreen> {
                       
                       // ワークアウトの日付と部位を取得
                       final date = (workoutData['date'] as Timestamp?)?.toDate();
-                      final muscleGroup = workoutData['muscle_group'] as String? ?? '不明';
+                      final muscleGroup = workoutData['muscle_group'] as String? ?? AppLocalizations.of(context)!.unknown;
                       
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -271,7 +272,7 @@ class _WorkoutMemoListScreenState extends State<WorkoutMemoListScreen> {
                                         Text(
                                           date != null
                                               ? DateFormat('yyyy/MM/dd').format(date)
-                                              : '日付不明',
+                                              : AppLocalizations.of(context)!.workout_3e8e25ce,
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.bold,

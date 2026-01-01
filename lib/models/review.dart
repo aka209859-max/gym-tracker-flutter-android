@@ -41,7 +41,7 @@ class Review {
       id: doc.id,
       gymId: data['gymId'] ?? '',
       userId: data['userId'] ?? '',
-      userName: data['userName'] ?? '匿名ユーザー',
+      userName: data['userName'] ?? AppLocalizations.of(context)!.general_58e6acec,
       userPhotoUrl: data['userPhotoUrl'] ?? '',
       overallRating: (data['overallRating'] ?? 3.0).toDouble(),
       crowdAccuracy: (data['crowdAccuracy'] ?? 3.0).toDouble(),

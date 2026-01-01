@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -102,7 +103,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
 
     if (weight == null && bodyFat == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('体重または体脂肪率を入力してください')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.general_6d12fd22)),
       );
       return;
     }
@@ -112,7 +113,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
 
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception('ユーザーが未ログイン');
+      if (user == null) throw Exception(AppLocalizations.of(context)!.login);
 
       // ✅ v1.0.158: 日付 + 現在時刻を保存
       final now = DateTime.now();
@@ -140,7 +141,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('記録を保存しました'), backgroundColor: Colors.green),
+            SnackBar(content: Text(AppLocalizations.of(context)!.save), backgroundColor: Colors.green),
           );
         }
       } else {
@@ -155,7 +156,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Row(
                 children: [
                   Icon(Icons.cloud_off, color: Colors.white),
@@ -180,7 +181,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('エラー: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(AppLocalizations.of(context)!.error), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -198,12 +199,12 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('記録を削除'),
+        title: Text(AppLocalizations.of(context)!.delete),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('以下の記録を削除しますか？'),
+            Text(AppLocalizations.of(context)!.delete),
             const SizedBox(height: 16),
             Text(
               DateFormat('yyyy年MM月dd日 HH:mm').format(date),
@@ -217,12 +218,12 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('キャンセル'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('削除'),
+            child: Text(AppLocalizations.of(context)!.remove),
           ),
         ],
       ),
@@ -249,8 +250,8 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('記録を削除しました'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.delete),
             backgroundColor: Colors.orange,
           ),
         );
@@ -261,7 +262,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('削除に失敗しました: $e'),
+            content: Text(AppLocalizations.of(context)!.deleteFailed(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -295,12 +296,12 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
       behavior: HitTestBehavior.translucent,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('体重・体脂肪率'),
+          title: Text(AppLocalizations.of(context)!.profileBodyWeight),
           backgroundColor: theme.colorScheme.primary,
           foregroundColor: Colors.white,
         ),
         body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -314,7 +315,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            '今日の記録',
+                            AppLocalizations.of(context)!.general_d279f4b3,
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 16),
@@ -323,13 +324,13 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                           InkWell(
                             onTap: _selectDate,
                             child: InputDecorator(
-                              decoration: const InputDecoration(
-                                labelText: '日付',
+                              decoration: InputDecoration(
+                                labelText: AppLocalizations.of(context)!.date,
                                 border: OutlineInputBorder(),
                                 prefixIcon: Icon(Icons.calendar_today),
                               ),
                               child: Text(
-                                DateFormat('yyyy年MM月dd日').format(_selectedDate),
+                                DateFormat(AppLocalizations.of(context)!.dateFormatYearMonthDay).format(_selectedDate),
                               ),
                             ),
                           ),
@@ -338,7 +339,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                           // 体重入力
                           TextField(
                             controller: _weightController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: '体重 (kg)',
                               border: OutlineInputBorder(),
                               prefixIcon: Icon(Icons.monitor_weight),
@@ -352,7 +353,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                           // 体脂肪率入力
                           TextField(
                             controller: _bodyFatController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: '体脂肪率 (%)',
                               border: OutlineInputBorder(),
                               prefixIcon: Icon(Icons.analytics),
@@ -374,7 +375,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
-                            child: const Text('記録を保存', style: TextStyle(fontSize: 16)),
+                            child: Text(AppLocalizations.of(context)!.save, style: TextStyle(fontSize: 16)),
                           ),
                         ],
                       ),
@@ -421,13 +422,13 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
             Row(
               children: [
                 _buildTabButton(
-                  label: '体重',
+                  label: AppLocalizations.of(context)!.bodyWeight,
                   isSelected: _selectedChartType == ChartType.weight,
                   onTap: () => setState(() => _selectedChartType = ChartType.weight),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 _buildTabButton(
-                  label: '体脂肪率',
+                  label: AppLocalizations.of(context)!.bodyFatRate,
                   isSelected: _selectedChartType == ChartType.bodyFat,
                   onTap: () => setState(() => _selectedChartType = ChartType.bodyFat),
                 ),
@@ -442,7 +443,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Text(
-                  _selectedChartType == ChartType.weight ? '体重' : '体脂肪率',
+                  _selectedChartType == ChartType.weight ? AppLocalizations.of(context)!.bodyWeight : AppLocalizations.of(context)!.bodyFatRate,
                   style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(width: 16),
@@ -481,7 +482,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text('最近', style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
+                Text(AppLocalizations.of(context)!.recentExercises, style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
                 Switch(
                   value: _selectedPeriod == ChartPeriod.all,
                   onChanged: (value) {
@@ -491,7 +492,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                   },
                   activeColor: Colors.grey.shade400,
                 ),
-                Text('全て', style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
+                Text(AppLocalizations.of(context)!.general_3582fe36, style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
               ],
             ),
           ],
@@ -527,7 +528,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
     }
     
     if (values.isEmpty) {
-      return Center(child: Text('データがありません'));
+      return Center(child: Text(AppLocalizations.of(context)!.noData));
     }
     
     // Y軸の範囲と間隔を計算（0.1刻み対応）
@@ -648,7 +649,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                 final date = filtered[index]['date'] as DateTime;
                 final value = spot.y;
                 
-                final unit = _selectedChartType == ChartType.weight ? 'kg' : '%';
+                final unit = _selectedChartType == ChartType.weight ? AppLocalizations.of(context)!.kg : '%';
                 
                 return LineTooltipItem(
                   '${DateFormat('M/d').format(date)}\n${value.toStringAsFixed(1)}$unit',
@@ -696,7 +697,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
               Icon(Icons.analytics_outlined, size: 48, color: Colors.grey[400]),
               const SizedBox(height: 16),
               Text(
-                '記録がありません',
+                AppLocalizations.of(context)!.general_175145c8,
                 style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               ),
             ],
@@ -712,7 +713,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
           const Padding(
             padding: EdgeInsets.all(16),
             child: Text(
-              '記録履歴',
+              AppLocalizations.of(context)!.workout_16013f46,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
@@ -736,7 +737,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                     size: 20,
                   ),
                 ),
-                title: Text(DateFormat('yyyy年MM月dd日').format(date)),
+                title: Text(DateFormat(AppLocalizations.of(context)!.dateFormatYearMonthDay).format(date)),
                 subtitle: Row(
                   children: [
                     if (weight != null) Text('体重: ${weight.toStringAsFixed(1)}kg'),
@@ -747,7 +748,7 @@ class _BodyMeasurementScreenState extends State<BodyMeasurementScreen> {
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
                   onPressed: () => _confirmDelete(measurement),
-                  tooltip: '削除',
+                  tooltip: AppLocalizations.of(context)!.remove,
                 ),
               );
             },

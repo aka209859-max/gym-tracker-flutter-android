@@ -214,7 +214,7 @@ class AdvancedFatigueService {
         'chronic_load': 0.0,
         'risk_level': 'insufficient_data',
         'risk_color': 'grey',
-        'advice': 'ACWRの計算には最低7日間のトレーニングデータが必要です。',
+        'advice': AppLocalizations.of(context)!.general_f7f81187,
       };
     }
     
@@ -231,7 +231,7 @@ class AdvancedFatigueService {
         'chronic_load': 0.0,
         'risk_level': 'insufficient_data',
         'risk_color': 'grey',
-        'advice': 'ACWRの計算には28日間のトレーニングデータが必要です。',
+        'advice': AppLocalizations.of(context)!.general_7bbb802c,
       };
     }
     

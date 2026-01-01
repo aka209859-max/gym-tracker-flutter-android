@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../providers/gym_provider.dart';
 import '../models/gym.dart';
 import 'gym_detail_screen.dart';
@@ -17,9 +18,10 @@ class _GymListScreenState extends State<GymListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ジム一覧'),
+        title: Text(l10n.gymList),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.sort),
@@ -29,33 +31,33 @@ class _GymListScreenState extends State<GymListScreen> {
               });
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'rating',
                 child: Row(
                   children: [
                     Icon(Icons.star, size: 20),
                     SizedBox(width: 8),
-                    Text('評価順'),
+                    Text(AppLocalizations.of(context)!.sortByRating),
                   ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'crowd',
                 child: Row(
                   children: [
                     Icon(Icons.people, size: 20),
                     SizedBox(width: 8),
-                    Text('混雑度順'),
+                    Text(AppLocalizations.of(context)!.sortByCrowd),
                   ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'price',
                 child: Row(
                   children: [
                     Icon(Icons.attach_money, size: 20),
                     SizedBox(width: 8),
-                    Text('料金順'),
+                    Text(AppLocalizations.of(context)!.sortByPrice),
                   ],
                 ),
               ),

@@ -143,7 +143,7 @@ class AppThemes {
   // テーマの説明
   static Map<String, Map<String, dynamic>> themeDescriptions = {
     'energetic': {
-      'name': 'エネルギッシュ系',
+      'name': AppLocalizations.of(context)!.general_afb4b3be,
       'description': 'ダークブルー × エナジーオレンジ\n活力とモチベーションを刺激',
       'colors': {
         'primary': Color(0xFF1a237e),
@@ -152,7 +152,7 @@ class AppThemes {
       },
     },
     'motivation': {
-      'name': 'モチベーション系',
+      'name': AppLocalizations.of(context)!.general_97925d41,
       'description': 'パワーレッド × シルバー\n情熱と力強さを表現',
       'colors': {
         'primary': Color(0xFFc62828),

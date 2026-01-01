@@ -97,13 +97,13 @@ class FatigueManagementService {
     // Step 2: 部位別の調整係数（大筋群は回復コストが高い）
     // 根拠: 脚・背中は中枢性疲労が大きい
     double bodyPartMultiplier = 1.0;
-    if (bodyParts.contains('脚')) {
+    if (bodyParts.contains(AppLocalizations.of(context)!.bodyPartLegs)) {
       bodyPartMultiplier += 0.15; // 脚: +15%
     }
-    if (bodyParts.contains('背中')) {
+    if (bodyParts.contains(AppLocalizations.of(context)!.bodyPartBack)) {
       bodyPartMultiplier += 0.10; // 背中: +10%
     }
-    if (bodyParts.contains('胸')) {
+    if (bodyParts.contains(AppLocalizations.of(context)!.bodyPartChest)) {
       bodyPartMultiplier += 0.05; // 胸: +5%
     }
     
@@ -129,7 +129,7 @@ class FatigueManagementService {
   /// 
   /// 戻り値: {
   ///   'level': 1-5,
-  ///   'label': '軽度' | '中程度' | '高め' | '極めて高い',
+  ///   'label': AppLocalizations.of(context)!.general_91e882eb | AppLocalizations.of(context)!.general_ce061ec3 | AppLocalizations.of(context)!.general_da8ce224 | AppLocalizations.of(context)!.general_89a3d255,
   ///   'color': Color,
   ///   'recoveryHours': 回復時間（時間）,
   ///   'advice': アドバイステキスト
@@ -142,7 +142,7 @@ class FatigueManagementService {
       // レベル1: 軽度
       return {
         'level': 1,
-        'label': '軽度',
+        'label': AppLocalizations.of(context)!.general_91e882eb,
         'color': 'green',
         'recoveryHours': 24,
         'advice': '良好なトレーニングでした！\n軽いストレッチと十分な水分補給をしましょう。',
@@ -151,7 +151,7 @@ class FatigueManagementService {
       // レベル2: 中程度（最適）
       return {
         'level': 2,
-        'label': '中程度',
+        'label': AppLocalizations.of(context)!.general_ce061ec3,
         'color': 'blue',
         'recoveryHours': 36,
         'advice': '適度な負荷のトレーニングでした。\n7-8時間の睡眠とタンパク質補給（体重1kgあたり1.6g以上）を心がけましょう。',
@@ -160,7 +160,7 @@ class FatigueManagementService {
       // レベル3: 高め（警戒）
       return {
         'level': 3,
-        'label': '高め',
+        'label': AppLocalizations.of(context)!.general_da8ce224,
         'color': 'orange',
         'recoveryHours': 48,
         'advice': '高強度のトレーニングでした。\n十分な休息と栄養補給が必要です。無理せず回復を優先しましょう。',
@@ -169,7 +169,7 @@ class FatigueManagementService {
       // レベル4: 極めて高い（危険）
       return {
         'level': 4,
-        'label': '極めて高い',
+        'label': AppLocalizations.of(context)!.general_89a3d255,
         'color': 'red',
         'recoveryHours': 72,
         'advice': '非常に高強度のトレーニングでした。\n今日は完全休養を推奨します。睡眠8時間以上、高タンパク質食、ストレッチを重視してください。',

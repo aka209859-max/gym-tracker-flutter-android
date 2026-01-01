@@ -37,7 +37,7 @@ class PartnerSearchService {
   /// パートナープロフィールを作成・更新
   Future<void> saveProfile(PartnerProfile profile) async {
     final userId = _auth.currentUser?.uid;
-    if (userId == null) throw Exception('ログインが必要です');
+    if (userId == null) throw Exception(AppLocalizations.of(context)!.loginRequired);
 
     try {
       await _firestore.collection('partner_profiles').doc(userId).set(
@@ -52,7 +52,7 @@ class PartnerSearchService {
   /// パートナープロフィールを削除（プロフィール非公開）
   Future<void> deleteProfile() async {
     final userId = _auth.currentUser?.uid;
-    if (userId == null) throw Exception('ログインが必要です');
+    if (userId == null) throw Exception(AppLocalizations.of(context)!.loginRequired);
 
     try {
       await _firestore.collection('partner_profiles').doc(userId).update({
@@ -102,7 +102,7 @@ class PartnerSearchService {
     bool enableSpatiotemporalFilter = false, // ✅ 時空間フィルター有効化フラグ
   }) async {
     final userId = _auth.currentUser?.uid;
-    if (userId == null) throw Exception('ログインが必要です');
+    if (userId == null) throw Exception(AppLocalizations.of(context)!.loginRequired);
 
     try {
       // ✅ Pro Plan非対称可視性: 検索者のプランを取得
@@ -369,7 +369,7 @@ class PartnerSearchService {
     String? message,
   }) async {
     final userId = _auth.currentUser?.uid;
-    if (userId == null) throw Exception('ログインが必要です');
+    if (userId == null) throw Exception(AppLocalizations.of(context)!.loginRequired);
 
     // ✅ Pro Plan権限チェック（非対称可視性の一環）
     final permissionCheck = await canSendMatchRequest();

@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -48,7 +49,7 @@ class _TemplateScreenState extends State<TemplateScreen> with SingleTickerProvid
       builder: (context, authSnapshot) {
         if (authSnapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            appBar: AppBar(title: const Text('テンプレート')),
+            appBar: AppBar(title: Text(AppLocalizations.of(context)!.templates)),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
@@ -56,16 +57,16 @@ class _TemplateScreenState extends State<TemplateScreen> with SingleTickerProvid
         final user = authSnapshot.data;
         if (user == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('テンプレート')),
+            appBar: AppBar(title: Text(AppLocalizations.of(context)!.templates)),
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('ログインに失敗しました'),
-                  const SizedBox(height: 16),
+                  Text(AppLocalizations.of(context)!.loginError),
+                  SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: _autoLoginIfNeeded,
-                    child: const Text('再試行'),
+                    child: Text(AppLocalizations.of(context)!.tryAgain),
                   ),
                 ],
               ),
@@ -83,7 +84,7 @@ class _TemplateScreenState extends State<TemplateScreen> with SingleTickerProvid
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ワークアウトテンプレート'),
+        title: Text(AppLocalizations.of(context)!.workout_518d7cc7),
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
         bottom: TabBar(
@@ -91,9 +92,9 @@ class _TemplateScreenState extends State<TemplateScreen> with SingleTickerProvid
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white.withValues(alpha: 0.7),
-          tabs: const [
-            Tab(text: 'マイテンプレート', icon: Icon(Icons.folder, size: 20)),
-            Tab(text: 'おすすめ', icon: Icon(Icons.auto_awesome, size: 20)),
+          tabs: [
+            Tab(text: AppLocalizations.of(context)!.workout_912b6191, icon: Icon(Icons.folder, size: 20)),
+            Tab(text: AppLocalizations.of(context)!.recommendation, icon: Icon(Icons.auto_awesome, size: 20)),
           ],
         ),
       ),
@@ -116,8 +117,8 @@ class _TemplateScreenState extends State<TemplateScreen> with SingleTickerProvid
             setState(() {}); // リフレッシュ
           }
         },
-        icon: const Icon(Icons.add),
-        label: const Text('テンプレート作成'),
+        icon: Icon(Icons.add),
+        label: Text(AppLocalizations.of(context)!.createTemplate),
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
       ),
@@ -138,7 +139,7 @@ class _TemplateScreenState extends State<TemplateScreen> with SingleTickerProvid
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('エラー: ${snapshot.error}'));
+          return Center(child: Text(AppLocalizations.of(context)!.snapshotError(snapshot.error.toString())));
         }
 
         final docs = snapshot.data?.docs ?? [];
@@ -166,12 +167,12 @@ class _TemplateScreenState extends State<TemplateScreen> with SingleTickerProvid
                 Icon(Icons.folder_open, size: 64, color: Colors.grey[400]),
                 const SizedBox(height: 16),
                 Text(
-                  'テンプレートがありません',
+                  AppLocalizations.of(context)!.workout_156c3331,
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
-                  'よく使う種目セットを保存してみましょう',
+                  AppLocalizations.of(context)!.save,
                   style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                 ),
               ],
@@ -263,8 +264,7 @@ class _TemplateScreenState extends State<TemplateScreen> with SingleTickerProvid
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(color: Colors.orange),
                                 ),
-                                child: const Text(
-                                  'おすすめ',
+                                child: Text(AppLocalizations.of(context)!.recommendation,
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -298,13 +298,13 @@ class _TemplateScreenState extends State<TemplateScreen> with SingleTickerProvid
                         }
                       },
                       itemBuilder: (context) => [
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'delete',
                           child: Row(
                             children: [
                               Icon(Icons.delete, color: Colors.red, size: 20),
                               SizedBox(width: 8),
-                              Text('削除'),
+                              Text(AppLocalizations.of(context)!.remove),
                             ],
                           ),
                         ),
@@ -399,14 +399,14 @@ class _TemplateScreenState extends State<TemplateScreen> with SingleTickerProvid
         
         if (result == true && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('トレーニングを保存しました')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.save)),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('エラー: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.error)),
         );
       }
     } finally {
@@ -421,17 +421,17 @@ class _TemplateScreenState extends State<TemplateScreen> with SingleTickerProvid
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('テンプレート削除'),
+        title: Text(AppLocalizations.of(context)!.deleteTemplate),
         content: Text('「${template.name}」を削除しますか？'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('キャンセル'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('削除'),
+            child: Text(AppLocalizations.of(context)!.remove),
           ),
         ],
       ),
@@ -446,13 +446,13 @@ class _TemplateScreenState extends State<TemplateScreen> with SingleTickerProvid
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('テンプレートを削除しました')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.delete)),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('削除エラー: $e')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.delete)),
           );
         }
       }
@@ -461,20 +461,20 @@ class _TemplateScreenState extends State<TemplateScreen> with SingleTickerProvid
 
   /// 部位別アイコン
   IconData _getMuscleGroupIcon(String muscleGroup) {
-    switch (muscleGroup) {
-      case '胸':
-        return Icons.favorite;
-      case '背中':
-        return Icons.backpack;
-      case '脚':
-        return Icons.directions_run;
-      case '肩':
-        return Icons.fitness_center;
-      case '二頭':
-      case '三頭':
-        return Icons.front_hand;
-      default:
-        return Icons.fitness_center;
+    final l10n = AppLocalizations.of(context)!;
+    
+    if (muscleGroup == l10n.bodyPartChest) {
+      return Icons.favorite;
+    } else if (muscleGroup == l10n.bodyPartBack) {
+      return Icons.backpack;
+    } else if (muscleGroup == l10n.bodyPartLegs) {
+      return Icons.directions_run;
+    } else if (muscleGroup == l10n.bodyPartShoulders) {
+      return Icons.fitness_center;
+    } else if (muscleGroup == l10n.bodyPartBiceps || muscleGroup == l10n.bodyPartTriceps) {
+      return Icons.front_hand;
+    } else {
+      return Icons.fitness_center;
     }
   }
 }

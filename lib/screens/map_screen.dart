@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -65,16 +66,15 @@ class _MapScreenState extends State<MapScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.location_on, color: Colors.blue),
             SizedBox(width: 8),
-            Text('位置情報を使用しますか？'),
+            Text(AppLocalizations.of(context)!.general_3b4e37f6),
           ],
         ),
-        content: const Text(
-          'あなたの近くのジムを検索するために位置情報を使用します。\n\n'
-          '※位置情報は検索のみに使用され、保存されません。',
+        content: Text(
+          '${AppLocalizations.of(context)!.searchGym}\n※位置情報は検索のみに使用され、保存されません。',
           style: TextStyle(fontSize: 14),
         ),
         actions: [
@@ -86,7 +86,7 @@ class _MapScreenState extends State<MapScreen> {
                 Navigator.pop(context);
               }
             },
-            child: const Text('後で'),
+            child: Text(AppLocalizations.of(context)!.later),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -97,7 +97,7 @@ class _MapScreenState extends State<MapScreen> {
                 _acquireLocationAndSearch();
               }
             },
-            child: const Text('はい、使用します'),
+            child: Text(AppLocalizations.of(context)!.general_c01ec2ac),
           ),
         ],
       ),
@@ -145,27 +145,27 @@ class _MapScreenState extends State<MapScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    '位置情報を取得できませんでした',
+                    AppLocalizations.of(context)!.general_8b92a0e1,
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     kIsWeb 
-                      ? 'ブラウザで位置情報を許可してください'
-                      : '端末の位置情報設定を確認してください',
+                      ? AppLocalizations.of(context)!.general_e4a4a1d1
+                      : AppLocalizations.of(context)!.confirm,
                     style: const TextStyle(fontSize: 12),
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    '東京駅周辺のジムを表示しています',
+                    AppLocalizations.of(context)!.general_3d380ed0,
                     style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                   ),
                 ],
               ),
               backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 5),
+              duration: Duration(seconds: 5),
               action: SnackBarAction(
-                label: '再試行',
+                label: AppLocalizations.of(context)!.tryAgain,
                 textColor: Colors.white,
                 onPressed: _acquireLocationAndSearch,
               ),
@@ -238,8 +238,8 @@ class _MapScreenState extends State<MapScreen> {
             facilities: place.types,
             phoneNumber: '',
             openingHours: place.openNow != null 
-                ? (place.openNow! ? '営業中' : '営業時間外')
-                : '営業時間不明',
+                ? (place.openNow! ? AppLocalizations.of(context)!.open : AppLocalizations.of(context)!.general_a2082b23)
+                : AppLocalizations.of(context)!.general_88133d74,
             monthlyFee: 0,
             rating: place.rating ?? 0.0,
             reviewCount: place.userRatingsTotal ?? 0,
@@ -312,15 +312,15 @@ class _MapScreenState extends State<MapScreen> {
         if (searchSucceeded && gyms.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('周辺の${gyms.length}件のジムを検索しました'),
+              content: Text(AppLocalizations.of(context)!.searchGym),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 2),
             ),
           );
         } else if (searchSucceeded && gyms.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('この地域にはジムが見つかりませんでした'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.general_fe7a7194),
               backgroundColor: Colors.orange,
               duration: Duration(seconds: 3),
             ),
@@ -328,11 +328,11 @@ class _MapScreenState extends State<MapScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('ジム検索に失敗しました。もう一度お試しください'),
+              content: Text(AppLocalizations.of(context)!.searchGym),
               backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
+              duration: Duration(seconds: 3),
               action: SnackBarAction(
-                label: '再試行',
+                label: AppLocalizations.of(context)!.tryAgain,
                 textColor: Colors.white,
                 onPressed: _acquireLocationAndSearch,
               ),
@@ -391,7 +391,7 @@ class _MapScreenState extends State<MapScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('検索に失敗しました: $e'),
+            content: Text(AppLocalizations.of(context)!.searchGym),
             backgroundColor: Colors.red,
           ),
         );
@@ -407,7 +407,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ジムマップ'),
+        title: Text(AppLocalizations.of(context)!.general_8a9d68db),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -437,10 +437,10 @@ class _MapScreenState extends State<MapScreen> {
               child: Row(
                 children: [
                   const Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '現在地周辺のジムを検索するには、下の「現在地」ボタンをタップ',
+                      AppLocalizations.of(context)!.searchGym,
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.blue[700],
@@ -464,10 +464,10 @@ class _MapScreenState extends State<MapScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '現在地を取得中... 近くのジムを検索しています',
+                      AppLocalizations.of(context)!.searchGym,
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.green[700],
@@ -518,8 +518,8 @@ class _MapScreenState extends State<MapScreen> {
                 height: 20,
                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
               )
-            : const Icon(Icons.my_location),
-        label: Text(_isLoadingGPS ? '検索中...' : '現在地'),
+            : Icon(Icons.my_location),
+        label: Text(_isLoadingGPS ? '検索中...' : AppLocalizations.of(context)!.currentLocation),
       ),
     );
   }
@@ -534,14 +534,14 @@ class _MapScreenState extends State<MapScreen> {
             const Icon(Icons.search_off, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
             const Text(
-              '近くにジムが見つかりませんでした',
+              AppLocalizations.of(context)!.general_303bea53,
               style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _acquireLocationAndSearch,
-              icon: const Icon(Icons.refresh),
-              label: const Text('再検索'),
+              icon: Icon(Icons.refresh),
+              label: Text(AppLocalizations.of(context)!.searchGym),
             ),
           ],
         ),
@@ -571,7 +571,7 @@ class _MapScreenState extends State<MapScreen> {
                 Icon(Icons.search_off, size: 64, color: Colors.grey),
                 SizedBox(height: 16),
                 Text(
-                  '条件に一致するジムが見つかりません',
+                  AppLocalizations.of(context)!.general_25d11492,
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
               ],
@@ -617,8 +617,8 @@ class _MapScreenState extends State<MapScreen> {
       child: Row(
         children: [
           const Icon(Icons.people, size: 20),
-          const SizedBox(width: 8),
-          const Text('混雑度フィルター:', style: TextStyle(fontWeight: FontWeight.bold)),
+          SizedBox(width: 8),
+          Text(AppLocalizations.of(context)!.workoutTypeFilter, style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(width: 16),
           Expanded(
             child: Slider(
@@ -696,7 +696,7 @@ class _MapScreenState extends State<MapScreen> {
                               color: Colors.amber[700],
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
@@ -705,7 +705,7 @@ class _MapScreenState extends State<MapScreen> {
                                 ),
                                 SizedBox(width: 2),
                                 Text(
-                                  '広告',
+                                  AppLocalizations.of(context)!.noAds,
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -800,11 +800,11 @@ class _MapScreenState extends State<MapScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('フィルター設定'),
+        title: Text(AppLocalizations.of(context)!.workoutTypeFilter),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('混雑度の上限を選択'),
+            Text(AppLocalizations.of(context)!.selectExercise),
             const SizedBox(height: 16),
             StatefulBuilder(
               builder: (context, setState) {
@@ -830,14 +830,14 @@ class _MapScreenState extends State<MapScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               setState(() {}); // 外側のStateも更新
             },
-            child: const Text('適用'),
+            child: Text(AppLocalizations.of(context)!.apply),
           ),
         ],
       ),
@@ -847,17 +847,17 @@ class _MapScreenState extends State<MapScreen> {
   String _getCrowdLevelText(int level) {
     switch (level) {
       case 1:
-        return '空いています';
+        return AppLocalizations.of(context)!.gym_e662330d;
       case 2:
-        return 'やや空き';
+        return AppLocalizations.of(context)!.moderatelyEmpty;
       case 3:
-        return '普通';
+        return AppLocalizations.of(context)!.normal;
       case 4:
-        return 'やや混雑';
+        return AppLocalizations.of(context)!.moderatelyCrowded;
       case 5:
-        return '超混雑';
+        return AppLocalizations.of(context)!.gym_181af51b;
       default:
-        return '不明';
+        return AppLocalizations.of(context)!.unknown;
     }
   }
 

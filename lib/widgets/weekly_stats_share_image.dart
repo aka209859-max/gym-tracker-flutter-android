@@ -41,7 +41,7 @@ class WeeklyStatsShareImage extends StatelessWidget {
             
             // タイトル
             const Text(
-              '週間トレーニング統計',
+              AppLocalizations.of(context)!.general_5fb75911,
               style: TextStyle(
                 fontSize: 56,
                 fontWeight: FontWeight.bold,
@@ -66,9 +66,9 @@ class WeeklyStatsShareImage extends StatelessWidget {
             // 統計カード
             _buildStatCard(
               icon: Icons.fitness_center,
-              label: 'トレーニング回数',
+              label: AppLocalizations.of(context)!.workoutCount,
               value: '$totalWorkouts',
-              unit: '回',
+              unit: AppLocalizations.of(context)!.workoutRepsLabel,
               color: Colors.blue,
             ),
             
@@ -76,9 +76,9 @@ class WeeklyStatsShareImage extends StatelessWidget {
             
             _buildStatCard(
               icon: Icons.show_chart,
-              label: '総ボリューム',
+              label: AppLocalizations.of(context)!.general_fd707892,
               value: _formatVolume(totalVolume),
-              unit: 'kg',
+              unit: AppLocalizations.of(context)!.kg,
               color: Colors.orange,
             ),
             
@@ -86,9 +86,9 @@ class WeeklyStatsShareImage extends StatelessWidget {
             
             _buildStatCard(
               icon: Icons.grid_on,
-              label: 'トレーニング部位',
+              label: AppLocalizations.of(context)!.general_0f8ad912,
               value: '$muscleGroupsCount',
-              unit: '部位',
+              unit: AppLocalizations.of(context)!.bodyPart,
               color: Colors.green,
             ),
             
@@ -96,9 +96,9 @@ class WeeklyStatsShareImage extends StatelessWidget {
             
             _buildStatCard(
               icon: Icons.trending_up,
-              label: '平均ボリューム/回',
+              label: AppLocalizations.of(context)!.general_1f8930f3,
               value: _formatVolume(avgVolumePerWorkout),
-              unit: 'kg',
+              unit: AppLocalizations.of(context)!.kg,
               color: Colors.pink,
             ),
             

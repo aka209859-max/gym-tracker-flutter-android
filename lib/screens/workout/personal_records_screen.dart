@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,7 +21,7 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen>
   String? _selectedExercise;
   bool _isLoadingExercises = true;
 
-  final List<String> _periods = ['1ヶ月', '2ヶ月', '3ヶ月', '6ヶ月', '9ヶ月', '1年'];
+  final List<String> _periods = [AppLocalizations.of(context)!.workout_133db81d, AppLocalizations.of(context)!.workout_962e3667, AppLocalizations.of(context)!.workout_a5546a18, AppLocalizations.of(context)!.workout_c6912d4d, AppLocalizations.of(context)!.workout_160f26bf, AppLocalizations.of(context)!.workout_2c6e4910];
   List<String> _exercises = [];
 
   @override
@@ -118,7 +119,7 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen>
       builder: (context, authSnapshot) {
         if (authSnapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            appBar: AppBar(title: const Text('パーソナルレコード')),
+            appBar: AppBar(title: Text(AppLocalizations.of(context)!.personalRecord)),
             body: const Center(
               child: CircularProgressIndicator(),
             ),
@@ -128,16 +129,16 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen>
         final user = authSnapshot.data;
         if (user == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('パーソナルレコード')),
+            appBar: AppBar(title: Text(AppLocalizations.of(context)!.personalRecord)),
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('ログインに失敗しました'),
-                  const SizedBox(height: 16),
+                  Text(AppLocalizations.of(context)!.loginError),
+                  SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: _autoLoginIfNeeded,
-                    child: const Text('再試行'),
+                    child: Text(AppLocalizations.of(context)!.tryAgain),
                   ),
                 ],
               ),
@@ -155,14 +156,14 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen>
     // 種目リスト読み込み中
     if (_isLoadingExercises) {
       return Scaffold(
-        appBar: AppBar(title: const Text('パーソナルレコード')),
-        body: const Center(
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.personalRecord)),
+        body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 16),
-              Text('種目を読み込み中...'),
+              Text(AppLocalizations.of(context)!.loading),
             ],
           ),
         ),
@@ -172,20 +173,20 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen>
     // 種目がない場合
     if (_exercises.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('パーソナルレコード')),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.personalRecord)),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.fitness_center, size: 64, color: Colors.grey[400]),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Text(
-                'まだトレーニング記録がありません',
+                AppLocalizations.of(context)!.noWorkoutRecords,
                 style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               ),
               const SizedBox(height: 8),
               Text(
-                'トレーニングを記録すると、ここに表示されます',
+                AppLocalizations.of(context)!.workout_27312ddb,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: Colors.grey[500]),
               ),
@@ -197,18 +198,18 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen>
 
     // 🔧 v1.0.251: 部位別カテゴリー表示（胸・背中・肩・二頭・三頭・腹筋・脚）
     return Scaffold(
-      appBar: AppBar(title: const Text('パーソナルレコード')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.personalRecord)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildBodyPartCategory(user.uid, '胸', Icons.fitness_center, Colors.red),
-          _buildBodyPartCategory(user.uid, '背中', Icons.fitness_center, Colors.blue),
-          _buildBodyPartCategory(user.uid, '肩', Icons.fitness_center, Colors.orange),
-          _buildBodyPartCategory(user.uid, '二頭', Icons.fitness_center, Colors.purple),
-          _buildBodyPartCategory(user.uid, '三頭', Icons.fitness_center, Colors.pink),
-          _buildBodyPartCategory(user.uid, '腹筋', Icons.fitness_center, Colors.green),
-          _buildBodyPartCategory(user.uid, '脚', Icons.fitness_center, Colors.brown),
-          _buildBodyPartCategory(user.uid, '有酸素', Icons.directions_run, Colors.teal),
+          _buildBodyPartCategory(user.uid, AppLocalizations.of(context)!.bodyPartChest, Icons.fitness_center, Colors.red),
+          _buildBodyPartCategory(user.uid, AppLocalizations.of(context)!.bodyPartBack, Icons.fitness_center, Colors.blue),
+          _buildBodyPartCategory(user.uid, AppLocalizations.of(context)!.bodyPartShoulders, Icons.fitness_center, Colors.orange),
+          _buildBodyPartCategory(user.uid, AppLocalizations.of(context)!.bodyPartBiceps, Icons.fitness_center, Colors.purple),
+          _buildBodyPartCategory(user.uid, AppLocalizations.of(context)!.bodyPartTriceps, Icons.fitness_center, Colors.pink),
+          _buildBodyPartCategory(user.uid, AppLocalizations.of(context)!.bodyPart_ceb49fa1, Icons.fitness_center, Colors.green),
+          _buildBodyPartCategory(user.uid, AppLocalizations.of(context)!.bodyPartLegs, Icons.fitness_center, Colors.brown),
+          _buildBodyPartCategory(user.uid, AppLocalizations.of(context)!.exerciseCardio, Icons.directions_run, Colors.teal),
         ],
       ),
     );
@@ -282,7 +283,7 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen>
           exerciseName,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: const Text('タップして推移を確認'),
+        subtitle: Text(AppLocalizations.of(context)!.confirm),
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
           // 詳細画面（グラフ）へ遷移
@@ -319,7 +320,7 @@ class PRDetailScreen extends StatefulWidget {
 class _PRDetailScreenState extends State<PRDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final List<String> _periods = ['1ヶ月', '2ヶ月', '3ヶ月', '6ヶ月', '9ヶ月', '1年'];
+  final List<String> _periods = [AppLocalizations.of(context)!.workout_133db81d, AppLocalizations.of(context)!.workout_962e3667, AppLocalizations.of(context)!.workout_a5546a18, AppLocalizations.of(context)!.workout_c6912d4d, AppLocalizations.of(context)!.workout_160f26bf, AppLocalizations.of(context)!.workout_2c6e4910];
 
   @override
   void initState() {
@@ -383,7 +384,7 @@ class _PeriodView extends StatelessWidget {
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('エラー: ${snapshot.error}'));
+          return Center(child: Text(AppLocalizations.of(context)!.snapshotError(snapshot.error.toString())));
         }
 
         final data = snapshot.data ?? [];
@@ -396,7 +397,7 @@ class _PeriodView extends StatelessWidget {
                 Icon(Icons.fitness_center, size: 64, color: Colors.grey[400]),
                 const SizedBox(height: 16),
                 Text(
-                  'まだ記録がありません',
+                  AppLocalizations.of(context)!.workout_3ca27cb2,
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
               ],
@@ -413,7 +414,7 @@ class _PeriodView extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 child: LineChart(
                   LineChartData(
-                    gridData: const FlGridData(show: true),
+                    gridData: FlGridData(show: true),
                     titlesData: FlTitlesData(
                       leftTitles: AxisTitles(
                         sideTitles: SideTitles(
@@ -422,7 +423,7 @@ class _PeriodView extends StatelessWidget {
                           getTitlesWidget: (value, meta) {
                             // 🔧 v1.0.246: 有酸素運動の場合は「分」、筋トレは「kg」
                             final isCardio = data.isNotEmpty && data.first.isCardio;
-                            final unit = isCardio ? '分' : 'kg';
+                            final unit = isCardio ? AppLocalizations.of(context)!.minutes : AppLocalizations.of(context)!.kg;
                             return Text(
                               '${value.toInt()}$unit',
                               style: const TextStyle(fontSize: 10),
@@ -478,7 +479,7 @@ class _PeriodView extends StatelessWidget {
               ),
 
               // 成長統計
-              if (data.length >= 2) _buildGrowthStats(data),
+              if (data.length >= 2) _buildGrowthStats(context, data),
 
               // 記録リスト
               _buildRecordsList(data),
@@ -495,22 +496,22 @@ class _PeriodView extends StatelessWidget {
     DateTime startDate;
 
     switch (period) {
-      case '1ヶ月':
+      case AppLocalizations.of(context)!.workout_133db81d:
         startDate = DateTime(now.year, now.month - 1, now.day);
         break;
-      case '2ヶ月':
+      case AppLocalizations.of(context)!.workout_962e3667:
         startDate = DateTime(now.year, now.month - 2, now.day);
         break;
-      case '3ヶ月':
+      case AppLocalizations.of(context)!.workout_a5546a18:
         startDate = DateTime(now.year, now.month - 3, now.day);
         break;
-      case '6ヶ月':
+      case AppLocalizations.of(context)!.workout_c6912d4d:
         startDate = DateTime(now.year, now.month - 6, now.day);
         break;
-      case '9ヶ月':
+      case AppLocalizations.of(context)!.workout_160f26bf:
         startDate = DateTime(now.year, now.month - 9, now.day);
         break;
-      case '1年':
+      case AppLocalizations.of(context)!.workout_2c6e4910:
         startDate = DateTime(now.year - 1, now.month, now.day);
         break;
       default:
@@ -600,7 +601,7 @@ class _PeriodView extends StatelessWidget {
     return weight * (1 + reps / 30.0);
   }
 
-  Widget _buildGrowthStats(List<PersonalRecord> data) {
+  Widget _buildGrowthStats(BuildContext context, List<PersonalRecord> data) {
     final start = data.first;
     final current = data.last;
     final isCardio = start.isCardio;  // 🔧 v1.0.246: 有酸素運動判定
@@ -609,8 +610,8 @@ class _PeriodView extends StatelessWidget {
     final growthPercent = (growthValue / start.calculated1RM) * 100;
     
     // 🔧 v1.0.246: 有酸素は「時間」、筋トレは「1RM」
-    final label = isCardio ? '時間' : '1RM';
-    final unit = isCardio ? '分' : 'kg';
+    final label = isCardio ? AppLocalizations.of(context)!.time : AppLocalizations.of(context)!.oneRepMax;
+    final unit = isCardio ? AppLocalizations.of(context)!.minutes : AppLocalizations.of(context)!.kg;
 
     return Card(
       margin: const EdgeInsets.all(16),
@@ -660,12 +661,11 @@ class _PeriodView extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             const Divider(),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Center(
               child: Column(
                 children: [
-                  const Text(
-                    '成長',
+                  Text(AppLocalizations.of(context)!.executeGrowthPrediction,
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   const SizedBox(height: 4),
@@ -695,7 +695,7 @@ class _PeriodView extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.all(16),
             child: Text(
-              '記録履歴',
+              AppLocalizations.of(context)!.workout_16013f46,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
@@ -775,7 +775,7 @@ class ExerciseListScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'トレーニングを記録すると、ここに表示されます',
+                    AppLocalizations.of(context)!.workout_27312ddb,
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                   ),
@@ -807,7 +807,7 @@ class ExerciseListScreen extends StatelessWidget {
                       exerciseName,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: const Text('タップして推移を確認'),
+                    subtitle: Text(AppLocalizations.of(context)!.confirm),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
                       // 詳細画面（グラフ）へ遷移

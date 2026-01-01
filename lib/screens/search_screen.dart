@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
@@ -62,7 +63,7 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ジム検索'),
+        title: Text(AppLocalizations.of(context)!.gymSearch),
         elevation: 2,
       ),
       body: Column(
@@ -99,7 +100,7 @@ class _SearchScreenState extends State<SearchScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'ジム名・地域で検索...',
+                hintText: AppLocalizations.of(context)!.searchPlaceholder,
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -147,7 +148,7 @@ class _SearchScreenState extends State<SearchScreen> {
               },
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           ElevatedButton(
             onPressed: _searchQuery.isEmpty || _isSearching ? null : _applyFilters,
             style: ElevatedButton.styleFrom(
@@ -162,7 +163,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('検索'),
+                : Text(AppLocalizations.of(context)!.search),
           ),
         ],
       ),
@@ -189,9 +190,9 @@ class _SearchScreenState extends State<SearchScreen> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.my_location),
+                      : Icon(Icons.my_location),
                   label: Text(_currentPosition == null
-                      ? 'GPS位置を取得'
+                      ? AppLocalizations.of(context)!.getGpsLocation
                       : 'GPS: ${_currentPosition!.latitude.toStringAsFixed(4)}, ${_currentPosition!.longitude.toStringAsFixed(4)}'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -199,7 +200,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
               if (_currentPosition != null) ...[
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 IconButton(
                   icon: const Icon(Icons.clear),
                   onPressed: () {
@@ -211,15 +212,15 @@ class _SearchScreenState extends State<SearchScreen> {
                       }
                     });
                   },
-                  tooltip: '現在地検索をクリア',
+                  tooltip: AppLocalizations.of(context)!.searchGym,
                 ),
               ],
             ],
           ),
           if (_currentPosition != null) ...[
-            const SizedBox(height: 12),
-            const Text(
-              '検索半径',
+            SizedBox(height: 12),
+            Text(
+                          AppLocalizations.of(context)!.searchGym,
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
             Row(
@@ -257,13 +258,13 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildSearchResults() {
     // ローディング中
     if (_isSearching) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('全国のジムを検索中...'),
+            Text(AppLocalizations.of(context)!.searchGym),
           ],
         ),
       );
@@ -289,10 +290,10 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             ElevatedButton(
               onPressed: _applyFilters,
-              child: const Text('再検索'),
+              child: Text(AppLocalizations.of(context)!.searchGym),
             ),
           ],
         ),
@@ -310,11 +311,11 @@ class _SearchScreenState extends State<SearchScreen> {
               size: 64,
               color: Colors.grey.shade400,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               _currentPosition != null || _searchQuery.isNotEmpty
-                  ? '検索結果が見つかりません'
-                  : 'GPS位置検索またはテキスト検索を開始してください',
+                  ? AppLocalizations.of(context)!.general_89ea4973
+                  : AppLocalizations.of(context)!.startGpsOrTextSearch,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey.shade600,
@@ -428,8 +429,8 @@ class _SearchScreenState extends State<SearchScreen> {
                           });
                         }
                       : null,
-                  icon: const Icon(Icons.chevron_left),
-                  label: const Text('前へ'),
+                  icon: Icon(Icons.chevron_left),
+                  label: Text(AppLocalizations.of(context)!.previous),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue[600],
                     foregroundColor: Colors.white,
@@ -455,8 +456,8 @@ class _SearchScreenState extends State<SearchScreen> {
                           });
                         }
                       : null,
-                  icon: const Icon(Icons.chevron_right),
-                  label: const Text('次へ'),
+                  icon: Icon(Icons.chevron_right),
+                  label: Text(AppLocalizations.of(context)!.next),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue[600],
                     foregroundColor: Colors.white,
@@ -522,7 +523,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               color: Colors.amber[700],
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
@@ -531,7 +532,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 ),
                                 SizedBox(width: 2),
                                 Text(
-                                  '広告',
+                                  AppLocalizations.of(context)!.noAds,
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -623,20 +624,20 @@ class _SearchScreenState extends State<SearchScreen> {
                     ],
                     // ビジター可バッジ
                     if (gym.acceptsVisitors) ...[
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
                           color: Colors.blue[600],
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.check_circle, size: 12, color: Colors.white),
                             SizedBox(width: 4),
                             Text(
-                              'ビジター可',
+                              AppLocalizations.of(context)!.visitorWelcome,
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
@@ -771,8 +772,8 @@ class _SearchScreenState extends State<SearchScreen> {
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('位置情報を取得できませんでした。東京駅周辺で検索します。'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.searchGym),
               backgroundColor: Colors.orange,
               duration: Duration(seconds: 3),
             ),
@@ -929,7 +930,7 @@ class _SearchScreenState extends State<SearchScreen> {
     } catch (e) {
       if (kDebugMode) {
         print('❌ 検索エラー: $e');
-        print('   検索タイプ: ${_searchQuery.isNotEmpty ? "テキスト検索" : "GPS検索"}');
+        print('   検索タイプ: ${_searchQuery.isNotEmpty ? AppLocalizations.of(context)!.textSearch : "GPS検索"}');
         if (_currentPosition != null) {
           print('   GPS座標: ${_currentPosition!.latitude}, ${_currentPosition!.longitude}');
         }
@@ -939,13 +940,13 @@ class _SearchScreenState extends State<SearchScreen> {
       }
       
       // ユーザーフレンドリーなエラーメッセージ
-      String userMessage = 'ジムの検索に失敗しました';
+      String userMessage = AppLocalizations.of(context)!.searchFailed;
       if (e.toString().contains('ClientException')) {
-        userMessage = 'ネットワークエラー: API接続に失敗しました\n\nHTTPリファラー制限を確認してください';
+        userMessage = AppLocalizations.of(context)!.networkError;
       } else if (e.toString().contains('REQUEST_DENIED')) {
-        userMessage = 'APIキーエラー: アクセスが拒否されました';
+        userMessage = AppLocalizations.of(context)!.apiKeyError;
       } else if (e.toString().contains('ZERO_RESULTS')) {
-        userMessage = '検索結果が見つかりませんでした';
+        userMessage = AppLocalizations.of(context)!.searchGym;
       }
       
       setState(() {
@@ -956,7 +957,7 @@ class _SearchScreenState extends State<SearchScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('検索に失敗しました: $e'),
+            content: Text(AppLocalizations.of(context)!.searchGym),
             backgroundColor: Colors.red,
           ),
         );

@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -134,19 +135,19 @@ class _AuthScreenState extends State<AuthScreen> {
   String _getErrorMessage(String code) {
     switch (code) {
       case 'user-not-found':
-        return 'このメールアドレスは登録されていません';
+        return AppLocalizations.of(context)!.emailNotRegistered;
       case 'wrong-password':
-        return 'パスワードが正しくありません';
+        return AppLocalizations.of(context)!.incorrectPassword;
       case 'email-already-in-use':
-        return 'このメールアドレスは既に使用されています';
+        return AppLocalizations.of(context)!.emailNotRegistered;
       case 'invalid-email':
-        return 'メールアドレスの形式が正しくありません';
+        return AppLocalizations.of(context)!.invalidEmailFormat;
       case 'weak-password':
-        return 'パスワードは6文字以上で設定してください';
+        return AppLocalizations.of(context)!.passwordMin6;
       case 'network-request-failed':
-        return 'ネットワーク接続を確認してください';
+        return AppLocalizations.of(context)!.general_4b85b706;
       default:
-        return '認証エラーが発生しました: $code';
+        return AppLocalizations.of(context)!.error;
     }
   }
 
@@ -176,7 +177,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'フィットネスソーシャルマップ',
+                  AppLocalizations.of(context)!.general_3fc0f668,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[600],
                       ),
@@ -194,14 +195,14 @@ class _AuthScreenState extends State<AuthScreen> {
                           padding: const EdgeInsets.only(bottom: 16),
                           child: TextFormField(
                             controller: _nameController,
-                            decoration: const InputDecoration(
-                              labelText: '名前',
+                            decoration: InputDecoration(
+                              labelText: AppLocalizations.of(context)!.name,
                               prefixIcon: Icon(Icons.person),
                               border: OutlineInputBorder(),
                             ),
                             validator: (value) {
                               if (!_isLogin && (value == null || value.trim().isEmpty)) {
-                                return '名前を入力してください';
+                                return AppLocalizations.of(context)!.general_98d98661;
                               }
                               return null;
                             },
@@ -211,18 +212,18 @@ class _AuthScreenState extends State<AuthScreen> {
                       // メールアドレス入力
                       TextFormField(
                         controller: _emailController,
-                        decoration: const InputDecoration(
-                          labelText: 'メールアドレス',
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)!.email,
                           prefixIcon: Icon(Icons.email),
                           border: OutlineInputBorder(),
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'メールアドレスを入力してください';
+                            return AppLocalizations.of(context)!.emailRequired;
                           }
                           if (!value.contains('@')) {
-                            return '正しいメールアドレスを入力してください';
+                            return AppLocalizations.of(context)!.enterValidEmailAddress;
                           }
                           return null;
                         },
@@ -232,18 +233,18 @@ class _AuthScreenState extends State<AuthScreen> {
                       // パスワード入力
                       TextFormField(
                         controller: _passwordController,
-                        decoration: const InputDecoration(
-                          labelText: 'パスワード',
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)!.password,
                           prefixIcon: Icon(Icons.lock),
                           border: OutlineInputBorder(),
                         ),
                         obscureText: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'パスワードを入力してください';
+                            return AppLocalizations.of(context)!.passwordRequired;
                           }
                           if (value.length < 6) {
-                            return 'パスワードは6文字以上で入力してください';
+                            return AppLocalizations.of(context)!.passwordMin6;
                           }
                           return null;
                         },
@@ -286,7 +287,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                   ),
                                 )
                               : Text(
-                                  _isLogin ? 'ログイン' : '新規登録',
+                                  _isLogin ? AppLocalizations.of(context)!.login : AppLocalizations.of(context)!.signUp,
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -308,8 +309,8 @@ class _AuthScreenState extends State<AuthScreen> {
                               },
                         child: Text(
                           _isLogin
-                              ? 'アカウントをお持ちでない方はこちら'
-                              : '既にアカウントをお持ちの方はこちら',
+                              ? AppLocalizations.of(context)!.dontHaveAccount
+                              : AppLocalizations.of(context)!.general_8fc2afad,
                         ),
                       ),
                     ],
@@ -320,7 +321,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
                 // 利用規約・プライバシーポリシー
                 Text(
-                  '続行することで、利用規約とプライバシーポリシーに同意したものとみなされます',
+                  AppLocalizations.of(context)!.general_cef07c55,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],

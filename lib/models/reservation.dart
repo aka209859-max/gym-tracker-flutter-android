@@ -62,13 +62,13 @@ class Reservation {
   String get statusText {
     switch (status) {
       case 'pending':
-        return '申込済';
+        return AppLocalizations.of(context)!.general_044f232e;
       case 'confirmed':
-        return '確定';
+        return AppLocalizations.of(context)!.subscription_84b9d24c;
       case 'cancelled':
-        return 'キャンセル';
+        return AppLocalizations.of(context)!.buttonCancel;
       default:
-        return '不明';
+        return AppLocalizations.of(context)!.unknown;
     }
   }
 }

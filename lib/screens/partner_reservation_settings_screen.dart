@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/gym.dart';
@@ -59,7 +60,7 @@ class _PartnerReservationSettingsScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('データ読み込みエラー: $e'),
+            content: Text(AppLocalizations.of(context)!.dataLoadError),
             backgroundColor: Colors.red,
           ),
         );
@@ -86,7 +87,7 @@ class _PartnerReservationSettingsScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('✅ 予約設定を更新しました！'),
             backgroundColor: Colors.green,
           ),
@@ -115,7 +116,7 @@ class _PartnerReservationSettingsScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ビジター予約設定'),
+        title: Text(AppLocalizations.of(context)!.settings),
         backgroundColor: Colors.orange[700],
         actions: [
           if (!_isLoading)
@@ -131,7 +132,7 @@ class _PartnerReservationSettingsScreenState
                     )
                   : const Icon(Icons.save),
               onPressed: _isSaving ? null : _saveSettings,
-              tooltip: '保存',
+              tooltip: AppLocalizations.of(context)!.save,
             ),
         ],
       ),
@@ -197,10 +198,10 @@ class _PartnerReservationSettingsScreenState
                         children: [
                           Icon(Icons.info_outline,
                               color: Colors.blue[700], size: 20),
-                          const SizedBox(width: 8),
-                          const Expanded(
+                          SizedBox(width: 8),
+                          Expanded(
                             child: Text(
-                              'ビジター予約を受け付けるかどうかを設定します。\n予約が入ると、指定のメールアドレスに通知が届きます。',
+                              AppLocalizations.of(context)!.settings,
                               style: TextStyle(fontSize: 13),
                             ),
                           ),
@@ -220,7 +221,7 @@ class _PartnerReservationSettingsScreenState
                           });
                         },
                         title: const Text(
-                          'ビジター利用を受け付ける',
+                          AppLocalizations.of(context)!.profile_285758a8,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -228,8 +229,8 @@ class _PartnerReservationSettingsScreenState
                         ),
                         subtitle: Text(
                           _acceptsVisitors
-                              ? 'ユーザーアプリに「ビジター可」バッジが表示されます'
-                              : '予約ボタンは非表示になります',
+                              ? AppLocalizations.of(context)!.profile_a54b51da
+                              : AppLocalizations.of(context)!.profile_b3857acd,
                           style: const TextStyle(fontSize: 13),
                         ),
                         secondary: Icon(
@@ -244,32 +245,31 @@ class _PartnerReservationSettingsScreenState
                     const SizedBox(height: 24),
 
                     // メールアドレス設定
-                    const Text(
-                      '予約通知先メールアドレス',
+                    Text(AppLocalizations.of(context)!.email,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     TextFormField(
                       controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'メールアドレス *',
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.email,
                         hintText: 'reservation@gym.com',
                         prefixIcon: Icon(Icons.email),
                         border: OutlineInputBorder(),
-                        helperText: '予約が入るとこのアドレスに通知メールが届きます',
+                        helperText: AppLocalizations.of(context)!.email,
                       ),
                       keyboardType: TextInputType.emailAddress,
                       enabled: _acceptsVisitors,
                       validator: (value) {
                         if (_acceptsVisitors) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'メールアドレスを入力してください';
+                            return AppLocalizations.of(context)!.emailRequired;
                           }
                           if (!value.contains('@')) {
-                            return '正しいメールアドレスを入力してください';
+                            return AppLocalizations.of(context)!.enterValidEmailAddress;
                           }
                         }
                         return null;
@@ -307,13 +307,13 @@ class _PartnerReservationSettingsScreenState
                     // プレビュー
                     if (_acceptsVisitors) ...[
                       const Text(
-                        'ユーザーアプリでの表示プレビュー',
+                        AppLocalizations.of(context)!.profile_599b1faa,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                       Card(
                         elevation: 4,
                         child: Padding(
@@ -330,14 +330,14 @@ class _PartnerReservationSettingsScreenState
                                       color: Colors.blue[600],
                                       borderRadius: BorderRadius.circular(4),
                                     ),
-                                    child: const Row(
+                                    child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(Icons.check_circle,
                                             size: 12, color: Colors.white),
                                         SizedBox(width: 4),
                                         Text(
-                                          'ビジター可',
+                                          AppLocalizations.of(context)!.visitorWelcome,
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.bold,
@@ -349,7 +349,7 @@ class _PartnerReservationSettingsScreenState
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 12),
+                              SizedBox(height: 12),
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
@@ -362,10 +362,10 @@ class _PartnerReservationSettingsScreenState
                                   children: [
                                     Icon(Icons.calendar_today,
                                         color: Colors.orange[700]),
-                                    const SizedBox(width: 12),
-                                    const Expanded(
+                                    SizedBox(width: 12),
+                                    Expanded(
                                       child: Text(
-                                        'ビジター予約申込',
+                                        AppLocalizations.of(context)!.visitorBooking,
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
@@ -400,9 +400,8 @@ class _PartnerReservationSettingsScreenState
                                       Colors.white),
                                 ),
                               )
-                            : const Icon(Icons.save),
-                        label: const Text(
-                          '予約設定を保存',
+                            : Icon(Icons.save),
+                        label: Text(AppLocalizations.of(context)!.save,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

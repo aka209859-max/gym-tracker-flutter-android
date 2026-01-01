@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/trainer_workout_service.dart';
@@ -33,7 +34,7 @@ class _TrainerRecordsScreenState extends State<TrainerRecordsScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null || user.email == null) {
-        throw Exception('ログインしていません');
+        throw Exception(AppLocalizations.of(context)!.login);
       }
 
       final records = await _service.getSharedWorkoutRecordsByEmail(
@@ -46,7 +47,7 @@ class _TrainerRecordsScreenState extends State<TrainerRecordsScreen> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'トレーナー記録の取得に失敗しました';
+        _errorMessage = AppLocalizations.of(context)!.error_3c788910;
         _isLoading = false;
       });
     }
@@ -56,7 +57,7 @@ class _TrainerRecordsScreenState extends State<TrainerRecordsScreen> {
   void _onRecordSaved() {
     // 保存成功メッセージ
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text('✅ トレーニング記録を保存しました'),
         backgroundColor: Colors.green,
         duration: Duration(seconds: 2),
@@ -71,8 +72,8 @@ class _TrainerRecordsScreenState extends State<TrainerRecordsScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          'パーソナルトレーニング',
+        title: Text(
+                          AppLocalizations.of(context)!.personalTraining,
           style: TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -110,9 +111,9 @@ class _TrainerRecordsScreenState extends State<TrainerRecordsScreen> {
                       size: 30,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'パーソナルトレーニング',
+                  SizedBox(height: 12),
+                  Text(
+                          AppLocalizations.of(context)!.personalTraining,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -139,8 +140,8 @@ class _TrainerRecordsScreenState extends State<TrainerRecordsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'メニュー',
+                  Text(
+                          AppLocalizations.of(context)!.generateMenu,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -190,7 +191,7 @@ class _TrainerRecordsScreenState extends State<TrainerRecordsScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'トレーナー記録',
+                                      AppLocalizations.of(context)!.general_fae344b2,
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -199,7 +200,7 @@ class _TrainerRecordsScreenState extends State<TrainerRecordsScreen> {
                                     ),
                                     SizedBox(height: 4),
                                     Text(
-                                      'トレーナーが記録したトレーニング履歴',
+                                      AppLocalizations.of(context)!.general_6c8b9d29,
                                       style: TextStyle(
                                         fontSize: 13,
                                         color: Colors.black54,
@@ -244,7 +245,7 @@ class _TrainerRecordsScreenState extends State<TrainerRecordsScreen> {
                               ElevatedButton.icon(
                                 onPressed: _fetchTrainerRecords,
                                 icon: const Icon(Icons.refresh),
-                                label: const Text('再読み込み'),
+                                label: Text(AppLocalizations.of(context)!.general_53b262c8),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.orange,
                                   foregroundColor: Colors.white,
@@ -261,7 +262,7 @@ class _TrainerRecordsScreenState extends State<TrainerRecordsScreen> {
                                   Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[300]),
                                   const SizedBox(height: 16),
                                   const Text(
-                                    'トレーナー記録がありません',
+                                    AppLocalizations.of(context)!.general_f1fa038f,
                                     style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.black54,

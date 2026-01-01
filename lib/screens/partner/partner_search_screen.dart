@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../../models/partner_profile.dart';
 import '../../services/partner_search_service.dart';
@@ -44,23 +45,23 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
 
   // 利用可能なオプション
   final Map<String, String> _trainingGoals = {
-    'muscle_gain': '筋力増強',
-    'weight_loss': '減量',
-    'endurance': '持久力向上',
-    'flexibility': '柔軟性向上',
+    'muscle_gain': AppLocalizations.of(context)!.goalStrengthGain,
+    'weight_loss': AppLocalizations.of(context)!.goalWeightLoss,
+    'endurance': AppLocalizations.of(context)!.goalEndurance,
+    'flexibility': AppLocalizations.of(context)!.goalFlexibility,
   };
 
   final Map<String, String> _experienceLevels = {
-    'beginner': '初心者',
-    'intermediate': '中級者',
-    'advanced': '上級者',
-    'expert': 'エキスパート',
+    'beginner': AppLocalizations.of(context)!.levelBeginner,
+    'intermediate': AppLocalizations.of(context)!.levelIntermediate,
+    'advanced': AppLocalizations.of(context)!.levelAdvanced,
+    'expert': AppLocalizations.of(context)!.levelExpert,
   };
 
   final Map<String, String> _genders = {
-    'male': '男性',
-    'female': '女性',
-    'other': 'その他',
+    'male': AppLocalizations.of(context)!.genderMale,
+    'female': AppLocalizations.of(context)!.genderFemale,
+    'other': AppLocalizations.of(context)!.other,
   };
 
   @override
@@ -92,7 +93,7 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
       // 位置情報取得失敗時は続行（フィルターから距離を除外）
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('位置情報を取得できませんでした')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.general_8b92a0e1)),
         );
       }
     }
@@ -136,12 +137,12 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('パートナー検索'),
+        title: Text(AppLocalizations.of(context)!.partnerSearch),
         actions: [
           IconButton(
             icon: const Icon(Icons.person_add),
             onPressed: _navigateToProfileEdit,
-            tooltip: 'プロフィール編集',
+            tooltip: AppLocalizations.of(context)!.editProfile,
           ),
         ],
       ),
@@ -167,8 +168,7 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '検索条件',
+            Text(AppLocalizations.of(context)!.searchConditions,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -178,7 +178,7 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
             
             // 距離フィルター
             if (_currentLatitude != null && _currentLongitude != null) ...[
-              Text('検索範囲: ${_maxDistanceKm.toStringAsFixed(1)} km'),
+              Text(AppLocalizations.of(context)!.searchGym),
               Slider(
                 value: _maxDistanceKm,
                 min: 1.0,
@@ -195,7 +195,7 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
             ],
 
             // トレーニング目標フィルター
-            const Text('トレーニング目標', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(AppLocalizations.of(context)!.profile_c7511bf1, style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -219,7 +219,7 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
             const SizedBox(height: 16),
 
             // 経験レベルフィルター
-            const Text('経験レベル', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(AppLocalizations.of(context)!.experienceLevel, style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -239,7 +239,7 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
             const SizedBox(height: 16),
 
             // 性別フィルター
-            const Text('性別', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(AppLocalizations.of(context)!.gender, style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -291,7 +291,7 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
               const Padding(
                 padding: EdgeInsets.only(top: 4),
                 child: Text(
-                  'あなたのBIG3平均1RMの±15%範囲内のユーザーのみ表示',
+                  AppLocalizations.of(context)!.general_80d43a2b,
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ),
@@ -307,7 +307,7 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
                       const SizedBox(width: 8),
                       const Expanded(
                         child: Text(
-                          '同じジム・時間帯の人のみ（±2時間）',
+                          AppLocalizations.of(context)!.general_726613df,
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -328,7 +328,7 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
               const Padding(
                 padding: EdgeInsets.only(top: 4),
                 child: Text(
-                  'あなたがよく行くジムで、同じ時間帯（±2時間）にトレーニングする人のみ表示',
+                  AppLocalizations.of(context)!.general_aaed5769,
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ),
@@ -339,8 +339,8 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: _isLoading ? null : _searchPartners,
-                icon: const Icon(Icons.search),
-                label: const Text('検索'),
+                icon: Icon(Icons.search),
+                label: Text(AppLocalizations.of(context)!.searchHint),
               ),
             ),
           ],
@@ -364,17 +364,17 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
-              'エラーが発生しました',
+              AppLocalizations.of(context)!.errorGeneric,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(_errorMessage!),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             ElevatedButton(
               onPressed: _searchPartners,
-              child: const Text('再試行'),
+              child: Text(AppLocalizations.of(context)!.retry),
             ),
           ],
         ),
@@ -391,9 +391,9 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
               size: 64,
               color: Colors.grey[400],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
-              '条件を設定して検索してください',
+              AppLocalizations.of(context)!.searchGym,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -416,15 +416,15 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              '条件に一致するパートナーが見つかりませんでした',
+              AppLocalizations.of(context)!.general_07460321,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
-              '検索条件を変更してみてください',
+              AppLocalizations.of(context)!.searchConditions,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[500],
@@ -483,7 +483,7 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Proユーザーのみ表示中',
+                      AppLocalizations.of(context)!.general_4c0c946d,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -491,7 +491,7 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Proプランにアップグレードで全ユーザーを検索可能',
+                      AppLocalizations.of(context)!.general_b96738b9,
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[700],
@@ -667,7 +667,7 @@ class _PartnerSearchScreenState extends State<PartnerSearchScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('エラーが発生しました: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context)!.errorGeneric),
             backgroundColor: Colors.red,
           ),
         );

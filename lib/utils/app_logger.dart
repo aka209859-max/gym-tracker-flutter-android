@@ -14,10 +14,10 @@ import 'package:flutter/foundation.dart';
 /// 
 /// 使用例:
 /// ```dart
-/// AppLogger.debug('デバッグメッセージ');
-/// AppLogger.info('情報メッセージ');
-/// AppLogger.warn('警告メッセージ');
-/// AppLogger.error('エラーメッセージ');
+/// AppLogger.debug(AppLocalizations.of(context)!.general_6a780cce);
+/// AppLogger.info(AppLocalizations.of(context)!.general_b4211e9a);
+/// AppLogger.warn(AppLocalizations.of(context)!.general_77a42488);
+/// AppLogger.error(AppLocalizations.of(context)!.error_7740d54f);
 /// AppLogger.userAction('BUTTON_CLICKED');
 /// ```
 class AppLogger {

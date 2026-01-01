@@ -1,18 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/foundation.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../models/gym.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../models/gym_announcement.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../models/review.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../services/realtime_user_service.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../services/favorites_service.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../services/share_service.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../services/visit_history_service.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../services/crowd_level_service.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import 'crowd_report_screen.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import 'reservation_form_screen.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import 'gym_review_screen.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 
 /// ジム詳細画面
 class GymDetailScreen extends StatefulWidget {
@@ -109,8 +124,8 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
           _isFavorite = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('お気に入りから削除しました'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.removedFromFavorites),
             backgroundColor: Colors.grey,
           ),
         );
@@ -123,8 +138,8 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
           _isFavorite = true;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('お気に入りに追加しました'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.addedToFavorites),
             backgroundColor: Colors.pink,
           ),
         );
@@ -153,8 +168,8 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
       );
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('チェックインに失敗しました'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.checkInFailed),
           backgroundColor: Colors.red,
         ),
       );
@@ -215,7 +230,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'ジム画像',
+                                AppLocalizations.of(context)!.gym_b8b06afd,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.3),
                                   fontSize: 12,
@@ -289,7 +304,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
         backgroundColor: _isFavorite == true ? Colors.pink : Colors.grey[300],
         foregroundColor: _isFavorite == true ? Colors.white : Colors.grey[700],
         icon: Icon(_isFavorite == true ? Icons.favorite : Icons.favorite_border),
-        label: Text(_isFavorite == true ? 'お気に入り登録済み' : _isFavorite == null ? '読み込み中...' : 'お気に入りに追加'),
+        label: Text(_isFavorite == true ? AppLocalizations.of(context)!.alreadyFavorite : _isFavorite == null ? AppLocalizations.of(context)!.loadingWorkouts : AppLocalizations.of(context)!.addToFavorites),
       ),
     );
   }
@@ -319,7 +334,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
       
       if (difference.inHours < 24) {
         displayLevel = gym.currentCrowdLevel;
-        dataSource = 'ユーザー報告';
+        dataSource = AppLocalizations.of(context)!.userReport;
         
         if (kDebugMode) {
           print('   ✅ Using user report: level $displayLevel');
@@ -330,7 +345,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
     // ユーザー報告がなければGoogle APIデータを使用
     if (displayLevel == null && _currentCrowdLevel != null) {
       displayLevel = _currentCrowdLevel;
-      dataSource = 'Google統計';
+      dataSource = AppLocalizations.of(context)!.googleStats;
       
       if (kDebugMode) {
         print('   ✅ Using Google API data: level $displayLevel');
@@ -354,12 +369,12 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                   Icon(Icons.people, color: Colors.grey, size: 24),
                   SizedBox(width: 8),
                   Text(
-                    '混雑度情報',
+                    AppLocalizations.of(context)!.gym_7770984f,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -370,9 +385,9 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                 child: Column(
                   children: [
                     Icon(Icons.help_outline, size: 48, color: Colors.grey[400]),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(
-                      'まだ混雑度情報がありません',
+                      AppLocalizations.of(context)!.noCrowdData,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -381,7 +396,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '最初の報告者になりましょう！',
+                      AppLocalizations.of(context)!.gym_923e40e1,
                       style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                   ],
@@ -400,7 +415,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                     );
                   },
                   icon: const Icon(Icons.edit),
-                  label: const Text('混雑度を報告する'),
+                  label: Text(AppLocalizations.of(context)!.gym_29c93cdb),
                 ),
               ),
             ],
@@ -428,7 +443,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  '現在の混雑度',
+                  AppLocalizations.of(context)!.gym_dc16fe89,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Column(
@@ -500,7 +515,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                   );
                 },
                 icon: const Icon(Icons.edit),
-                label: const Text('混雑度を報告する'),
+                label: Text(AppLocalizations.of(context)!.gym_29c93cdb),
               ),
             ),
           ],
@@ -524,23 +539,23 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                 Icon(Icons.info, color: Colors.blue, size: 24),
                 SizedBox(width: 8),
                 Text(
-                  '基本情報',
+                  AppLocalizations.of(context)!.gym_0179630e,
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const Divider(thickness: 2),
-            _buildInfoRow(Icons.star, '評価', '${gym.rating} (${gym.reviewCount}件)'),
-            _buildInfoRow(Icons.location_on, '住所', gym.address),
+            Divider(thickness: 2),
+            _buildInfoRow(Icons.star, AppLocalizations.of(context)!.rating, '${gym.rating} (${gym.reviewCount}件)'),
+            _buildInfoRow(Icons.location_on, AppLocalizations.of(context)!.gymAddress, gym.address),
             if (gym.phoneNumber.isNotEmpty)
-              _buildInfoRow(Icons.phone, '電話番号', gym.phoneNumber),
-            _buildInfoRow(Icons.access_time, '営業時間', gym.openingHours),
+              _buildInfoRow(Icons.phone, AppLocalizations.of(context)!.gymPhone, gym.phoneNumber),
+            _buildInfoRow(Icons.access_time, AppLocalizations.of(context)!.hours, gym.openingHours),
             const SizedBox(height: 8),
             // 月額料金は公式サイトで確認
             _buildInfoNotice(
               Icons.open_in_new,
-              '料金・詳細情報',
-              '最新の料金プランや設備情報は、ジムの公式サイトでご確認ください',
+              AppLocalizations.of(context)!.gym_a44956f8,
+              AppLocalizations.of(context)!.gym_e83fdce4,
             ),
             const SizedBox(height: 16),
             // チェックインボタン
@@ -549,7 +564,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
               child: ElevatedButton.icon(
                 onPressed: _checkInToGym,
                 icon: const Icon(Icons.check_circle_outline),
-                label: const Text('このジムにチェックイン'),
+                label: Text(AppLocalizations.of(context)!.gym_5c490300),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Theme.of(context).colorScheme.primary,
@@ -670,18 +685,18 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
               Row(
                 children: [
                   const Text(
-                    '設備・マシン情報',
+                    AppLocalizations.of(context)!.gym_2689426f,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.blue[600],
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: const Text(
-                      'オーナー提供',
+                    child: Text(
+                          AppLocalizations.of(context)!.ownerProvided,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -750,7 +765,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                       _isCheckedIn = false;
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('チェックアウトしました')),
+                      SnackBar(content: Text(AppLocalizations.of(context)!.checkedOut)),
                     );
                   }
                 } else {
@@ -761,7 +776,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                       _isCheckedIn = true;
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('チェックインしました！')),
+                      SnackBar(content: Text(AppLocalizations.of(context)!.checkedIn)),
                     );
                   }
                 }
@@ -771,14 +786,14 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('Firebase設定が必要です'),
+                      title: Text(AppLocalizations.of(context)!.gym_b439391c),
                       content: const Text(
                         'チェックイン機能を使用するには、Firebase Consoleで設定ファイルを取得し、firebase_options.dartを更新してください。',
                       ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('了解'),
+                          child: Text(AppLocalizations.of(context)!.gym_95877b1f),
                         ),
                       ],
                     ),
@@ -787,7 +802,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
               }
             },
             icon: Icon(_isCheckedIn ? Icons.logout : Icons.login),
-            label: Text(_isCheckedIn ? 'チェックアウト' : 'チェックイン'),
+            label: Text(_isCheckedIn ? AppLocalizations.of(context)!.checkOut : AppLocalizations.of(context)!.checkIn),
             style: ElevatedButton.styleFrom(
               backgroundColor: _isCheckedIn
                   ? Theme.of(context).colorScheme.error
@@ -802,8 +817,8 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
           width: double.infinity,
           child: OutlinedButton.icon(
             onPressed: _shareGym,
-            icon: const Icon(Icons.share),
-            label: const Text('このジムをシェア'),
+            icon: Icon(Icons.share),
+            label: Text(AppLocalizations.of(context)!.shareGym),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: Colors.blue[600]!),
               foregroundColor: Colors.blue[600],
@@ -827,30 +842,30 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                 setState(() {});
               }
             },
-            icon: const Icon(Icons.rate_review),
-            label: const Text('レビューを投稿'),
+            icon: Icon(Icons.rate_review),
+            label: Text(AppLocalizations.of(context)!.postReview),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.amber[700],
               foregroundColor: Colors.white,
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Row(
           children: [
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: _openGoogleMapsRoute,
-                icon: const Icon(Icons.directions),
-                label: const Text('ルート案内'),
+                icon: Icon(Icons.directions),
+                label: Text(AppLocalizations.of(context)!.routeGuidance),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _isFavorite == null ? null : _toggleFavorite,
                 icon: Icon(_isFavorite == true ? Icons.favorite : Icons.favorite_border),
-                label: Text(_isFavorite == true ? 'お気に入り済み' : 'お気に入り'),
+                label: Text(_isFavorite == true ? AppLocalizations.of(context)!.gym_c4a78c77 : AppLocalizations.of(context)!.favorite),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _isFavorite == true ? Colors.pink : null,
                   side: BorderSide(
@@ -886,8 +901,8 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('シェアしました！'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.shared),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -915,15 +930,15 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'レビュー',
+                Text(
+                          AppLocalizations.of(context)!.review,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 TextButton(
                   onPressed: () {
                     // TODO: レビュー一覧画面への遷移
                   },
-                  child: const Text('すべて見る'),
+                  child: Text(AppLocalizations.of(context)!.viewAll),
                 ),
               ],
             ),
@@ -945,8 +960,8 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                     setState(() {}); // レビュー投稿後に画面を更新
                   }
                 },
-                icon: const Icon(Icons.rate_review),
-                label: const Text('レビューを投稿'),
+                icon: Icon(Icons.rate_review),
+                label: Text(AppLocalizations.of(context)!.postReview),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.amber[700],
                   foregroundColor: Colors.white,
@@ -979,7 +994,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text(
-                        'レビューの読み込みに失敗しました',
+                        AppLocalizations.of(context)!.loadReviewsFailed,
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                     ),
@@ -1004,7 +1019,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                 return Column(
                   children: reviews.map((doc) {
                     final data = doc.data() as Map<String, dynamic>;
-                    final userName = data['userName'] ?? 'ユーザー';
+                    final userName = data['userName'] ?? AppLocalizations.of(context)!.gym_d2109d2d;
                     final overallRating = (data['overallRating'] ?? 0).toDouble();
                     final comment = data['comment'] ?? '';
                     final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
@@ -1109,13 +1124,13 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                     color: Colors.amber[700],
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text('🏆', style: TextStyle(fontSize: 14)),
                       SizedBox(width: 4),
                       Text(
-                        '広告',
+                        AppLocalizations.of(context)!.gym_45a96aae,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -1125,10 +1140,10 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                const Expanded(
+                SizedBox(width: 8),
+                Expanded(
                   child: Text(
-                    'パートナージム',
+                    AppLocalizations.of(context)!.partnerGym,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -1304,29 +1319,29 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                   size: 28,
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Text(
-                          'ビジター予約申込',
+                        Text(
+                          AppLocalizations.of(context)!.visitorBooking,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.green[600],
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
-                            'ビジター可',
+                          child: Text(
+                          AppLocalizations.of(context)!.visitorWelcome,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -1338,7 +1353,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '店舗に直接予約申込ができます',
+                      AppLocalizations.of(context)!.gym_6aaedfbd,
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey[700],
@@ -1420,9 +1435,9 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
                 Row(
                   children: [
                     Icon(Icons.campaign, color: Colors.orange[700]),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'お知らせ',
+                    SizedBox(width: 8),
+                    Text(
+                          AppLocalizations.of(context)!.announcement,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -1608,7 +1623,7 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
           mode: LaunchMode.externalApplication, // 外部アプリで開く
         );
       } else {
-        throw Exception('Googleマップを開けませんでした');
+        throw Exception(AppLocalizations.of(context)!.couldNotOpenMap);
       }
     } catch (e) {
       if (mounted) {
@@ -1644,17 +1659,17 @@ class _GymDetailScreenState extends State<GymDetailScreen> {
   String _getCrowdLevelText(int level) {
     switch (level) {
       case 1:
-        return '空いています';
+        return AppLocalizations.of(context)!.gym_e662330d;
       case 2:
-        return 'やや空き';
+        return AppLocalizations.of(context)!.moderatelyEmpty;
       case 3:
-        return '普通';
+        return AppLocalizations.of(context)!.normal;
       case 4:
-        return 'やや混雑';
+        return AppLocalizations.of(context)!.moderatelyCrowded;
       case 5:
-        return '超混雑';
+        return AppLocalizations.of(context)!.gym_181af51b;
       default:
-        return '不明';
+        return AppLocalizations.of(context)!.unknown;
     }
   }
 }

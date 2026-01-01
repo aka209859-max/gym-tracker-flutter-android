@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/goal.dart';
@@ -71,15 +72,15 @@ class _GoalsScreenState extends State<GoalsScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('目標設定'),
+        title: Text(AppLocalizations.of(context)!.settings),
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           indicatorColor: Colors.white,
-          tabs: const [
-            Tab(text: 'アクティブ'),
-            Tab(text: '達成済み'),
+          tabs: [
+            Tab(text: AppLocalizations.of(context)!.active),
+            Tab(text: AppLocalizations.of(context)!.general_45f91da4),
           ],
         ),
       ),
@@ -95,7 +96,7 @@ class _GoalsScreenState extends State<GoalsScreen>
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showCreateGoalDialog,
         icon: const Icon(Icons.add),
-        label: const Text('新しい目標'),
+        label: Text(AppLocalizations.of(context)!.general_6b0cabf8),
       ),
     );
   }
@@ -110,14 +111,14 @@ class _GoalsScreenState extends State<GoalsScreen>
             Icon(Icons.flag, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'アクティブな目標がありません',
+              AppLocalizations.of(context)!.general_01b23520,
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _showCreateGoalDialog,
-              icon: const Icon(Icons.add),
-              label: const Text('目標を設定する'),
+              icon: Icon(Icons.add),
+              label: Text(AppLocalizations.of(context)!.settings),
             ),
           ],
         ),
@@ -147,7 +148,7 @@ class _GoalsScreenState extends State<GoalsScreen>
             Icon(Icons.emoji_events_outlined, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              '達成した目標がありません',
+              AppLocalizations.of(context)!.general_46a04781,
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
@@ -221,7 +222,7 @@ class _GoalsScreenState extends State<GoalsScreen>
                       size: 28,
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,9 +234,9 @@ class _GoalsScreenState extends State<GoalsScreen>
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
-                          '${goal.period == GoalPeriod.weekly ? '今週' : '今月'}の目標',
+                          '${goal.period == GoalPeriod.weekly ? AppLocalizations.of(context)!.thisWeek : AppLocalizations.of(context)!.thisMonth}の目標',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600],
@@ -376,7 +377,7 @@ class _GoalsScreenState extends State<GoalsScreen>
             // 目標値変更
             ListTile(
               leading: const Icon(Icons.edit, color: Colors.blue),
-              title: const Text('目標値を変更'),
+              title: Text(AppLocalizations.of(context)!.general_fbfd31d9),
               onTap: () {
                 Navigator.pop(context);
                 _showEditGoalDialog(goal);
@@ -385,8 +386,8 @@ class _GoalsScreenState extends State<GoalsScreen>
             const Divider(),
             // 削除
             ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('削除', style: TextStyle(color: Colors.red)),
+              leading: Icon(Icons.delete, color: Colors.red),
+              title: Text(AppLocalizations.of(context)!.remove, style: TextStyle(color: Colors.red)),
               onTap: () async {
                 Navigator.pop(context);
                 final confirmed = await _showDeleteConfirmDialog(goal.name);
@@ -394,7 +395,7 @@ class _GoalsScreenState extends State<GoalsScreen>
                   await _goalService.deleteGoal(goal.id);
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('目標を削除しました')),
+                      SnackBar(content: Text(AppLocalizations.of(context)!.delete)),
                     );
                   }
                   _loadGoals();
@@ -412,12 +413,12 @@ class _GoalsScreenState extends State<GoalsScreen>
     return await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('目標を削除'),
+        title: Text(AppLocalizations.of(context)!.delete),
         content: Text('「$goalName」を削除しますか？\nこの操作は取り消せません。'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('キャンセル'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -425,7 +426,7 @@ class _GoalsScreenState extends State<GoalsScreen>
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('削除'),
+            child: Text(AppLocalizations.of(context)!.remove),
           ),
         ],
       ),
@@ -443,29 +444,29 @@ class _GoalsScreenState extends State<GoalsScreen>
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            title: const Text('新しい目標を設定'),
+            title: Text(AppLocalizations.of(context)!.settings),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 目標タイプ選択
-                  const Text('目標タイプ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text(AppLocalizations.of(context)!.general_654c46cb, style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<GoalType>(
                     value: selectedType,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
                     items: const [
                       DropdownMenuItem(
                         value: GoalType.weeklyWorkoutCount,
-                        child: Text('週間トレーニング回数'),
+                        child: Text(AppLocalizations.of(context)!.general_e9b451c8),
                       ),
                       DropdownMenuItem(
                         value: GoalType.monthlyTotalWeight,
-                        child: Text('月間総重量'),
+                        child: Text(AppLocalizations.of(context)!.general_12bffb53),
                       ),
                     ],
                     onChanged: (value) {
@@ -484,14 +485,14 @@ class _GoalsScreenState extends State<GoalsScreen>
                   const SizedBox(height: 16),
                   
                   // 目標値入力
-                  const Text('目標値', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
+                  Text(AppLocalizations.of(context)!.targetValue, style: TextStyle(fontWeight: FontWeight.bold)),
+                  SizedBox(height: 8),
                   TextFormField(
                     initialValue: targetValue.toString(),
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      border: const OutlineInputBorder(),
-                      suffixText: selectedType == GoalType.weeklyWorkoutCount ? '回' : 'kg',
+                      border: OutlineInputBorder(),
+                      suffixText: selectedType == GoalType.weeklyWorkoutCount ? AppLocalizations.of(context)!.reps : AppLocalizations.of(context)!.kg,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
                     onChanged: (value) {
@@ -513,12 +514,12 @@ class _GoalsScreenState extends State<GoalsScreen>
                     child: Row(
                       children: [
                         Icon(Icons.lightbulb_outline, color: Colors.blue[700], size: 20),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             selectedType == GoalType.weeklyWorkoutCount
-                                ? '週に何回トレーニングするか設定します'
-                                : '月間で扱う総重量の目標を設定します',
+                                ? AppLocalizations.of(context)!.general_1350619b
+                                : AppLocalizations.of(context)!.settings,
                             style: TextStyle(fontSize: 12, color: Colors.blue[900]),
                           ),
                         ),
@@ -531,7 +532,7 @@ class _GoalsScreenState extends State<GoalsScreen>
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('キャンセル'),
+                child: Text(AppLocalizations.of(context)!.cancel),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -550,7 +551,7 @@ class _GoalsScreenState extends State<GoalsScreen>
                     
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('目標を設定しました')),
+                        SnackBar(content: Text(AppLocalizations.of(context)!.settings)),
                       );
                     }
                     
@@ -558,12 +559,12 @@ class _GoalsScreenState extends State<GoalsScreen>
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('目標の設定に失敗しました: $e')),
+                        SnackBar(content: Text(AppLocalizations.of(context)!.settings)),
                       );
                     }
                   }
                 },
-                child: const Text('設定'),
+                child: Text(AppLocalizations.of(context)!.settings),
               ),
             ],
           );
@@ -587,7 +588,7 @@ class _GoalsScreenState extends State<GoalsScreen>
               initialValue: goal.targetValue.toString(),
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: '目標値',
+                labelText: AppLocalizations.of(context)!.targetValue,
                 border: const OutlineInputBorder(),
                 suffixText: goal.unit,
               ),
@@ -600,7 +601,7 @@ class _GoalsScreenState extends State<GoalsScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -611,7 +612,7 @@ class _GoalsScreenState extends State<GoalsScreen>
                 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('目標値を更新しました')),
+                    SnackBar(content: Text(AppLocalizations.of(context)!.general_583ed93e)),
                   );
                 }
                 
@@ -624,7 +625,7 @@ class _GoalsScreenState extends State<GoalsScreen>
                 }
               }
             },
-            child: const Text('更新'),
+            child: Text(AppLocalizations.of(context)!.update),
           ),
         ],
       ),

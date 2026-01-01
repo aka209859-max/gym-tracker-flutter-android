@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -94,8 +95,8 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('画像をアップロードしました'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.gym_6604883b),
             backgroundColor: Colors.green,
           ),
         );
@@ -105,7 +106,7 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('画像アップロードエラー: $e'),
+            content: Text(AppLocalizations.of(context)!.error),
             backgroundColor: Colors.red,
           ),
         );
@@ -152,8 +153,8 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('お知らせを保存しました'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.save),
             backgroundColor: Colors.green,
           ),
         );
@@ -163,7 +164,7 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('保存エラー: $e'),
+            content: Text(AppLocalizations.of(context)!.saveFailed),
             backgroundColor: Colors.red,
           ),
         );
@@ -177,7 +178,7 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.announcement == null ? 'お知らせ投稿' : 'お知らせ編集'),
+        title: Text(widget.announcement == null ? AppLocalizations.of(context)!.gym_afa40a0c : AppLocalizations.of(context)!.edit),
         actions: [
           TextButton.icon(
             onPressed: _isSaving ? null : _saveAnnouncement,
@@ -187,8 +188,8 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
                     height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.send),
-            label: const Text('投稿'),
+                : Icon(Icons.send),
+            label: Text(AppLocalizations.of(context)!.postSubmitted),
             style: TextButton.styleFrom(
               foregroundColor: Colors.white,
             ),
@@ -204,7 +205,7 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
             children: [
               // お知らせタイプ選択
               const Text(
-                'お知らせタイプ',
+                AppLocalizations.of(context)!.gym_0dfe6c91,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -232,14 +233,14 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
               // タイトル入力
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'タイトル',
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.gym_37f10bb4,
                   hintText: '例: 春の入会キャンペーン開催中',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'タイトルを入力してください';
+                    return AppLocalizations.of(context)!.gym_0be017ad;
                   }
                   return null;
                 },
@@ -249,15 +250,15 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
               // 本文入力
               TextFormField(
                 controller: _contentController,
-                decoration: const InputDecoration(
-                  labelText: '本文',
-                  hintText: 'お知らせの詳細を入力してください',
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.gym_0edea1b7,
+                  hintText: AppLocalizations.of(context)!.gym_b23cb9bd,
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 5,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return '本文を入力してください';
+                    return AppLocalizations.of(context)!.gym_524e1d73;
                   }
                   return null;
                 },
@@ -271,8 +272,8 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
                   children: [
                     TextFormField(
                       controller: _couponCodeController,
-                      decoration: const InputDecoration(
-                        labelText: 'クーポンコード（任意）',
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.gym_7ce11d8a,
                         hintText: '例: SPRING2024',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.local_offer),
@@ -284,7 +285,7 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
               
               // 画像アップロード
               const Text(
-                'お知らせ画像',
+                AppLocalizations.of(context)!.gym_b26e7c38,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -329,8 +330,8 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.add_photo_alternate),
-                  label: Text(_isUploading ? 'アップロード中...' : '画像を選択'),
+                      : Icon(Icons.add_photo_alternate),
+                  label: Text(_isUploading ? 'アップロード中...' : AppLocalizations.of(context)!.selectExercise),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),
                   ),
@@ -338,8 +339,7 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
               const SizedBox(height: 24),
               
               // 有効期限設定
-              const Text(
-                '有効期限',
+              Text(AppLocalizations.of(context)!.expiryDate,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -363,7 +363,7 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
                 icon: const Icon(Icons.calendar_today),
                 label: Text(
                   _validUntil == null
-                      ? '期限なし'
+                      ? AppLocalizations.of(context)!.gym_5d1d7a5c
                       : '${_validUntil!.year}/${_validUntil!.month}/${_validUntil!.day}',
                 ),
                 style: OutlinedButton.styleFrom(
@@ -378,7 +378,7 @@ class _GymAnnouncementEditorScreenState extends State<GymAnnouncementEditorScree
                     });
                   },
                   icon: const Icon(Icons.clear),
-                  label: const Text('期限をクリア'),
+                  label: Text(AppLocalizations.of(context)!.gym_4f509a03),
                 ),
             ],
           ),

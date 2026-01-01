@@ -70,7 +70,7 @@ class StatisticsShareCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'トレーニング統計',
+                    AppLocalizations.of(context)!.general_cbca9048,
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.white70,
@@ -119,7 +119,7 @@ class StatisticsShareCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '連続トレーニング記録',
+                  AppLocalizations.of(context)!.workout_a826db5c,
                   style: TextStyle(
                     fontSize: 22,
                     color: Colors.white70,
@@ -149,7 +149,7 @@ class StatisticsShareCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      '今週の実績',
+                      AppLocalizations.of(context)!.general_124aaff7,
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
@@ -164,23 +164,23 @@ class StatisticsShareCard extends StatelessWidget {
                   children: [
                     _buildStatItem(
                       icon: Icons.fitness_center,
-                      label: 'トレーニング日数',
+                      label: AppLocalizations.of(context)!.trainingDays,
                       value: '$weeklyWorkoutDays',
-                      unit: '日',
+                      unit: AppLocalizations.of(context)!.sun,
                       color: Colors.blue,
                     ),
                     _buildStatItem(
                       icon: Icons.list_alt,
-                      label: '総セット数',
+                      label: AppLocalizations.of(context)!.workoutTotalSets,
                       value: '$weeklyTotalSets',
                       unit: 'sets',
                       color: Colors.green,
                     ),
                     _buildStatItem(
                       icon: Icons.timer,
-                      label: 'トレーニング時間',
+                      label: AppLocalizations.of(context)!.workoutDuration,
                       value: '$weeklyTotalMinutes',
-                      unit: '分',
+                      unit: AppLocalizations.of(context)!.minutes,
                       color: Colors.orange,
                     ),
                   ],
@@ -209,7 +209,7 @@ class StatisticsShareCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      '今月の実績',
+                      AppLocalizations.of(context)!.general_d2429b27,
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
@@ -224,14 +224,14 @@ class StatisticsShareCard extends StatelessWidget {
                   children: [
                     _buildStatItem(
                       icon: Icons.event_available,
-                      label: 'トレーニング日数',
+                      label: AppLocalizations.of(context)!.trainingDays,
                       value: '$monthlyWorkoutDays',
-                      unit: '日',
+                      unit: AppLocalizations.of(context)!.sun,
                       color: Colors.purple,
                     ),
                     _buildStatItem(
                       icon: Icons.bar_chart,
-                      label: '総セット数',
+                      label: AppLocalizations.of(context)!.workoutTotalSets,
                       value: '$monthlyTotalSets',
                       unit: 'sets',
                       color: Colors.teal,
@@ -263,7 +263,7 @@ class StatisticsShareCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        '部位別トレーニング',
+                        AppLocalizations.of(context)!.general_5aa4062e,
                         style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
@@ -395,15 +395,15 @@ class StatisticsShareCard extends StatelessWidget {
 
   Color _getColorForMuscleGroup(String muscleGroup) {
     final colors = {
-      '胸': Colors.red,
-      '背中': Colors.blue,
-      '脚': Colors.green,
-      '肩': Colors.orange,
-      '腕': Colors.purple,
-      '二頭': Colors.indigo,
-      '三頭': Colors.pink,
-      '体幹': Colors.teal,
-      '有酸素': Colors.amber,
+      AppLocalizations.of(context)!.bodyPartChest: Colors.red,
+      AppLocalizations.of(context)!.bodyPartBack: Colors.blue,
+      AppLocalizations.of(context)!.bodyPartLegs: Colors.green,
+      AppLocalizations.of(context)!.bodyPartShoulders: Colors.orange,
+      AppLocalizations.of(context)!.bodyPartArms: Colors.purple,
+      AppLocalizations.of(context)!.bodyPartBiceps: Colors.indigo,
+      AppLocalizations.of(context)!.bodyPartTriceps: Colors.pink,
+      AppLocalizations.of(context)!.bodyPartCore: Colors.teal,
+      AppLocalizations.of(context)!.exerciseCardio: Colors.amber,
     };
     return colors[muscleGroup] ?? Colors.grey;
   }

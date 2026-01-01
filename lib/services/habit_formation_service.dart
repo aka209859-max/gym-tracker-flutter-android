@@ -7,11 +7,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 /// 習慣形成マイルストーン
 enum HabitMilestone {
-  streak10(10, '10日連続達成！'),
-  streak30(30, '30日連続達成！'),
-  streak50(50, '50日連続達成！'),
-  streak100(100, '100日連続達成！'),
-  streak365(365, '1年連続達成！');
+  streak10(10, AppLocalizations.of(context)!.general_bcb900c4),
+  streak30(30, AppLocalizations.of(context)!.general_b32b7934),
+  streak50(50, AppLocalizations.of(context)!.general_119ecef6),
+  streak100(100, AppLocalizations.of(context)!.general_0501c995),
+  streak365(365, AppLocalizations.of(context)!.general_31b3e4e4);
 
   const HabitMilestone(this.days, this.message);
   final int days;
@@ -153,7 +153,7 @@ class HabitFormationService {
 
   /// 最もトレーニングしている曜日TOP3を取得
   /// 
-  /// 戻り値: [{'weekday': '水曜日', 'count': 10}, ...]
+  /// 戻り値: [{'weekday': AppLocalizations.of(context)!.wednesday, 'count': 10}, ...]
   Future<List<Map<String, dynamic>>> getTopTrainingDays() async {
     try {
       final user = _auth.currentUser;
@@ -212,13 +212,13 @@ class HabitFormationService {
   /// 曜日番号から曜日名を取得
   String _getWeekdayName(int weekday) {
     const weekdayNames = {
-      1: '月曜日',
-      2: '火曜日',
-      3: '水曜日',
-      4: '木曜日',
-      5: '金曜日',
-      6: '土曜日',
-      7: '日曜日',
+      1: AppLocalizations.of(context)!.monday,
+      2: AppLocalizations.of(context)!.tuesday,
+      3: AppLocalizations.of(context)!.wednesday,
+      4: AppLocalizations.of(context)!.thursday,
+      5: AppLocalizations.of(context)!.friday,
+      6: AppLocalizations.of(context)!.saturday,
+      7: AppLocalizations.of(context)!.sunday,
     };
     return weekdayNames[weekday] ?? '';
   }

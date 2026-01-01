@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,7 +17,7 @@ class _DebugLogScreenState extends State<DebugLogScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('デバッグログ'),
+        title: Text(AppLocalizations.of(context)!.general_97909b88),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         actions: [
@@ -26,13 +27,13 @@ class _DebugLogScreenState extends State<DebugLogScreen> {
               final logText = logs.join('\n');
               Clipboard.setData(ClipboardData(text: logText));
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('ログをクリップボードにコピーしました'),
+                SnackBar(
+                  content: Text(AppLocalizations.of(context)!.general_34b10a74),
                   duration: Duration(seconds: 2),
                 ),
               );
             },
-            tooltip: 'ログをコピー',
+            tooltip: AppLocalizations.of(context)!.general_d889d870,
           ),
           IconButton(
             icon: const Icon(Icons.delete),
@@ -41,25 +42,25 @@ class _DebugLogScreenState extends State<DebugLogScreen> {
                 DebugLogger.instance.clearLogs();
               });
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('ログをクリアしました'),
+                SnackBar(
+                  content: Text(AppLocalizations.of(context)!.general_9248af32),
                   duration: Duration(seconds: 1),
                 ),
               );
             },
-            tooltip: 'ログをクリア',
+            tooltip: AppLocalizations.of(context)!.general_a0854d25,
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
               setState(() {});
             },
-            tooltip: '更新',
+            tooltip: AppLocalizations.of(context)!.refresh,
           ),
         ],
       ),
       body: logs.isEmpty
-          ? const Center(
+          ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -70,7 +71,7 @@ class _DebugLogScreenState extends State<DebugLogScreen> {
                   ),
                   SizedBox(height: 16),
                   Text(
-                    'まだログがありません',
+                    AppLocalizations.of(context)!.general_d35250cd,
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.grey,
@@ -78,7 +79,7 @@ class _DebugLogScreenState extends State<DebugLogScreen> {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'トレーニングを保存/読み込みすると\nここにログが表示されます',
+                    AppLocalizations.of(context)!.save,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
@@ -96,16 +97,16 @@ class _DebugLogScreenState extends State<DebugLogScreen> {
                 Color bgColor;
                 IconData icon;
                 
-                if (log.contains('❌') || log.contains('ERROR') || log.contains('エラー')) {
+                if (log.contains('❌') || log.contains('ERROR') || log.contains(AppLocalizations.of(context)!.error)) {
                   bgColor = Colors.red.shade50;
                   icon = Icons.error;
                 } else if (log.contains('⚠️') || log.contains('WARNING')) {
                   bgColor = Colors.orange.shade50;
                   icon = Icons.warning;
-                } else if (log.contains('✅') || log.contains('SUCCESS') || log.contains('成功')) {
+                } else if (log.contains('✅') || log.contains('SUCCESS') || log.contains(AppLocalizations.of(context)!.success)) {
                   bgColor = Colors.green.shade50;
                   icon = Icons.check_circle;
-                } else if (log.contains('💾') || log.contains('🔍') || log.contains('開始')) {
+                } else if (log.contains('💾') || log.contains('🔍') || log.contains(AppLocalizations.of(context)!.startDate)) {
                   bgColor = Colors.blue.shade50;
                   icon = Icons.play_arrow;
                 } else {

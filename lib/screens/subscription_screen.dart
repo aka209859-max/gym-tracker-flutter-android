@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/foundation.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../services/subscription_service.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../services/revenue_cat_service.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../services/subscription_management_service.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:gym_match/gen/app_localizations.dart';
+// import 'package:purchases_flutter/purchases_flutter.dart';  // ❌ Android版では使用しない
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import 'ai_addon_purchase_screen.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import 'campaign/campaign_registration_screen.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 
 /// サブスクリプション管理画面
 class SubscriptionScreen extends StatefulWidget {
@@ -78,7 +88,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('プラン管理'),
+        title: Text(AppLocalizations.of(context)!.subscription_1cbcacf3),
         centerTitle: true,
         actions: [
           // 購入復元ボタン（iOS専用 - Apple審査対応）
@@ -97,7 +107,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -115,7 +125,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   
                   // プラン選択セクション
                   const Text(
-                    'プランを選択',
+                    AppLocalizations.of(context)!.subscription_f129a868,
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -126,15 +136,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   // 無料プラン
                   _buildPlanCard(
                     type: SubscriptionType.free,
-                    name: '無料プラン',
+                    name: AppLocalizations.of(context)!.freePlan,
                     price: '¥0',
-                    priceUnit: '永久無料',
+                    priceUnit: AppLocalizations.of(context)!.subscription_95db4a6f,
                     features: [
-                      '全国のジム検索',
-                      'GPS位置検索',
-                      '基本情報閲覧',
-                      '混雑度表示',
-                      '営業時間確認',
+                      AppLocalizations.of(context)!.subscription_d59bc6e4,
+                      AppLocalizations.of(context)!.gpsSearch,
+                      AppLocalizations.of(context)!.subscription_0a2805b1,
+                      AppLocalizations.of(context)!.subscription_cd8c3359,
+                      AppLocalizations.of(context)!.subscription_1c65be25,
                       '📝 トレーニング記録',
                       '🤖 AI機能月3回',
                       '📢 広告表示あり',
@@ -153,10 +163,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     type: SubscriptionType.premium,
                     name: 'Premium',
                     price: _getPriceForPlan(SubscriptionType.premium),
-                    priceUnit: _isYearlySelected ? '年額' : '月額',
+                    priceUnit: _isYearlySelected ? AppLocalizations.of(context)!.yearly : AppLocalizations.of(context)!.monthly,
                     monthlyEquivalent: _isYearlySelected ? '月換算 ¥400' : null,
                     discount: _isYearlySelected ? '20% OFF' : null,
-                    savings: _isYearlySelected ? '¥1,200お得！' : null,
+                    savings: _isYearlySelected ? AppLocalizations.of(context)!.subscription_eb54b59e : null,
                     features: [
                       '✨ 無料プランの全機能',
                       '🤖 AI機能月20回（AIコーチ・成長予測・効果分析合計）',
@@ -177,10 +187,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     type: SubscriptionType.pro,
                     name: 'Pro',
                     price: _getPriceForPlan(SubscriptionType.pro),
-                    priceUnit: _isYearlySelected ? '年額' : '月額',
+                    priceUnit: _isYearlySelected ? AppLocalizations.of(context)!.yearly : AppLocalizations.of(context)!.monthly,
                     monthlyEquivalent: _isYearlySelected ? '月換算 ¥667' : null,
                     discount: _isYearlySelected ? '32% OFF' : null,
-                    savings: _isYearlySelected ? '¥3,760お得！' : null,
+                    savings: _isYearlySelected ? AppLocalizations.of(context)!.subscription_0ed6afa5 : null,
                     features: [
                       '✨ Premiumプランの全機能',
                       '🤖 AI機能無制限（AIコーチ・成長予測・効果分析）',
@@ -239,9 +249,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               size: 48,
               color: planColor,
             ),
-            const SizedBox(height: 12),
-            const Text(
-              '現在のプラン',
+            SizedBox(height: 12),
+            Text(AppLocalizations.of(context)!.currentPlan,
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 4),
@@ -279,7 +288,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     Icon(Icons.stars, color: Colors.white, size: 20),
                     SizedBox(width: 8),
                     Text(
-                      '永年Proプラン（∞）',
+                      AppLocalizations.of(context)!.subscription_2aa69e25,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -312,15 +321,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             if (_currentPlan != SubscriptionType.free && !_hasLifetimePlan) ...[
               const SizedBox(height: 16),
               const Divider(),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // ダウングレードボタン
                   TextButton.icon(
                     onPressed: _showDowngradeDialog,
-                    icon: const Icon(Icons.arrow_downward, size: 20),
-                    label: const Text('プラン変更'),
+                    icon: Icon(Icons.arrow_downward, size: 20),
+                    label: Text(AppLocalizations.of(context)!.changePlan),
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.blue,
                     ),
@@ -347,7 +356,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildToggleButton(
-              label: '月額',
+              label: AppLocalizations.of(context)!.monthly,
               isSelected: !_isYearlySelected,
               onTap: () {
                 setState(() {
@@ -594,8 +603,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           const SizedBox(width: 8),
                           Text(
                             type == SubscriptionType.premium
-                                ? '30日間無料トライアル'
-                                : '14日間無料トライアル',
+                                ? AppLocalizations.of(context)!.subscription_f7ec6c91
+                                : AppLocalizations.of(context)!.subscription_2fe3bc16,
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -618,8 +627,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               side: BorderSide(color: color, width: 2),
                             ),
-                            child: const Text(
-                              '現在のプラン',
+                            child: Text(AppLocalizations.of(context)!.currentPlan,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -635,7 +643,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                   padding: const EdgeInsets.symmetric(vertical: 14),
                                 ),
                                 child: const Text(
-                                  'このプランに変更',
+                                  AppLocalizations.of(context)!.subscription_bf804c6f,
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -649,9 +657,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(vertical: 14),
                                 ),
-                                child: const Text(
-                                  '無料トライアルを始める',
-                                  style: TextStyle(
+                                child: Text(
+                                  AppLocalizations.of(context)!.subscriptionStartFreeTrial,
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -676,23 +684,23 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              '機能比較',
+              AppLocalizations.of(context)!.subscription_aaee0ad5,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
-            _buildComparisonRow('ジム検索', true, true, true),
-            _buildComparisonRow('GPS位置検索', true, true, true),
-            _buildComparisonRow('混雑度表示', true, true, true),
-            _buildComparisonRow('トレーニング記録', true, true, true),
-            _buildComparisonRow('広告表示なし', false, true, true),
-            _buildComparisonRow('お気に入り保存', false, true, true),
-            _buildComparisonRow('レビュー投稿', false, true, true),
-            _buildComparisonRow('成長予測・効果分析', false, true, true),
-            _buildComparisonRow('パートナー検索', false, false, true),
-            _buildComparisonRow('メッセージング', false, false, true),
+            SizedBox(height: 16),
+            _buildComparisonRow(AppLocalizations.of(context)!.gymSearch, true, true, true),
+            _buildComparisonRow(AppLocalizations.of(context)!.gpsSearch, true, true, true),
+            _buildComparisonRow(AppLocalizations.of(context)!.subscription_cd8c3359, true, true, true),
+            _buildComparisonRow(AppLocalizations.of(context)!.trainingLog, true, true, true),
+            _buildComparisonRow(AppLocalizations.of(context)!.subscriptionNoAds, false, true, true),
+            _buildComparisonRow(AppLocalizations.of(context)!.subscription_9217a80b, false, true, true),
+            _buildComparisonRow(AppLocalizations.of(context)!.subscription_397839f3, false, true, true),
+            _buildComparisonRow(AppLocalizations.of(context)!.subscription_52f5cfb1, false, true, true),
+            _buildComparisonRow(AppLocalizations.of(context)!.partnerSearch, false, false, true),
+            _buildComparisonRow(AppLocalizations.of(context)!.subscription_f19cb091, false, false, true),
           ],
         ),
       ),
@@ -759,7 +767,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  'ご利用について',
+                  AppLocalizations.of(context)!.subscription_76b79b54,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -824,8 +832,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       } else {
                         if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('利用規約を開けませんでした'),
+                          SnackBar(
+                            content: Text(AppLocalizations.of(context)!.subscription_0a763184),
                             duration: Duration(seconds: 2),
                           ),
                         );
@@ -862,8 +870,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       } else {
                         if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('プライバシーポリシーを開けませんでした'),
+                          SnackBar(
+                            content: Text(AppLocalizations.of(context)!.subscription_f8882591),
                             duration: Duration(seconds: 2),
                           ),
                         );
@@ -944,12 +952,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Future<void> _changePlan(SubscriptionType newPlan) async {
     // 年額/月額に応じた価格を取得
     final price = _getPriceForPlan(newPlan);
-    final billingPeriod = _isYearlySelected ? '年額' : '月額';
+    final billingPeriod = _isYearlySelected ? AppLocalizations.of(context)!.yearly : AppLocalizations.of(context)!.monthly;
     
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('プランを${newPlan == SubscriptionType.free ? '変更' : 'アップグレード'}しますか？'),
+        title: Text('プランを${newPlan == SubscriptionType.free ? AppLocalizations.of(context)!.workout_5c7bbafb : 'アップグレード'}しますか？'),
         content: Text(
           '${_subscriptionService.getPlanName(newPlan)}に変更します。\n\n'
           '料金: $price ($billingPeriod)',
@@ -957,11 +965,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('キャンセル'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('確定'),
+            child: Text(AppLocalizations.of(context)!.subscription_84b9d24c),
           ),
         ],
       ),
@@ -972,7 +980,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       if (newPlan == SubscriptionType.free) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text('無料プランへの変更は、App Store設定でサブスクリプションをキャンセルしてください'),
               duration: Duration(seconds: 4),
               backgroundColor: Colors.orange,
@@ -1044,8 +1052,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         // ユーザーがキャンセルした場合など
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('購入がキャンセルされました'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.purchaseCancelled),
               backgroundColor: Colors.grey,
             ),
           );
@@ -1099,8 +1107,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       if (hasActiveSub) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('購入履歴を復元しました！'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.subscription_471c73c1),
               backgroundColor: Colors.green,
             ),
           );
@@ -1111,8 +1119,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('復元可能な購入履歴がありませんでした'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.subscription_8449b990),
               backgroundColor: Colors.orange,
             ),
           );
@@ -1158,8 +1166,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       _loadCurrentPlan();
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('プラン変更に失敗しました'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.subscription_1bc3e774),
           backgroundColor: Colors.red,
         ),
       );
@@ -1206,21 +1214,20 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   size: 32,
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'AI追加パック',
+                    Text(AppLocalizations.of(context)!.aiAddonPack,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
-                      'AI使用回数を追加購入',
+                      AppLocalizations.of(context)!.purchaseAiAddon,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -1266,7 +1273,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     
     // 現在のプランに応じてダウングレード先を決定
     final String targetPlan = _currentPlan == SubscriptionType.pro ? 'premium' : 'free';
-    final String targetPlanName = targetPlan == 'premium' ? 'Premium' : '無料プラン';
+    final String targetPlanName = targetPlan == 'premium' ? 'Premium' : AppLocalizations.of(context)!.freePlan;
 
     showDialog(
       context: context,
@@ -1340,12 +1347,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 const SizedBox(height: 16),
                 
                 // 理由選択
-                const Text('変更理由', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context)!.subscription_1ffe5eae, style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     border: OutlineInputBorder(),
-                    hintText: '選択してください',
+                    hintText: AppLocalizations.of(context)!.subscription_90a2e4d0,
                   ),
                   value: selectedReason,
                   items: SubscriptionManagementService.churnReasons.map((reason) {
@@ -1363,7 +1370,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('キャンセル'),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -1380,9 +1387,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     SnackBar(
                       content: Text('App Store設定から$targetPlanNameへ変更してください'),
                       backgroundColor: Colors.blue,
-                      duration: const Duration(seconds: 5),
+                      duration: Duration(seconds: 5),
                       action: SnackBarAction(
-                        label: 'ヘルプ',
+                        label: AppLocalizations.of(context)!.help,
                         textColor: Colors.white,
                         onPressed: () {
                           // App Store設定へのリンクを表示
@@ -1397,7 +1404,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('変更する'),
+              child: Text(AppLocalizations.of(context)!.subscription_cddeade5),
             ),
           ],
         ),
@@ -1409,17 +1416,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   List<String> _getLostFeatures() {
     if (_currentPlan == SubscriptionType.pro) {
       return [
-        'AI機能が無制限→月20回に制限',
-        'トレーニングパートナー検索',
-        'メッセージング機能',
+        AppLocalizations.of(context)!.subscription_2939d15b,
+        AppLocalizations.of(context)!.subscription_8232b2c6,
+        AppLocalizations.of(context)!.subscription_4fb5def4,
       ];
     } else if (_currentPlan == SubscriptionType.premium) {
       return [
-        'AI機能が月20回→月3回に制限',
-        'お気に入り無制限→制限あり',
-        '詳細な混雑度統計',
-        'ジムレビュー投稿',
-        '広告が表示されます',
+        AppLocalizations.of(context)!.subscription_95d4c56c,
+        AppLocalizations.of(context)!.subscription_8c2b9430,
+        AppLocalizations.of(context)!.subscriptionDetailedStats,
+        AppLocalizations.of(context)!.postGymReviews,
+        AppLocalizations.of(context)!.subscription_f9025e06,
       ];
     }
     return [];
@@ -1430,7 +1437,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('プラン変更手順'),
+        title: Text(AppLocalizations.of(context)!.subscription_f56f5454),
         content: const SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1456,7 +1463,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('閉じる'),
+            child: Text(AppLocalizations.of(context)!.readLess),
           ),
         ],
       ),

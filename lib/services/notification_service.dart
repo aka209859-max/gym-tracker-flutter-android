@@ -25,9 +25,7 @@ class NotificationService {
     // タイムゾーンデータベース初期化
     tz.initializeTimeZones();
 
-    const initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-
+    // iOS専用アプリ
     const initializationSettingsIOS = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -35,7 +33,6 @@ class NotificationService {
     );
 
     const initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
       iOS: initializationSettingsIOS,
     );
 
@@ -74,21 +71,14 @@ class NotificationService {
     await _notifications.zonedSchedule(
       1, // notification ID
       '${muscleGroup}の回復完了！💪',
-      '次のトレーニングに最適なタイミングです',
+      AppLocalizations.of(context)!.general_39e26ea4,
       tz.TZDateTime.now(tz.local).add(delay),
       const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'training_reminder',
-          'トレーニングリマインダー',
-          channelDescription: '次のトレーニング時期をお知らせ',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
         iOS: DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // iOS専用だが必須パラメータのため指定
     );
   }
 
@@ -102,13 +92,6 @@ class NotificationService {
       title,
       message,
       const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'ai_analysis',
-          'AI分析結果',
-          channelDescription: 'AI分析完了をお知らせ',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
         iOS: DarwinNotificationDetails(),
       ),
     );
@@ -123,13 +106,6 @@ class NotificationService {
       '${streakDays}日間連続達成！🔥',
       '次は${streakDays + 7}日間連続を目指そう',
       const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'streak_achievement',
-          '習慣継続サポート',
-          channelDescription: '連続トレーニング達成をお知らせ',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
         iOS: DarwinNotificationDetails(),
       ),
     );
@@ -139,22 +115,15 @@ class NotificationService {
   Future<void> scheduleReengagementNotification() async {
     await _notifications.zonedSchedule(
       4, // notification ID
-      'お久しぶりです！',
-      'あなたの成長予測が待っています',
+      AppLocalizations.of(context)!.general_c2f773c9,
+      AppLocalizations.of(context)!.general_5957525b,
       tz.TZDateTime.now(tz.local).add(const Duration(days: 7)),
       const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'reengagement',
-          'リエンゲージメント',
-          channelDescription: 'アプリへの復帰をお知らせ',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
         iOS: DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // iOS専用だが必須パラメータのため指定
     );
   }
 
@@ -215,15 +184,7 @@ class NotificationService {
     required String gymName,
     required int crowdLevel,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
-      'crowd_alert',
-      '混雑度アラート',
-      channelDescription: 'お気に入りジムの混雑度アラート',
-      importance: Importance.high,
-      priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
-    );
-    
+    // iOS専用アプリ
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
@@ -231,7 +192,6 @@ class NotificationService {
     );
     
     const details = NotificationDetails(
-      android: androidDetails,
       iOS: iosDetails,
     );
     
@@ -248,13 +208,13 @@ class NotificationService {
   String _getCrowdLevelText(int level) {
     switch (level) {
       case 1:
-        return '空いています';
+        return AppLocalizations.of(context)!.gym_e662330d;
       case 2:
-        return 'やや空き';
+        return AppLocalizations.of(context)!.moderatelyEmpty;
       case 3:
-        return '普通';
+        return AppLocalizations.of(context)!.intensityModerate;
       default:
-        return '空いています';
+        return AppLocalizations.of(context)!.gym_e662330d;
     }
   }
 }

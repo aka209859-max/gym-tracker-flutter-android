@@ -1,8 +1,10 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import 'add_workout_screen.dart';
 import 'simple_workout_detail_screen.dart';
 import 'weekly_reports_screen.dart';
@@ -65,7 +67,7 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
             userCredential = await FirebaseAuth.instance.signInAnonymously().timeout(
               const Duration(seconds: 15),
               onTimeout: () {
-                throw Exception('ログインタイムアウト（15秒）');
+                throw Exception(AppLocalizations.of(context)!.login);
               },
             );
             
@@ -115,7 +117,7 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
     if (_isInitializing) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('トレーニング記録'),
+          title: Text(AppLocalizations.of(context)!.trainingLog),
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -143,7 +145,7 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
         
         return Scaffold(
           appBar: AppBar(
-            title: const Text('トレーニング記録'),
+            title: Text(AppLocalizations.of(context)!.trainingLog),
           ),
           body: Center(
             child: Padding(
@@ -152,19 +154,18 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.warning_amber_rounded, size: 80, color: Colors.orange),
-                  const SizedBox(height: 24),
-                  const Text(
-                    '認証エラー',
+                  SizedBox(height: 24),
+                  Text(AppLocalizations.of(context)!.authenticationError,
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Text(
-                    'Firebaseの初期化またはログインに失敗しました',
+                    AppLocalizations.of(context)!.loginFailed,
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                   ),
                   if (kDebugMode && snapshot.hasError) ...[
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -172,12 +173,12 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        'エラー詳細:\n${snapshot.error}',
+                        AppLocalizations.of(context)!.error,
                         style: const TextStyle(fontSize: 12, color: Colors.red),
                       ),
                     ),
                   ],
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32),
                   ElevatedButton.icon(
                     onPressed: () {
                       setState(() {
@@ -185,19 +186,19 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
                       });
                       _initializeAuth();
                     },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('再試行'),
+                    icon: Icon(Icons.refresh),
+                    label: Text(AppLocalizations.of(context)!.tryAgain),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   TextButton(
                     onPressed: () {
                       // ホーム画面に戻る
                       Navigator.of(context).popUntil((route) => route.isFirst);
                     },
-                    child: const Text('ホームに戻る'),
+                    child: Text(AppLocalizations.of(context)!.backToHome),
                   ),
                 ],
               ),
@@ -231,8 +232,8 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
       if (todayDocs.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('今日のトレーニング記録がありません'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.noTodaysWorkout),
               backgroundColor: Colors.orange,
             ),
           );
@@ -250,7 +251,7 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
         if (exercises != null) {
           for (final exercise in exercises) {
             final exerciseData = exercise as Map<String, dynamic>;
-            final name = exerciseData['name'] as String? ?? '不明な種目';
+            final name = exerciseData['name'] as String? ?? AppLocalizations.of(context)!.unknownExercise;
             
             if (!exerciseMap.containsKey(name)) {
               exerciseMap[name] = [];
@@ -276,8 +277,8 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
       if (exerciseGroups.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('シェアできる種目がありません'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.noExercisesToShare),
               backgroundColor: Colors.orange,
             ),
           );
@@ -296,7 +297,7 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('シェアに失敗しました: $e'),
+            content: Text(AppLocalizations.of(context)!.shareFailed(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -309,12 +310,12 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('トレーニング記録'),
+        title: Text(AppLocalizations.of(context)!.trainingLog),
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
             onPressed: () => _handleShare(user),
-            tooltip: 'トレーニングをシェア',
+            tooltip: AppLocalizations.of(context)!.shareWorkout,
           ),
           IconButton(
             icon: const Icon(Icons.calendar_today),
@@ -461,12 +462,12 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
                   children: [
                     Icon(Icons.fitness_center,
                         size: 64, color: Colors.grey[400]),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Text(
-                      'まだトレーニング記録がありません',
+                      AppLocalizations.of(context)!.noWorkoutRecords,
                       style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                     ElevatedButton.icon(
                       onPressed: () {
                         Navigator.push(
@@ -476,8 +477,8 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
                           ),
                         );
                       },
-                      icon: const Icon(Icons.add),
-                      label: const Text('最初の記録を追加'),
+                      icon: Icon(Icons.add),
+                      label: Text(AppLocalizations.of(context)!.addFirstRecord),
                     ),
                   ],
                 ),
@@ -518,9 +519,9 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Text(
-                            '更新中',
+                            AppLocalizations.of(context)!.updating,
                             style: TextStyle(color: Colors.white, fontSize: 12),
                           ),
                         ],
@@ -659,7 +660,7 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
         scrollDirection: Axis.horizontal,
         children: [
           _QuickAccessCard(
-            title: '週次レポート',
+            title: AppLocalizations.of(context)!.weeklyReport,
             icon: Icons.bar_chart,
             color: Colors.blue,
             onTap: () {
@@ -671,9 +672,9 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
               );
             },
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           _QuickAccessCard(
-            title: 'PR記録',
+            title: AppLocalizations.of(context)!.prRecords,
             icon: Icons.trending_up,
             color: Colors.green,
             onTap: () {
@@ -685,9 +686,9 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
               );
             },
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           _QuickAccessCard(
-            title: '部位別',
+            title: AppLocalizations.of(context)!.byBodyPart,
             icon: Icons.accessibility_new,
             color: Colors.orange,
             onTap: () {
@@ -699,9 +700,9 @@ class _WorkoutLogScreenState extends State<WorkoutLogScreen> {
               );
             },
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
           _QuickAccessCard(
-            title: 'メモ',
+            title: AppLocalizations.of(context)!.notes,
             icon: Icons.note_add,
             color: Colors.purple,
             onTap: () {
@@ -787,7 +788,7 @@ class _SimpleWorkoutCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // データ解析
-    final muscleGroup = workoutData['muscle_group'] as String? ?? '不明';
+    final muscleGroup = workoutData['muscle_group'] as String? ?? AppLocalizations.of(context)!.unknown;
     final date = (workoutData['date'] as Timestamp?)?.toDate() ?? DateTime.now();
     final startTime = (workoutData['start_time'] as Timestamp?)?.toDate();
     final endTime = (workoutData['end_time'] as Timestamp?)?.toDate();

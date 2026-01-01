@@ -30,7 +30,7 @@ class TrainingPartner {
   factory TrainingPartner.fromFirestore(Map<String, dynamic> data) {
     return TrainingPartner(
       userId: data['user_id']?.toString() ?? '',
-      displayName: data['display_name']?.toString() ?? '名前未設定',
+      displayName: data['display_name']?.toString() ?? AppLocalizations.of(context)!.general_5b6bca48,
       profileImageUrl: data['profile_image_url']?.toString(),
       bio: data['bio']?.toString(),
       location: data['location']?.toString(),

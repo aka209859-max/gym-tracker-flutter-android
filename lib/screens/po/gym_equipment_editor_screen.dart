@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -28,20 +29,20 @@ class _GymEquipmentEditorScreenState extends State<GymEquipmentEditorScreen> {
 
   // 設備候補
   final List<String> _facilityOptions = [
-    'シャワー室',
-    'サウナ',
-    'プール',
-    'スパ',
-    'ロッカールーム',
-    'パーソナルトレーニング',
-    'グループレッスン',
+    AppLocalizations.of(context)!.gym_bd5c63c1,
+    AppLocalizations.of(context)!.gym_d816d814,
+    AppLocalizations.of(context)!.gym_62b8a10f,
+    AppLocalizations.of(context)!.gym_a88b1eac,
+    AppLocalizations.of(context)!.gym_3f1c4a99,
+    AppLocalizations.of(context)!.personalTraining,
+    AppLocalizations.of(context)!.gym_0f5d9dd9,
     'Wi-Fi',
-    '駐車場',
-    '24時間営業',
-    '女性専用エリア',
-    'ストレッチエリア',
-    '有酸素エリア',
-    'フリーウェイトエリア',
+    AppLocalizations.of(context)!.gym_6cec8734,
+    AppLocalizations.of(context)!.gym_fc767436,
+    AppLocalizations.of(context)!.gym_ae762a12,
+    AppLocalizations.of(context)!.gym_7d1e3afa,
+    AppLocalizations.of(context)!.gym_1741ee33,
+    AppLocalizations.of(context)!.gym_bdb55ce3,
   ];
 
   @override
@@ -62,7 +63,7 @@ class _GymEquipmentEditorScreenState extends State<GymEquipmentEditorScreen> {
       if (gymDoc.exists) {
         final data = gymDoc.data();
         if (data == null) {
-          throw Exception('データの取得に失敗しました');
+          throw Exception(AppLocalizations.of(context)!.gym_c7e47d32);
         }
         setState(() {
           _equipment = data['equipment'] != null
@@ -79,7 +80,7 @@ class _GymEquipmentEditorScreenState extends State<GymEquipmentEditorScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('データ読み込みエラー: $e'),
+            content: Text(AppLocalizations.of(context)!.dataLoadError),
             backgroundColor: Colors.red,
           ),
         );
@@ -102,8 +103,8 @@ class _GymEquipmentEditorScreenState extends State<GymEquipmentEditorScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('保存しました'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.saved),
             backgroundColor: Colors.green,
           ),
         );
@@ -113,7 +114,7 @@ class _GymEquipmentEditorScreenState extends State<GymEquipmentEditorScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('保存エラー: $e'),
+            content: Text(AppLocalizations.of(context)!.saveFailed),
             backgroundColor: Colors.red,
           ),
         );
@@ -130,22 +131,22 @@ class _GymEquipmentEditorScreenState extends State<GymEquipmentEditorScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('マシン・器具を追加'),
+        title: Text(AppLocalizations.of(context)!.addWorkout),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(
-                labelText: '器具名',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.gym_17c1e0c7,
                 hintText: '例: レッグプレス',
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: countController,
-              decoration: const InputDecoration(
-                labelText: '台数',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.gym_d441d8be,
               ),
               keyboardType: TextInputType.number,
             ),
@@ -154,7 +155,7 @@ class _GymEquipmentEditorScreenState extends State<GymEquipmentEditorScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -168,7 +169,7 @@ class _GymEquipmentEditorScreenState extends State<GymEquipmentEditorScreen> {
                 Navigator.pop(context);
               }
             },
-            child: const Text('追加'),
+            child: Text(AppLocalizations.of(context)!.add),
           ),
         ],
       ),
@@ -183,7 +184,7 @@ class _GymEquipmentEditorScreenState extends State<GymEquipmentEditorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('設備・施設編集'),
+        title: Text(AppLocalizations.of(context)!.edit),
         actions: [
           if (!_isLoading)
             TextButton.icon(
@@ -194,8 +195,8 @@ class _GymEquipmentEditorScreenState extends State<GymEquipmentEditorScreen> {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.save),
-              label: const Text('保存'),
+                  : Icon(Icons.save),
+              label: Text(AppLocalizations.of(context)!.save),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.white,
               ),
@@ -232,7 +233,7 @@ class _GymEquipmentEditorScreenState extends State<GymEquipmentEditorScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'マシン・器具',
+                  AppLocalizations.of(context)!.gym_841a92b0,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -240,17 +241,17 @@ class _GymEquipmentEditorScreenState extends State<GymEquipmentEditorScreen> {
                 ),
                 ElevatedButton.icon(
                   onPressed: _addEquipment,
-                  icon: const Icon(Icons.add),
-                  label: const Text('追加'),
+                  icon: Icon(Icons.add),
+                  label: Text(AppLocalizations.of(context)!.add),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             if (_equipment.isEmpty)
-              const Center(
+              Center(
                 child: Padding(
                   padding: EdgeInsets.all(16),
-                  child: Text('まだマシン・器具が登録されていません'),
+                  child: Text(AppLocalizations.of(context)!.emailNotRegistered),
                 ),
               )
             else
@@ -313,7 +314,7 @@ class _GymEquipmentEditorScreenState extends State<GymEquipmentEditorScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              '施設・設備',
+              AppLocalizations.of(context)!.gym_36f6e41f,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,

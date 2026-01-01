@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,9 +19,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          'メッセージ',
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.of(context)!.messaging,
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -70,9 +71,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.login, size: 80, color: Colors.grey[400]),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
-            'ログインが必要です',
+            AppLocalizations.of(context)!.signInRequired,
             style: TextStyle(fontSize: 18, color: Colors.grey[600]),
           ),
         ],
@@ -88,12 +89,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
           Icon(Icons.chat_bubble_outline, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
-            'まだメッセージがありません',
+            AppLocalizations.of(context)!.general_00af6a9c,
             style: TextStyle(fontSize: 18, color: Colors.grey[600]),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
-            'パートナー検索から相手を探してみましょう',
+            AppLocalizations.of(context)!.searchGym,
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
           ),
         ],
@@ -119,11 +120,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
           child: const Icon(Icons.person, color: Colors.white),
         ),
         title: Text(
-          'パートナー',
+          AppLocalizations.of(context)!.findPartner,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
-          lastMessage.isEmpty ? 'メッセージを送信しましょう' : lastMessage,
+          lastMessage.isEmpty ? AppLocalizations.of(context)!.general_c69c0c2d : lastMessage,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(color: Colors.grey[600]),
@@ -156,7 +157,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     } else if (difference.inMinutes > 0) {
       return '${difference.inMinutes}分前';
     } else {
-      return 'たった今';
+      return AppLocalizations.of(context)!.general_e31b5d77;
     }
   }
 }

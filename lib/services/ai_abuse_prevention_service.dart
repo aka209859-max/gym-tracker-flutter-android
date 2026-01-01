@@ -49,7 +49,7 @@ class AIAbusePreventionService {
           allowed: false,
           reason: '今月の利用上限（${MAX_AI_CALLS_PER_MONTH}回）に達しました。\n'
                  '異常な利用パターンが検出されました。\n'
-                 'サポートにお問い合わせください。',
+                 AppLocalizations.of(context)!.general_357589c3,
           retryAfter: null,
         );
       }
@@ -141,10 +141,10 @@ class AIAbusePreventionService {
       }).length;
       
       if (recentCalls >= 10) {
-        await _flagUser(userId, 'rapid_calls', '5分以内に10回の連続呼び出し');
+        await _flagUser(userId, 'rapid_calls', AppLocalizations.of(context)!.general_c85634b2);
         return AnomalyDetectionResult(
           isAnomaly: true,
-          reason: 'ボット的な利用パターンが検出されました。',
+          reason: AppLocalizations.of(context)!.general_497a2aa7,
           action: AnomalyAction.temporaryBlock,
         );
       }
@@ -157,10 +157,10 @@ class AIAbusePreventionService {
       }).length;
       
       if (logs.length > 20 && nightCalls / logs.length > 0.5) {
-        await _flagUser(userId, 'night_usage', '深夜時間帯に集中利用');
+        await _flagUser(userId, 'night_usage', AppLocalizations.of(context)!.general_98d5d34b);
         return AnomalyDetectionResult(
           isAnomaly: true,
-          reason: '自動化ツールの利用が疑われます。',
+          reason: AppLocalizations.of(context)!.general_15574875,
           action: AnomalyAction.warning,
         );
       }
@@ -177,10 +177,10 @@ class AIAbusePreventionService {
         // 平均間隔が30秒未満（人間は考える時間が必要）
         final avgInterval = intervals.reduce((a, b) => a + b) / intervals.length;
         if (avgInterval < 30) {
-          await _flagUser(userId, 'rapid_automation', '平均30秒未満の連続利用');
+          await _flagUser(userId, 'rapid_automation', AppLocalizations.of(context)!.general_6474d3c8);
           return AnomalyDetectionResult(
             isAnomaly: true,
-            reason: '自動化スクリプトの利用が検出されました。',
+            reason: AppLocalizations.of(context)!.general_84f740ea,
             action: AnomalyAction.permanentBlock,
           );
         }
@@ -233,12 +233,10 @@ class AIAbusePreventionService {
     try {
       final deviceInfo = DeviceInfoPlugin();
       
+      // iOS専用アプリ
       if (Platform.isIOS) {
         final iosInfo = await deviceInfo.iosInfo;
         return iosInfo.identifierForVendor ?? 'unknown_ios';
-      } else if (Platform.isAndroid) {
-        final androidInfo = await deviceInfo.androidInfo;
-        return androidInfo.id;
       }
       
       return 'unknown_platform';

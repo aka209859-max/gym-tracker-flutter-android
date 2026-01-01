@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -170,7 +171,7 @@ class _PartnerCampaignEditorScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('✅ キャンペーンを保存しました！ユーザーアプリに即反映されます'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 3),
@@ -219,12 +220,12 @@ class _PartnerCampaignEditorScreenState
                   )
                 : const Icon(Icons.save),
             onPressed: _isSaving ? null : _saveCampaign,
-            tooltip: '保存',
+            tooltip: AppLocalizations.of(context)!.save,
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : Form(
               key: _formKey,
               child: ListView(
@@ -238,16 +239,16 @@ class _PartnerCampaignEditorScreenState
 
                   // 基本特典
                   Text(
-                    '基本特典',
+                    AppLocalizations.of(context)!.general_2c8755d8,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   TextFormField(
                     controller: _benefitController,
-                    decoration: const InputDecoration(
-                      labelText: 'パートナー特典',
-                      hintText: '入会金50%OFF・初月無料',
-                      helperText: '検索結果に常に表示される基本特典',
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.general_3dc965c3,
+                      hintText: AppLocalizations.of(context)!.gym_b6f4f89a,
+                      helperText: AppLocalizations.of(context)!.searchGym,
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.local_offer),
                     ),
@@ -258,14 +259,14 @@ class _PartnerCampaignEditorScreenState
 
                   // キャンペーン情報
                   Text(
-                    '期間限定キャンペーン',
+                    AppLocalizations.of(context)!.general_809889ae,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _campaignTitleController,
-                    decoration: const InputDecoration(
-                      labelText: 'キャンペーンタイトル',
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.general_3dc93f95,
                       hintText: '🎉 春の入会キャンペーン開催中!',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.campaign),
@@ -277,8 +278,8 @@ class _PartnerCampaignEditorScreenState
 
                   TextFormField(
                     controller: _campaignDescController,
-                    decoration: const InputDecoration(
-                      labelText: 'キャンペーン詳細',
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.general_b4b2d8e1,
                       hintText:
                           '3月31日までの入会で入会金無料 + プロテイン1kg プレゼント!',
                       border: OutlineInputBorder(),
@@ -294,11 +295,11 @@ class _PartnerCampaignEditorScreenState
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.calendar_today),
-                    title: const Text('キャンペーン期限'),
+                    title: Text(AppLocalizations.of(context)!.general_1a095336),
                     subtitle: Text(
                       _validUntil != null
                           ? '${_validUntil!.year}年${_validUntil!.month}月${_validUntil!.day}日まで'
-                          : '期限なし',
+                          : AppLocalizations.of(context)!.gym_5d1d7a5c,
                     ),
                     trailing: _validUntil != null
                         ? IconButton(
@@ -329,7 +330,7 @@ class _PartnerCampaignEditorScreenState
 
                   TextFormField(
                     controller: _couponCodeController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'クーポンコード (任意)',
                       hintText: 'SPRING2024',
                       border: OutlineInputBorder(),
@@ -342,7 +343,7 @@ class _PartnerCampaignEditorScreenState
 
                   // キャンペーンバナー
                   Text(
-                    'キャンペーンバナー',
+                    AppLocalizations.of(context)!.general_cb4f1541,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
@@ -386,8 +387,8 @@ class _PartnerCampaignEditorScreenState
                   else
                     OutlinedButton.icon(
                       onPressed: _pickBannerImage,
-                      icon: const Icon(Icons.add_photo_alternate),
-                      label: const Text('バナー画像を追加'),
+                      icon: Icon(Icons.add_photo_alternate),
+                      label: Text(AppLocalizations.of(context)!.addWorkout),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),

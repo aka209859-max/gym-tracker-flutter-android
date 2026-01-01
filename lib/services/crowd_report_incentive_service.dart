@@ -23,7 +23,7 @@ class CrowdReportIncentiveService {
       if (user == null) {
         return ReportRewardResult(
           success: false,
-          message: 'ログインが必要です',
+          message: AppLocalizations.of(context)!.loginRequired,
         );
       }
       
@@ -62,7 +62,7 @@ class CrowdReportIncentiveService {
       
       return ReportRewardResult(
         success: true,
-        message: '報告ありがとうございます！',
+        message: AppLocalizations.of(context)!.general_abb85a78,
         aiCreditAwarded: 1,
         reportCount: reportCount,
         milestone: milestone,
@@ -104,7 +104,7 @@ class CrowdReportIncentiveService {
         reward = MilestoneReward(
           type: RewardType.badge,
           title: '🎖️ バッジ獲得！',
-          description: '混雑レポーター（10回達成）',
+          description: AppLocalizations.of(context)!.general_d8b75b82,
           badgeId: 'crowd_reporter_10',
         );
         await _unlockBadge(userId, 'crowd_reporter_10');
@@ -115,7 +115,7 @@ class CrowdReportIncentiveService {
         reward = MilestoneReward(
           type: RewardType.premiumCoupon,
           title: '🎁 Premium 1ヶ月無料！',
-          description: '50回の報告ありがとうございます',
+          description: AppLocalizations.of(context)!.general_1a08e6bb,
           couponCode: 'PREMIUM_1MONTH_FREE',
         );
         await _issueCoupon(userId, 'PREMIUM_1MONTH_FREE', 'Premium 1ヶ月無料', 30);
@@ -126,7 +126,7 @@ class CrowdReportIncentiveService {
         reward = MilestoneReward(
           type: RewardType.proCoupon,
           title: '🔥 Pro Plan 50% OFF！',
-          description: '100回の報告達成！神です！',
+          description: AppLocalizations.of(context)!.general_6f421e4c,
           couponCode: 'PRO_PLAN_50_OFF',
         );
         await _issueCoupon(userId, 'PRO_PLAN_50_OFF', 'Pro Plan 50% OFF (初月)', 90);
@@ -224,7 +224,7 @@ class CrowdReportIncentiveService {
     return NextMilestone(
       target: 200,
       remaining: 0,
-      reward: '全マイルストーン達成！',
+      reward: AppLocalizations.of(context)!.general_67e3473d,
     );
   }
   
@@ -239,7 +239,7 @@ class CrowdReportIncentiveService {
       case 200:
         return '👑 伝説バッジ + AI 50回分';
       default:
-        return '特別報酬';
+        return AppLocalizations.of(context)!.general_945ccc14;
     }
   }
 }

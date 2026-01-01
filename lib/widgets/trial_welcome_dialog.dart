@@ -57,7 +57,7 @@ class TrialWelcomeDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     const Text(
-                      'ようこそ！',
+                      AppLocalizations.of(context)!.subscription_e1e85327,
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -88,7 +88,7 @@ class TrialWelcomeDialog extends StatelessWidget {
                         Icon(Icons.card_giftcard, color: Colors.amber.shade700),
                         const SizedBox(width: 8),
                         const Text(
-                          '特別プレゼント',
+                          AppLocalizations.of(context)!.subscription_2c0c51fb,
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -114,7 +114,7 @@ class TrialWelcomeDialog extends StatelessWidget {
                               Icon(Icons.star, color: Colors.amber.shade600, size: 20),
                               const SizedBox(width: 8),
                               const Text(
-                                'プレミアム7日間無料',
+                                AppLocalizations.of(context)!.subscription_1d16adbb,
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -125,7 +125,7 @@ class TrialWelcomeDialog extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           const Text(
-                            '以下の条件を達成すると、自動的にプレミアムプラン7日間無料でご利用いただけます：',
+                            AppLocalizations.of(context)!.subscription_3dd87f02,
                             style: TextStyle(fontSize: 14),
                           ),
                           const SizedBox(height: 12),
@@ -167,7 +167,7 @@ class TrialWelcomeDialog extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'トライアル期間中はいつでもキャンセル可能です',
+                              AppLocalizations.of(context)!.subscription_b2159b40,
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.amber.shade900,
@@ -207,7 +207,7 @@ class TrialWelcomeDialog extends StatelessWidget {
                           ),
                         ),
                         child: const Text(
-                          '進捗を確認する',
+                          AppLocalizations.of(context)!.subscription_f9d161bd,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -218,7 +218,7 @@ class TrialWelcomeDialog extends StatelessWidget {
                     const SizedBox(height: 8),
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('後で確認する'),
+                      child: Text(AppLocalizations.of(context)!.subscription_441ff03f),
                     ),
                   ],
                 ),

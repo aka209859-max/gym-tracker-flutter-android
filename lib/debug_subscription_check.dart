@@ -33,7 +33,7 @@ Future<void> debugCurrentUserSubscription() async {
     final premiumEndDate = data['premiumEndDate'] as Timestamp?;
     final premiumStartDate = data['premiumStartDate'] as Timestamp?;
     
-    print('プラン種別:');
+    print(AppLocalizations.of(context)!.subscription_a9e04143);
     print('  isPremium: $isPremium');
     print('  premiumType: $premiumType');
     print('');

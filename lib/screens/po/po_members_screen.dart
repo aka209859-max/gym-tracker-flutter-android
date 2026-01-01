@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/pt_member.dart';
@@ -25,10 +26,10 @@ class _POMembersScreenState extends State<POMembersScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'all', label: Text('全会員')),
-                ButtonSegment(value: 'active', label: Text('アクティブ')),
-                ButtonSegment(value: 'dormant', label: Text('休眠中')),
+              segments: [
+                ButtonSegment(value: 'all', label: Text(AppLocalizations.of(context)!.general_f3a02437)),
+                ButtonSegment(value: 'active', label: Text(AppLocalizations.of(context)!.active)),
+                ButtonSegment(value: 'dormant', label: Text(AppLocalizations.of(context)!.general_a9de8b69)),
               ],
               selected: {_filterStatus},
               onSelectionChanged: (Set<String> newSelection) {
@@ -52,7 +53,7 @@ class _POMembersScreenState extends State<POMembersScreen> {
                 }
 
                 if (snapshot.hasError) {
-                  return Center(child: Text('エラー: ${snapshot.error}'));
+                  return Center(child: Text(AppLocalizations.of(context)!.snapshotError));
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -64,7 +65,7 @@ class _POMembersScreenState extends State<POMembersScreen> {
                             size: 64, color: Colors.grey[400]),
                         const SizedBox(height: 16),
                         Text(
-                          'まだパーソナル会員がいません',
+                          AppLocalizations.of(context)!.general_ab9c4e26,
                           style:
                               TextStyle(fontSize: 16, color: Colors.grey[600]),
                         ),
@@ -101,15 +102,15 @@ class _POMembersScreenState extends State<POMembersScreen> {
                         children: [
                           Expanded(
                             child: _SummaryCard(
-                              label: '全会員',
+                              label: AppLocalizations.of(context)!.general_f3a02437,
                               value: '${members.length}名',
                               color: Colors.blue,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Expanded(
                             child: _SummaryCard(
-                              label: 'アクティブ',
+                              label: AppLocalizations.of(context)!.active,
                               value: '$activeCount名',
                               color: Colors.green,
                             ),
@@ -117,7 +118,7 @@ class _POMembersScreenState extends State<POMembersScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _SummaryCard(
-                              label: '休眠中',
+                              label: AppLocalizations.of(context)!.general_a9de8b69,
                               value: '$dormantCount名',
                               color: Colors.orange,
                             ),
@@ -161,7 +162,7 @@ class _POMembersScreenState extends State<POMembersScreen> {
         onPressed: () {
           // 会員追加機能（今後実装）
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('会員追加機能は近日公開予定です')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.addWorkout)),
           );
         },
         child: const Icon(Icons.add),
@@ -267,7 +268,7 @@ class _MemberCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      member.isActive ? 'アクティブ' : '休眠中',
+                      member.isActive ? AppLocalizations.of(context)!.active : AppLocalizations.of(context)!.general_a9de8b69,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,

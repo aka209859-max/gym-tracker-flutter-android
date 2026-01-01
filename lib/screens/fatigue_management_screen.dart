@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -57,8 +58,8 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
   Future<void> _endTodayWorkout() async {
     if (!_isEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('疲労管理システムをONにしてください'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.enableFatigueManagement),
           backgroundColor: Colors.orange,
         ),
       );
@@ -71,7 +72,7 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
       // 本日のトレーニング記録を取得
       final user = firebase_auth.FirebaseAuth.instance.currentUser;
       if (user == null) {
-        throw Exception('ユーザーが認証されていません');
+        throw Exception(AppLocalizations.of(context)!.userNotAuthenticated);
       }
 
       final today = DateTime.now();
@@ -88,8 +89,8 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
       if (querySnapshot.docs.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('本日のトレーニング記録が見つかりません'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.general_86a8de76),
               backgroundColor: Colors.orange,
             ),
           );
@@ -118,7 +119,7 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
             totalVolumeLoad += weight * reps;
           }
           
-          final bodyPart = exercise['body_part'] as String? ?? '不明';
+          final bodyPart = exercise['body_part'] as String? ?? AppLocalizations.of(context)!.unknown;
           bodyParts.add(bodyPart);
         }
       }
@@ -168,9 +169,9 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
     fatigueScore += totalSets * 2.0;
     
     // 部位数による疲労度（大筋群は追加）
-    if (bodyParts.contains('脚')) fatigueScore += 15.0;
-    if (bodyParts.contains('背中')) fatigueScore += 10.0;
-    if (bodyParts.contains('胸')) fatigueScore += 8.0;
+    if (bodyParts.contains(AppLocalizations.of(context)!.bodyPartLegs)) fatigueScore += 15.0;
+    if (bodyParts.contains(AppLocalizations.of(context)!.bodyPartBack)) fatigueScore += 10.0;
+    if (bodyParts.contains(AppLocalizations.of(context)!.bodyPartChest)) fatigueScore += 8.0;
     
     // 疲労度レベルを判定
     String fatigueLevel;
@@ -180,29 +181,29 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
     IconData levelIcon;
     
     if (fatigueScore < 30) {
-      fatigueLevel = '軽度';
+      fatigueLevel = AppLocalizations.of(context)!.general_91e882eb;
       levelColor = Colors.green;
       levelIcon = Icons.sentiment_satisfied;
       advice = '良好なトレーニングでした！\n軽いストレッチと十分な水分補給をしましょう。';
-      recoveryTime = '24時間';
+      recoveryTime = AppLocalizations.of(context)!.allDay;
     } else if (fatigueScore < 50) {
-      fatigueLevel = '中程度';
+      fatigueLevel = AppLocalizations.of(context)!.general_ce061ec3;
       levelColor = Colors.blue;
       levelIcon = Icons.sentiment_neutral;
       advice = '適度な負荷のトレーニングでした。\n7-8時間の睡眠とタンパク質補給を心がけましょう。';
       recoveryTime = '36-48時間';
     } else if (fatigueScore < 70) {
-      fatigueLevel = '高め';
+      fatigueLevel = AppLocalizations.of(context)!.general_da8ce224;
       levelColor = Colors.orange;
       levelIcon = Icons.sentiment_dissatisfied;
       advice = '高強度のトレーニングでした。\n十分な休息と栄養補給が必要です。無理せず回復を優先しましょう。';
       recoveryTime = '48-72時間';
     } else {
-      fatigueLevel = '極めて高い';
+      fatigueLevel = AppLocalizations.of(context)!.general_89a3d255;
       levelColor = Colors.red;
       levelIcon = Icons.warning;
       advice = '非常に高強度のトレーニングでした。\n今日は完全休養を推奨します。睡眠・栄養・ストレッチを重視してください。';
-      recoveryTime = '72時間以上';
+      recoveryTime = AppLocalizations.of(context)!.general_863f2f6a;
     }
 
     showDialog(
@@ -212,7 +213,7 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
           children: [
             Icon(levelIcon, color: levelColor, size: 32),
             const SizedBox(width: 12),
-            const Text('疲労度分析結果'),
+            Text(AppLocalizations.of(context)!.general_2779463b),
           ],
         ),
         content: SingleChildScrollView(
@@ -231,7 +232,7 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
                 child: Column(
                   children: [
                     Text(
-                      '疲労度レベル',
+                      AppLocalizations.of(context)!.general_034a0b49,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[700],
@@ -260,13 +261,13 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
               const SizedBox(height: 20),
               
               // トレーニング内容サマリー
-              _buildInfoRow('総セット数', '$totalSets セット'),
+              _buildInfoRow(AppLocalizations.of(context)!.totalSets, '$totalSets セット'),
               const SizedBox(height: 8),
-              _buildInfoRow('総負荷量', '${totalVolumeLoad.toStringAsFixed(0)} kg'),
+              _buildInfoRow(AppLocalizations.of(context)!.workoutTotalVolume, '${totalVolumeLoad.toStringAsFixed(0)} kg'),
               const SizedBox(height: 8),
-              _buildInfoRow('実施部位', bodyParts.join('、')),
+              _buildInfoRow(AppLocalizations.of(context)!.general_89c719c1, bodyParts.join('、')),
               const SizedBox(height: 8),
-              _buildInfoRow('推奨回復時間', recoveryTime),
+              _buildInfoRow(AppLocalizations.of(context)!.general_f563accd, recoveryTime),
               
               const Divider(height: 32),
               
@@ -276,7 +277,7 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
                   Icon(Icons.lightbulb, color: Colors.amber[700], size: 20),
                   const SizedBox(width: 8),
                   const Text(
-                    'アドバイス',
+                    AppLocalizations.of(context)!.general_c443fe2a,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -321,7 +322,7 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('閉じる'),
+            child: Text(AppLocalizations.of(context)!.readLess),
           ),
         ],
       ),
@@ -355,7 +356,7 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('疲労管理システム'),
+          title: Text(AppLocalizations.of(context)!.fatigueManagementSystem),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -363,7 +364,7 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('疲労管理システム'),
+        title: Text(AppLocalizations.of(context)!.fatigueManagementSystem),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -383,7 +384,7 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
                         Icon(Icons.psychology, color: Colors.blue[700], size: 28),
                         const SizedBox(width: 12),
                         const Text(
-                          '疲労管理システムとは？',
+                          AppLocalizations.of(context)!.general_f79781b6,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -393,10 +394,10 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'トレーニング後の疲労度を科学的に分析し、'
+                      AppLocalizations.of(context)!.general_757bdf34
                       '最適な回復期間とアドバイスを提供します。\n\n'
-                      'オーバートレーニングを防ぎ、常にベストコンディションで'
-                      'トレーニングできるようサポートします。',
+                      AppLocalizations.of(context)!.general_86e4d133
+                      AppLocalizations.of(context)!.general_e373b708,
                       style: TextStyle(
                         fontSize: 14,
                         height: 1.5,
@@ -417,12 +418,11 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
                   size: 40,
                   color: _isEnabled ? Colors.green : Colors.grey,
                 ),
-                title: const Text(
-                  '疲労管理システム',
+                title: Text(AppLocalizations.of(context)!.fatigueManagementSystem,
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(
-                  _isEnabled ? '有効' : '無効',
+                  _isEnabled ? AppLocalizations.of(context)!.valid : AppLocalizations.of(context)!.invalid,
                   style: TextStyle(
                     color: _isEnabled ? Colors.green : Colors.grey,
                     fontWeight: FontWeight.bold,
@@ -456,7 +456,7 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
                           const Icon(Icons.check_circle, size: 28),
                           const SizedBox(width: 12),
                           Text(
-                            '本日の全トレーニング終了',
+                            AppLocalizations.of(context)!.general_60ef486a,
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -472,7 +472,7 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
             if (_isEnabled) ...[
               Text(
                 '💡 全トレーニング終了ボタンを押すと、本日のトレーニング記録を分析し、'
-                '疲労度とアドバイスを表示します。',
+                AppLocalizations.of(context)!.general_8aeecaf0,
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey[600],
@@ -489,10 +489,10 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
                 child: Row(
                   children: [
                     Icon(Icons.info, color: Colors.grey[700], size: 20),
-                    const SizedBox(width: 12),
+                    SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        '疲労管理システムをONにしてください',
+                        AppLocalizations.of(context)!.enableFatigueManagement,
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.grey[800],
@@ -514,9 +514,9 @@ class _FatigueManagementScreenState extends State<FatigueManagementScreen> {
                   color: _hasWorkoutToday ? Colors.green : Colors.grey,
                   size: 32,
                 ),
-                title: const Text('本日のトレーニング'),
+                title: Text(AppLocalizations.of(context)!.general_b673dc9f),
                 subtitle: Text(
-                  _hasWorkoutToday ? '記録済み（分析完了）' : 'まだ記録がありません',
+                  _hasWorkoutToday ? AppLocalizations.of(context)!.purchaseCompleted : AppLocalizations.of(context)!.workout_3ca27cb2,
                   style: TextStyle(
                     color: _hasWorkoutToday ? Colors.green : Colors.grey,
                   ),

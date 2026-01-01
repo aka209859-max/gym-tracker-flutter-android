@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/gym.dart';
@@ -19,26 +20,26 @@ class _PartnerEquipmentEditorScreenState
 
   // マシン種類のマスタリスト
   final List<String> _availableEquipment = [
-    'フリーウエイト',
-    'スミスマシン',
-    'レッグプレス',
-    'ベンチプレス',
-    'ケーブルマシン',
-    'ランニングマシン',
-    'エアロバイク',
-    'ダンベル',
-    'バーベル',
-    'ラットプルダウン',
-    'レッグエクステンション',
-    'レッグカール',
-    'アブドミナル',
-    'ショルダープレス',
-    'チェストプレス',
-    'ハックスクワット',
-    'ケーブルクロスオーバー',
-    'ローイングマシン',
-    'ステップマシン',
-    'その他',
+    AppLocalizations.of(context)!.general_c43e173a,
+    AppLocalizations.of(context)!.gym_8b54efdd,
+    AppLocalizations.of(context)!.exerciseLegPress,
+    AppLocalizations.of(context)!.exerciseBenchPress,
+    AppLocalizations.of(context)!.general_34cda07f,
+    AppLocalizations.of(context)!.gym_40e07129,
+    AppLocalizations.of(context)!.exerciseAerobicBike,
+    AppLocalizations.of(context)!.dumbbell,
+    AppLocalizations.of(context)!.barbell,
+    AppLocalizations.of(context)!.exerciseLatPulldown,
+    AppLocalizations.of(context)!.exerciseLegExtension,
+    AppLocalizations.of(context)!.exerciseLegCurl,
+    AppLocalizations.of(context)!.general_921ddbac,
+    AppLocalizations.of(context)!.exerciseShoulderPress,
+    AppLocalizations.of(context)!.exercise_cfc4f367,
+    AppLocalizations.of(context)!.general_c2994ab4,
+    AppLocalizations.of(context)!.workout_c196525e,
+    AppLocalizations.of(context)!.workout_4c6d7db7,
+    AppLocalizations.of(context)!.general_58db9535,
+    AppLocalizations.of(context)!.bodyPartOther,
   ];
 
   Map<String, int> _equipmentData = {};
@@ -74,7 +75,7 @@ class _PartnerEquipmentEditorScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('データ読み込みエラー: $e'),
+            content: Text(AppLocalizations.of(context)!.dataLoadError),
             backgroundColor: Colors.red,
           ),
         );
@@ -107,7 +108,7 @@ class _PartnerEquipmentEditorScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('✅ 設備情報を更新しました！'),
             backgroundColor: Colors.green,
           ),
@@ -136,7 +137,7 @@ class _PartnerEquipmentEditorScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('設備・マシン情報編集'),
+        title: Text(AppLocalizations.of(context)!.edit),
         backgroundColor: Colors.amber[700],
         actions: [
           if (!_isLoading)
@@ -152,7 +153,7 @@ class _PartnerEquipmentEditorScreenState
                     )
                   : const Icon(Icons.save),
               onPressed: _isSaving ? null : _saveEquipmentData,
-              tooltip: '保存',
+              tooltip: AppLocalizations.of(context)!.saveWorkout,
             ),
         ],
       ),
@@ -216,10 +217,10 @@ class _PartnerEquipmentEditorScreenState
                       children: [
                         Icon(Icons.info_outline,
                             color: Colors.blue[700], size: 20),
-                        const SizedBox(width: 8),
-                        const Expanded(
+                        SizedBox(width: 8),
+                        Expanded(
                           child: Text(
-                            '設置しているマシンの種類と台数を設定してください。\nユーザーが設備情報を確認できます。',
+                            AppLocalizations.of(context)!.confirm,
                             style: TextStyle(fontSize: 13),
                           ),
                         ),
@@ -231,7 +232,7 @@ class _PartnerEquipmentEditorScreenState
 
                   // マシンリスト
                   const Text(
-                    '設備・マシン情報',
+                    AppLocalizations.of(context)!.gym_2689426f,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -315,9 +316,8 @@ class _PartnerEquipmentEditorScreenState
                                     AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
-                          : const Icon(Icons.save),
-                      label: const Text(
-                        '設備情報を保存',
+                          : Icon(Icons.save),
+                      label: Text(AppLocalizations.of(context)!.save,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

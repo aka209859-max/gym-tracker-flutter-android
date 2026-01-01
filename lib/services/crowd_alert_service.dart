@@ -112,7 +112,7 @@ class CrowdAlertService {
       }
       
       // 通知を送信
-      final gymName = gymData['name'] as String? ?? '不明なジム';
+      final gymName = gymData['name'] as String? ?? AppLocalizations.of(context)!.general_0ed7d043;
       await _notificationService.showCrowdAlert(
         gymName: gymName,
         crowdLevel: crowdLevel,

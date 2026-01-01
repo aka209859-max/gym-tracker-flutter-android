@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -37,7 +38,7 @@ class _WeeklyReportsScreenState extends State<WeeklyReportsScreen> {
       builder: (context, authSnapshot) {
         if (authSnapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            appBar: AppBar(title: const Text('週次レポート')),
+            appBar: AppBar(title: Text(AppLocalizations.of(context)!.weeklyReport)),
             body: const Center(
               child: CircularProgressIndicator(),
             ),
@@ -47,16 +48,16 @@ class _WeeklyReportsScreenState extends State<WeeklyReportsScreen> {
         final user = authSnapshot.data;
         if (user == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('週次レポート')),
+            appBar: AppBar(title: Text(AppLocalizations.of(context)!.weeklyReport)),
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('ログインに失敗しました'),
-                  const SizedBox(height: 16),
+                  Text(AppLocalizations.of(context)!.loginError),
+                  SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: _autoLoginIfNeeded,
-                    child: const Text('再試行'),
+                    child: Text(AppLocalizations.of(context)!.tryAgain),
                   ),
                 ],
               ),
@@ -72,7 +73,7 @@ class _WeeklyReportsScreenState extends State<WeeklyReportsScreen> {
   Widget _buildMainContent(User user) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('週次レポート'),
+        title: Text(AppLocalizations.of(context)!.weeklyReport),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -103,7 +104,7 @@ class _WeeklyReportsScreenState extends State<WeeklyReportsScreen> {
                     const Icon(Icons.info_outline, size: 64, color: Colors.blue),
                     const SizedBox(height: 16),
                     const Text(
-                      '週次レポートはまだありません',
+                      AppLocalizations.of(context)!.workout_73791c8e,
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
@@ -126,12 +127,12 @@ class _WeeklyReportsScreenState extends State<WeeklyReportsScreen> {
                   Icon(Icons.assessment, size: 64, color: Colors.grey[400]),
                   const SizedBox(height: 16),
                   Text(
-                    'まだ週次レポートがありません',
+                    AppLocalizations.of(context)!.workout_6fa5ecc7,
                     style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '毎週月曜日に自動生成されます',
+                    AppLocalizations.of(context)!.workout_c604389d,
                     style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
                 ],
@@ -166,13 +167,13 @@ class _WeeklyReportsScreenState extends State<WeeklyReportsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('週次レポート設定'),
+        title: Text(AppLocalizations.of(context)!.settings),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SwitchListTile(
-              title: const Text('週次レコメンデーション'),
-              subtitle: const Text('推奨曜日とメニュー提案を表示'),
+              title: Text(AppLocalizations.of(context)!.workout_82b9ada7),
+              subtitle: Text(AppLocalizations.of(context)!.workout_54f8ade3),
               value: true,
               onChanged: (value) {
                 // TODO: Save setting to Firestore
@@ -183,7 +184,7 @@ class _WeeklyReportsScreenState extends State<WeeklyReportsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('閉じる'),
+            child: Text(AppLocalizations.of(context)!.readLess),
           ),
         ],
       ),
@@ -218,21 +219,21 @@ class _ReportCard extends StatelessWidget {
               children: [
                 // 実績サマリー
                 _buildSection(
-                  '実績',
+                  AppLocalizations.of(context)!.achievementsAndGoals,
                   [
                     _InfoRow(
                       icon: Icons.fitness_center,
-                      label: 'トレーニング回数',
+                      label: AppLocalizations.of(context)!.workoutCount,
                       value: '${report.totalWorkouts}回',
                     ),
                     _InfoRow(
                       icon: Icons.timer,
-                      label: '合計時間',
+                      label: AppLocalizations.of(context)!.workout_5197dae1,
                       value: '${report.totalMinutes}分',
                     ),
                     _InfoRow(
                       icon: Icons.local_fire_department,
-                      label: 'ストリーク',
+                      label: AppLocalizations.of(context)!.workout_a9ff3dea,
                       value: '${report.streak}日',
                     ),
                   ],
@@ -244,7 +245,7 @@ class _ReportCard extends StatelessWidget {
 
                 // 部位別実施状況
                 _buildSection(
-                  '部位別実施状況',
+                  AppLocalizations.of(context)!.workout_2d649ff9,
                   [
                     ...report.bodyParts.entries.map((entry) {
                       return _BodyPartRow(
@@ -296,12 +297,12 @@ class _ReportCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(Icons.lightbulb, color: Colors.blue, size: 20),
               SizedBox(width: 8),
               Text(
-                '今週のレコメンデーション',
+                AppLocalizations.of(context)!.workout_1ed68d67,
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
             ],

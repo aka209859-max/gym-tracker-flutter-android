@@ -113,7 +113,7 @@ class ScientificBasis {
       'monthly_rate_max': 25.0,
       'weekly_rate_min': 3.5,
       'weekly_rate_max': 5.8,
-      'description': '神経系適応による急速な向上期',
+      'description': AppLocalizations.of(context)!.general_fb75142a,
       'reference': 'Effect of high intensity study - 6週間で+31.2%',
     },
     'intermediate': {
@@ -122,16 +122,16 @@ class ScientificBasis {
       'monthly_rate_max': 10.0,
       'weekly_rate_min': 1.2,
       'weekly_rate_max': 2.3,
-      'description': '筋肥大依存の安定成長期',
+      'description': AppLocalizations.of(context)!.general_a0f52296,
       'reference': 'ACSM 2009 Position Stand',
     },
     'advanced': {
-      'period': '24ヶ月以上',
+      'period': AppLocalizations.of(context)!.general_8f8e63f4,
       'monthly_rate_min': 1.0,
       'monthly_rate_max': 3.0,
       'weekly_rate_min': 0.2,
       'weekly_rate_max': 0.7,
-      'description': 'ピリオダイゼーション必須の緩成長期',
+      'description': AppLocalizations.of(context)!.general_36984c1b,
       'reference': 'ACSM 2009 Periodization Model',
     },
   };
@@ -150,10 +150,10 @@ class ScientificBasis {
   
   /// 頻度別の効果サイズ（Grgic et al. 2018）
   static const Map<int, Map<String, dynamic>> FREQUENCY_EFFECT_SIZES = {
-    1: {'effect_size': 0.74, 'description': '週1回'},
-    2: {'effect_size': 0.82, 'description': '週2回'},
-    3: {'effect_size': 0.93, 'description': '週3回'},
-    4: {'effect_size': 1.08, 'description': '週4回以上'},
+    1: {'effect_size': 0.74, 'description': AppLocalizations.of(context)!.general_2e727f5f},
+    2: {'effect_size': 0.82, 'description': AppLocalizations.of(context)!.general_7df4a661},
+    3: {'effect_size': 0.93, 'description': AppLocalizations.of(context)!.general_6942f967},
+    4: {'effect_size': 1.08, 'description': AppLocalizations.of(context)!.general_1c4dd8b9},
   };
 
   /// ボリューム等価時のp値（重要知見）
@@ -189,27 +189,27 @@ class ScientificBasis {
   /// プラトー打破戦略A: 新刺激
   static const List<Map<String, String>> PLATEAU_BREAKING_TECHNIQUES = [
     {
-      'name': 'ドロップセット',
-      'description': '限界到達後、即座に負荷を下げて継続',
-      'effect': '高い代謝ストレス誘発',
+      'name': AppLocalizations.of(context)!.general_71a798d0,
+      'description': AppLocalizations.of(context)!.general_5b7f8633,
+      'effect': AppLocalizations.of(context)!.general_06533cc7,
       'reference': 'Krzysztofik et al. 2019',
     },
     {
-      'name': 'スーパーセット',
-      'description': '拮抗筋または上下半身を組み合わせ',
-      'effect': '時間効率とボリューム向上',
+      'name': AppLocalizations.of(context)!.superSet,
+      'description': AppLocalizations.of(context)!.general_41e9fd88,
+      'effect': AppLocalizations.of(context)!.general_e42e4be1,
       'reference': 'Krzysztofik et al. 2019',
     },
     {
-      'name': 'クラスターセット',
+      'name': AppLocalizations.of(context)!.general_f9cf88c0,
       'description': 'セット内に短い休憩（15-30秒）を挟む',
-      'effect': 'セット全体の質と総挙上重量の向上',
+      'effect': AppLocalizations.of(context)!.general_8ce8f22a,
       'reference': 'Krzysztofik et al. 2019',
     },
     {
-      'name': 'AEL（偏心負荷強調）',
-      'description': 'ネガティブ動作の負荷を意図的に高める',
-      'effect': '機械的張力の最大化',
+      'name': AppLocalizations.of(context)!.general_434e4837,
+      'description': AppLocalizations.of(context)!.general_59f08269,
+      'effect': AppLocalizations.of(context)!.general_266dc027,
       'reference': 'Krzysztofik et al. 2019',
     },
   ];
@@ -220,7 +220,7 @@ class ScientificBasis {
     'volume_reduction_range': [30, 50],
     'intensity_change': 'maintain', // 強度は維持
     'duration_days': 7,
-    'description': '生理・心理的疲労を軽減し、回復を促進する期間',
+    'description': AppLocalizations.of(context)!.general_dfa34238,
     'reference': 'Bell et al. 2023 BMC Sports Sci',
   };
 
@@ -326,13 +326,13 @@ class ScientificBasis {
     'strength': {
       'effect_size': -0.09,
       'p_value': 'not significant',
-      'recommendation': '不要',
+      'recommendation': AppLocalizations.of(context)!.general_b5422837,
       'reference': 'Grgic et al. 2022 J Sport Health Sci',
     },
     'hypertrophy_trained': {
       'effect_size': 0.15,
       'p_value': '<0.05',
-      'recommendation': '上級者には有効',
+      'recommendation': AppLocalizations.of(context)!.general_c1d76f34,
       'reference': 'Grgic et al. 2022',
     },
   };
@@ -360,20 +360,20 @@ class ScientificBasis {
     'hypertrophy_relative': {
       'effect_size': 0.07,
       'p_value': 0.31,
-      'result': '男女差なし',
+      'result': AppLocalizations.of(context)!.general_a6830e80,
       'reference': '2024 PeerJ Meta-analysis',
     },
     'strength_lower_body': {
       'effect_size': -0.21,
       'p_value': 0.20,
-      'result': '男女差なし',
+      'result': AppLocalizations.of(context)!.general_a6830e80,
       'reference': 'Roberts et al. 2020',
     },
     'strength_upper_body': {
       'effect_size': -0.60, // 負値は女性に有利
       'p_value': 0.002,
-      'result': '女性が有意に優位',
-      'recommendation': 'AI予測で女性の上半身成長率を高く設定',
+      'result': AppLocalizations.of(context)!.general_ecb0445d,
+      'recommendation': AppLocalizations.of(context)!.general_76f6bcee,
       'reference': 'Roberts et al. 2020 J Strength Cond Res',
     },
   };
@@ -381,8 +381,8 @@ class ScientificBasis {
   /// 遺伝要因（Pickering & Kiely 2019）
   static const Map<String, String> GENETIC_FACTORS = {
     'non_responder_existence': 'unlikely',
-    'stagnation_cause': 'プログラムのミスマッチ（遺伝的限界ではない）',
-    'ai_approach': 'ボリューム・強度・頻度の個別最適化を提案',
+    'stagnation_cause': AppLocalizations.of(context)!.general_ab2daf8d,
+    'ai_approach': AppLocalizations.of(context)!.general_35f010d1,
     'reference': 'Pickering & Kiely 2019 Sports Med',
   };
 }

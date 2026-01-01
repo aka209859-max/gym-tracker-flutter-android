@@ -33,7 +33,7 @@ class UpdateDialog extends StatelessWidget {
       canPop: !versionCheck.isForceUpdate, // 強制の場合は戻るボタン無効
       child: AlertDialog(
         title: const Text(
-          '最新バージョンに更新',
+          AppLocalizations.of(context)!.general_07b4f5d1,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 18,
@@ -41,7 +41,7 @@ class UpdateDialog extends StatelessWidget {
           ),
         ),
         content: const Text(
-          '新しいバージョンのアプリが利用可能です。最新バージョンにアップデートしてください。',
+          AppLocalizations.of(context)!.general_3f0af19e,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 15,
@@ -74,7 +74,7 @@ class UpdateDialog extends StatelessWidget {
                 // 強制アップデートの場合はダイアログを閉じない
               },
               child: const Text(
-                'OK',
+                AppLocalizations.of(context)!.ok,
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,

@@ -105,15 +105,16 @@ class Exercise {
     }
     
     // 🔧 v1.0.245: bodyPartのランタイム補完強化 (Problem 1 fix)
+    // 🔧 v1.0.317: AppLocalizations削除のため、'Other'文字列を直接使用
     String? bodyPart = map['bodyPart'] ?? map['muscle_group'];
     
-    // bodyPartがnull、または'その他'の場合、ExerciseMasterDataで再評価
-    if (bodyPart == null || bodyPart == 'その他') {
+    // bodyPartがnull、または'Other'の場合、ExerciseMasterDataで再評価
+    if (bodyPart == null || bodyPart == 'Other') {
       bodyPart = ExerciseMasterData.getBodyPartByName(exerciseName);
     }
     
-    // それでもnullなら'その他'（ExerciseMasterDataはデフォルトで'その他'を返すので通常不要）
-    bodyPart ??= 'その他';
+    // それでもnullなら'Other'（ExerciseMasterDataはデフォルトで'Other'を返すので通常不要）
+    bodyPart ??= 'Other';
     
     return Exercise(
       name: exerciseName,
@@ -213,7 +214,7 @@ class WorkoutSet {
   String get setTypeDisplayName {
     switch (setType) {
       case SetType.normal:
-        return '通常';
+        return AppLocalizations.of(context)!.workout_9f784efd;
       case SetType.warmup:
         return 'W-UP';
       case SetType.superset:
@@ -221,7 +222,7 @@ class WorkoutSet {
       case SetType.dropset:
         return 'DS';
       case SetType.failure:
-        return '限界';
+        return AppLocalizations.of(context)!.limit;
     }
   }
 }
