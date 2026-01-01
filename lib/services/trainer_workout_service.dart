@@ -14,7 +14,7 @@ class TrainerWorkoutService {
     try {
       // メールアドレスが空の場合は空リストを返す
       if (memberEmail.isEmpty) {
-        debugPrint('メールアドレスが設定されていません');
+        debugPrint(AppLocalizations.of(context)!.workout_8982c109);
         return [];
       }
 
@@ -140,7 +140,7 @@ class TrainerWorkoutRecord {
       gymId: data['gymId'] ?? '',
       date: (data['date'] as Timestamp).toDate(),
       duration: data['duration'] ?? 60,
-      sessionType: data['sessionType'] ?? 'パーソナルトレーニング',
+      sessionType: data['sessionType'] ?? AppLocalizations.of(context)!.personalTraining,
       status: data['status'] ?? 'completed',
       exercises: workoutLog != null && workoutLog['exercises'] != null
           ? (workoutLog['exercises'] as List)

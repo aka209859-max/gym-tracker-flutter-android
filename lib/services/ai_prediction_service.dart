@@ -36,6 +36,7 @@ class AIPredictionService {
     required String bodyPart,
     int monthsAhead = 4,
     int rpe = 8,
+    String locale = 'ja', // 🆕 v1.0.274: Add locale parameter for multilingual support
   }) async {
     try {
       // 基本的な成長率を計算
@@ -87,6 +88,7 @@ class AIPredictionService {
         recommendedVolume: recommendedVolume,
         recommendedFreq: recommendedFreq,
         rpe: rpe,
+        locale: locale, // 🆕 v1.0.274: Pass locale to AI analysis
       );
 
       return {
@@ -143,6 +145,7 @@ class AIPredictionService {
     required Map<String, int> recommendedVolume,
     required Map<String, dynamic> recommendedFreq,
     int rpe = 8,
+    String locale = 'ja', // 🆕 v1.0.274: Add locale parameter
   }) async {
     // キャッシュキーを生成
     final cacheKey = AIResponseOptimizer.generateCacheKey({
@@ -154,6 +157,7 @@ class AIPredictionService {
       'age': age,
       'bodyPart': bodyPart,
       'monthsAhead': monthsAhead,
+      'locale': locale, // 🆕 v1.0.274: Include locale in cache key
     });
     
     // キャッシュをチェック
@@ -165,43 +169,22 @@ class AIPredictionService {
     
     print('⏳ AI分析: API呼び出し中...');
     
-    final prompt = '''
-${ScientificDatabase.getSystemPrompt()}
-
-【ユーザー情報】
-・対象部位：$bodyPart
-・現在の1RM：${currentWeight}kg
-・トレーニングレベル：$level
-・現在の頻度：$bodyPart を週${frequency}回トレーニング
-・性別：$gender
-・年齢：${age}歳
-
-【予測結果】
-・予測期間：${monthsAhead}ヶ月
-・予測1RM：${predictedWeight.round()}kg
-・成長率：月+${(monthlyRate * 100).round()}%
-・週次成長率：週+${(weeklyRate * 100 * 10).round() / 10}%
-
-【推奨プログラム】
-・$bodyPart のトレーニング：週${recommendedFreq['frequency']}回
-・$bodyPart のボリューム：週${recommendedVolume['optimal']}セット
-・効果量：ES=${recommendedFreq['effectSize']}
-
-【重要】
-「週${recommendedFreq['frequency']}回」= 同一部位（$bodyPart）を週に${recommendedFreq['frequency']}回トレーニングすること
-これはGrgic et al. 2018のメタ分析に基づく推奨値
-
-以下の形式で簡潔に回答してください（300文字以内）：
-
-## 成長予測の科学的根拠
-（レベル別の成長率とその根拠を説明）
-
-## 推奨アクションプラン
-（具体的なトレーニング頻度・ボリューム・負荷増加を提案）
-
-## 成功のカギ
-（最も重要な3つのポイント）
-''';
+    // 🆕 v1.0.274: Build multilingual prompt based on locale
+    final prompt = _buildPrompt(
+      locale: locale,
+      currentWeight: currentWeight,
+      predictedWeight: predictedWeight,
+      level: level,
+      frequency: frequency,
+      gender: gender,
+      age: age,
+      bodyPart: bodyPart,
+      monthsAhead: monthsAhead,
+      monthlyRate: monthlyRate,
+      weeklyRate: weeklyRate,
+      recommendedVolume: recommendedVolume,
+      recommendedFreq: recommendedFreq,
+    );
 
     try {
       final response = await http.post(
@@ -288,35 +271,35 @@ ${ScientificDatabase.getSystemPrompt()}
     final basis = <Map<String, String>>[];
 
     // レベル別の根拠
-    if (level == '初心者') {
+    if (level == AppLocalizations.of(context)!.levelBeginner) {
       basis.add({
         'citation': 'ACSM 2009',
-        'finding': '初心者は4ヶ月で約30%の筋力向上',
+        'finding': AppLocalizations.of(context)!.general_28b93543,
         'effectSize': 'N/A',
       });
       
-      final isUpperBody = bodyPart.contains('胸') || 
-                          bodyPart.contains('腕') || 
-                          bodyPart.contains('肩') || 
-                          bodyPart.contains('三角筋');
+      final isUpperBody = bodyPart.contains(AppLocalizations.of(context)!.bodyPartChest) || 
+                          bodyPart.contains(AppLocalizations.of(context)!.bodyPartArms) || 
+                          bodyPart.contains(AppLocalizations.of(context)!.bodyPartShoulders) || 
+                          bodyPart.contains(AppLocalizations.of(context)!.workout_da6d5d22);
       
-      if (gender == '女性' && isUpperBody) {
+      if (gender == AppLocalizations.of(context)!.genderFemale && isUpperBody) {
         basis.add({
           'citation': 'Roberts et al. 2020',
-          'finding': '女性の上半身は男性より20%高い成長率',
+          'finding': AppLocalizations.of(context)!.general_22c8a84e,
           'effectSize': 'ES=-0.60',
         });
       }
-    } else if (level == '中級者') {
+    } else if (level == AppLocalizations.of(context)!.levelIntermediate) {
       basis.add({
         'citation': 'ACSM 2009',
-        'finding': '中級者は4ヶ月で約15%の筋力向上',
+        'finding': AppLocalizations.of(context)!.general_1e52e0d5,
         'effectSize': 'N/A',
       });
     } else {
       basis.add({
         'citation': 'Williams et al. 2017',
-        'finding': 'DUPが上級者に効果的（4ヶ月で約5%成長）',
+        'finding': AppLocalizations.of(context)!.general_92cbf27f,
         'effectSize': 'ES=0.68',
       });
     }
@@ -324,7 +307,7 @@ ${ScientificDatabase.getSystemPrompt()}
     // 頻度の根拠
     basis.add({
       'citation': 'Grgic et al. 2018',
-      'finding': 'ボリュームが成長の鍵、頻度は手段',
+      'finding': AppLocalizations.of(context)!.general_8e3d4ad1,
       'effectSize': 'ES=0.88-1.08',
     });
 
@@ -385,5 +368,144 @@ ${ScientificDatabase.getSystemPrompt()}
     }
 
     return curve;
+  }
+
+  /// 🆕 v1.0.274: Build multilingual AI prompt based on user's locale
+  static String _buildPrompt({
+    required String locale,
+    required double currentWeight,
+    required double predictedWeight,
+    required String level,
+    required int frequency,
+    required String gender,
+    required int age,
+    required String bodyPart,
+    required int monthsAhead,
+    required double monthlyRate,
+    required double weeklyRate,
+    required Map<String, int> recommendedVolume,
+    required Map<String, dynamic> recommendedFreq,
+  }) {
+    final systemPrompt = ScientificDatabase.getSystemPrompt();
+    
+    switch (locale) {
+      case 'en':
+        return '''
+$systemPrompt
+
+[USER INFORMATION]
+・Target Muscle: $bodyPart
+・Current 1RM: ${currentWeight}kg
+・Training Level: $level
+・Current Frequency: $bodyPart training ${frequency}x/week
+・Gender: $gender
+・Age: $age years
+
+[PREDICTION RESULTS]
+・Prediction Period: $monthsAhead months
+・Predicted 1RM: ${predictedWeight.round()}kg
+・Growth Rate: +${(monthlyRate * 100).round()}%/month
+・Weekly Growth Rate: +${(weeklyRate * 100 * 10).round() / 10}%/week
+
+[RECOMMENDED PROGRAM]
+・$bodyPart Training: ${recommendedFreq['frequency']}x/week
+・$bodyPart Volume: ${recommendedVolume['optimal']} sets/week
+・Effect Size: ES=${recommendedFreq['effectSize']}
+
+[IMPORTANT]
+"${recommendedFreq['frequency']}x/week" = Training the same muscle group ($bodyPart) ${recommendedFreq['frequency']} times per week
+Based on meta-analysis by Grgic et al. 2018
+
+Please respond in the following format (within 300 words):
+
+## Scientific Basis for Growth Prediction
+(Explain growth rate by level and its scientific basis)
+
+## Recommended Action Plan
+(Suggest specific training frequency, volume, and load progression)
+
+## Keys to Success
+(List 3 most important points)
+''';
+
+      case 'ko':
+        return '''
+$systemPrompt
+
+[사용자 정보]
+・대상 부위: $bodyPart
+・현재 1RM: ${currentWeight}kg
+・트레이닝 레벨: $level
+・현재 빈도: $bodyPart 주 ${frequency}회 트레이닝
+・성별: $gender
+・나이: $age세
+
+[예측 결과]
+・예측 기간: ${monthsAhead}개월
+・예측 1RM: ${predictedWeight.round()}kg
+・성장률: 월 +${(monthlyRate * 100).round()}%
+・주간 성장률: 주 +${(weeklyRate * 100 * 10).round() / 10}%
+
+[추천 프로그램]
+・$bodyPart 트레이닝: 주 ${recommendedFreq['frequency']}회
+・$bodyPart 볼륨: 주 ${recommendedVolume['optimal']}세트
+・효과 크기: ES=${recommendedFreq['effectSize']}
+
+[중요]
+"주 ${recommendedFreq['frequency']}회" = 같은 부위($bodyPart)를 주에 ${recommendedFreq['frequency']}회 트레이닝하는 것
+Grgic et al. 2018의 메타 분석 기반
+
+다음 형식으로 간결하게 답변해주세요 (300자 이내):
+
+## 성장 예측의 과학적 근거
+(레벨별 성장률과 그 근거 설명)
+
+## 추천 액션 플랜
+(구체적인 트레이닝 빈도, 볼륨, 부하 증가 제안)
+
+## 성공의 열쇠
+(가장 중요한 3가지 포인트)
+''';
+
+      case 'ja':
+      default:
+        return '''
+$systemPrompt
+
+【ユーザー情報】
+・対象部位：$bodyPart
+・現在の1RM：${currentWeight}kg
+・トレーニングレベル：$level
+・現在の頻度：$bodyPart を週${frequency}回トレーニング
+・性別：$gender
+・年齢：${age}歳
+
+【予測結果】
+・予測期間：${monthsAhead}ヶ月
+・予測1RM：${predictedWeight.round()}kg
+・成長率：月+${(monthlyRate * 100).round()}%
+・週次成長率：週+${(weeklyRate * 100 * 10).round() / 10}%
+
+【推奨プログラム】
+・$bodyPart のトレーニング：週${recommendedFreq['frequency']}回
+・$bodyPart のボリューム：週${recommendedVolume['optimal']}セット
+・効果量：ES=${recommendedFreq['effectSize']}
+
+【重要】
+「週${recommendedFreq['frequency']}回」= 同一部位（$bodyPart）を週に${recommendedFreq['frequency']}回トレーニングすること
+これはGrgic et al. 2018のメタ分析に基づく推奨値
+
+以下の形式で簡潔に回答してください（300文字以内）：
+
+## 成長予測の科学的根拠
+（レベル別の成長率とその根拠を説明）
+
+## 推奨アクションプラン
+（具体的なトレーニング頻度・ボリューム・負荷増加を提案）
+
+## 成功のカギ
+（最も重要な3つのポイント）
+''';
+    }
   }
 }

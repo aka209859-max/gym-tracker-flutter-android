@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/trainer_workout_service.dart';
@@ -214,13 +215,13 @@ class TrainerWorkoutCard extends StatelessWidget {
                       ),
                       child: Icon(Icons.fitness_center, color: Colors.orange[700]),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'パーソナルトレーニング',
+                          Text(
+                          AppLocalizations.of(context)!.personalTraining,
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -247,13 +248,13 @@ class TrainerWorkoutCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   children: [
                     // トレーナー情報
-                    _buildInfoRow('トレーナー', record.trainerName),
-                    _buildInfoRow('時間', '${record.duration}分'),
-                    _buildInfoRow('強度', _getIntensityLabel(record.intensity)),
+                    _buildInfoRow(AppLocalizations.of(context)!.trainers, record.trainerName),
+                    _buildInfoRow(AppLocalizations.of(context)!.duration, '${record.duration}分'),
+                    _buildInfoRow(AppLocalizations.of(context)!.workout_c34d51a0, _getIntensityLabel(context, record.intensity)),
                     
                     const SizedBox(height: 24),
                     const Text(
-                      '実施メニュー',
+                      AppLocalizations.of(context)!.workout_6635091c,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -295,24 +296,24 @@ class TrainerWorkoutCard extends StatelessWidget {
                     if (record.bodyMetrics != null) ...[
                       const SizedBox(height: 24),
                       const Text(
-                        '体組成',
+                        AppLocalizations.of(context)!.workout_85a5a0ad,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                       Card(
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
                             children: [
                               if (record.bodyMetrics!.weight != null)
-                                _buildMetricRow('体重', '${record.bodyMetrics!.weight}kg'),
+                                _buildMetricRow(AppLocalizations.of(context)!.weight, '${record.bodyMetrics!.weight}kg'),
                               if (record.bodyMetrics!.bodyFat != null)
-                                _buildMetricRow('体脂肪率', '${record.bodyMetrics!.bodyFat}%'),
+                                _buildMetricRow(AppLocalizations.of(context)!.bodyFat, '${record.bodyMetrics!.bodyFat}%'),
                               if (record.bodyMetrics!.muscleMass != null)
-                                _buildMetricRow('筋肉量', '${record.bodyMetrics!.muscleMass}kg'),
+                                _buildMetricRow(AppLocalizations.of(context)!.muscleMass, '${record.bodyMetrics!.muscleMass}kg'),
                             ],
                           ),
                         ),
@@ -323,7 +324,7 @@ class TrainerWorkoutCard extends StatelessWidget {
                     if (record.trainerNotes.isNotEmpty) ...[
                       const SizedBox(height: 24),
                       const Text(
-                        'トレーナーからのメッセージ',
+                        AppLocalizations.of(context)!.workout_ffc76989,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -402,15 +403,15 @@ class TrainerWorkoutCard extends StatelessWidget {
     );
   }
 
-  String _getIntensityLabel(String intensity) {
+  String _getIntensityLabel(BuildContext context, String intensity) {
     switch (intensity) {
       case 'low':
-        return '軽め';
+        return AppLocalizations.of(context)!.workout_c55c9549;
       case 'high':
-        return 'ハード';
+        return AppLocalizations.of(context)!.workout_eaaa4898;
       case 'medium':
       default:
-        return '普通';
+        return AppLocalizations.of(context)!.crowdLevelNormal;
     }
   }
 }

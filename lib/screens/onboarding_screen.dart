@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,7 +25,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       imagePath: null,
     ),
     OnboardingPage(
-      title: '簡単トレーニング記録',
+      title: AppLocalizations.of(context)!.general_b8985d41,
       description: '種目・重量・回数を入力するだけ！\nカレンダーで成長を可視化',
       icon: Icons.edit_note,
       color: Colors.green,
@@ -38,7 +39,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       imagePath: null,
     ),
     OnboardingPage(
-      title: '今すぐはじめよう！',
+      title: AppLocalizations.of(context)!.general_08f3d852,
       description: '最初のトレーニングを\n記録してみましょう',
       icon: Icons.rocket_launch,
       color: Colors.purple,
@@ -88,8 +89,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 alignment: Alignment.topRight,
                 child: TextButton(
                   onPressed: _skipOnboarding,
-                  child: const Text(
-                    'スキップ',
+                  child: Text(AppLocalizations.of(context)!.skip,
                     style: TextStyle(fontSize: 16),
                   ),
                 ),
@@ -139,7 +139,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   child: Text(
-                    _currentPage < _pages.length - 1 ? '次へ' : 'はじめる！',
+                    _currentPage < _pages.length - 1 ? AppLocalizations.of(context)!.next : AppLocalizations.of(context)!.general_81e13f3b,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

@@ -107,7 +107,7 @@ class _RewardAdDialogState extends State<RewardAdDialog> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('広告の読み込みに失敗しました。もう一度お試しください。'),
+              content: Text(AppLocalizations.of(context)!.error_6a111b24),
               backgroundColor: Colors.red,
             ),
           );
@@ -146,7 +146,7 @@ class _RewardAdDialogState extends State<RewardAdDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('広告の表示に失敗しました。しばらく待ってからお試しください。'),
+            content: Text(AppLocalizations.of(context)!.error_31ac752d),
             backgroundColor: Colors.red,
           ),
         );
@@ -163,7 +163,7 @@ class _RewardAdDialogState extends State<RewardAdDialog> {
           const SizedBox(width: 12),
           const Expanded(
             child: Text(
-              '動画を見てAI機能を使う',
+              AppLocalizations.of(context)!.general_bc95e298,
               style: TextStyle(fontSize: 18),
             ),
           ),
@@ -176,7 +176,7 @@ class _RewardAdDialogState extends State<RewardAdDialog> {
           Text(
             kIsWeb
                 ? '【Web版テストモード】\nボタンを押すと2秒後にAIクレジットを獲得できます'
-                : '広告動画を1回視聴すると、AI機能を1回使えるクレジットを獲得できます',
+                : AppLocalizations.of(context)!.general_a6551e30,
             style: const TextStyle(fontSize: 14),
           ),
           const SizedBox(height: 16),
@@ -208,7 +208,7 @@ class _RewardAdDialogState extends State<RewardAdDialog> {
                 if (_remainingAds == 0) ...[
                   const SizedBox(height: 8),
                   const Text(
-                    '今月の上限に達しました',
+                    AppLocalizations.of(context)!.general_d3b805fc,
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
@@ -225,7 +225,7 @@ class _RewardAdDialogState extends State<RewardAdDialog> {
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(false),
-          child: const Text('キャンセル'),
+          child: Text(AppLocalizations.of(context)!.buttonCancel),
         ),
         ElevatedButton(
           onPressed: _isLoading || _remainingAds == 0 ? null : _watchAd,
@@ -242,7 +242,7 @@ class _RewardAdDialogState extends State<RewardAdDialog> {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-              : const Text('動画を見る'),
+              : Text(AppLocalizations.of(context)!.general_3968b846),
         ),
       ],
     );

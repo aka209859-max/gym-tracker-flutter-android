@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,7 +20,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('メッセージ'),
+        title: Text(AppLocalizations.of(context)!.messaging),
         elevation: 2,
       ),
       body: StreamBuilder<List<Conversation>>(
@@ -61,7 +62,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
             Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
             Text(
-              'メッセージの読み込みに失敗しました',
+              AppLocalizations.of(context)!.error_4c43efe6,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
@@ -89,18 +90,18 @@ class _MessagingScreenState extends State<MessagingScreen> {
               size: 80,
               color: Colors.grey[300],
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Text(
-              'メッセージがありません',
+              AppLocalizations.of(context)!.noMessages,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey[600],
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
-              'トレーニングパートナーとメッセージを\n開始してみましょう',
+              AppLocalizations.of(context)!.trainingPartner,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -126,7 +127,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
       future: _messagingService.getUserInfo(otherUserId),
       builder: (context, snapshot) {
         final userInfo = snapshot.data;
-        final displayName = userInfo?['displayName'] ?? '不明なユーザー';
+        final displayName = userInfo?['displayName'] ?? AppLocalizations.of(context)!.general_c519f0c5;
         final photoUrl = userInfo?['photoUrl'] as String?;
 
         return Card(
@@ -253,7 +254,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
     if (difference.inDays == 0) {
       return DateFormat('HH:mm').format(timestamp);
     } else if (difference.inDays == 1) {
-      return '昨日';
+      return AppLocalizations.of(context)!.yesterday;
     } else if (difference.inDays < 7) {
       return DateFormat('E', 'ja_JP').format(timestamp);
     } else {

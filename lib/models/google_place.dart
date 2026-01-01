@@ -214,7 +214,7 @@ class GooglePlace {
       'monthlyFee': null, // 推定値は表示しない（公式サイト確認を推奨）
       'facilities': [], // 推定値は表示しない（公式サイト確認を推奨）
       'phoneNumber': null, // Google Places API Details呼び出しが必要
-      'openingHours': openNow == true ? '営業中' : openNow == false ? '営業時間外' : '営業時間不明',
+      'openingHours': openNow == true ? AppLocalizations.of(context)!.open : openNow == false ? AppLocalizations.of(context)!.general_a2082b23 : AppLocalizations.of(context)!.general_88133d74,
       'imageUrl': photoReference != null 
           ? 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=$photoReference&key=AIzaSyBRJG8v0euVbxbMNbwXownQJA3_Ra8EzMM'
           : 'https://via.placeholder.com/400x300?text=No+Image',

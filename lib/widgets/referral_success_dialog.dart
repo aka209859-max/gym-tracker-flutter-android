@@ -34,7 +34,7 @@ class ReferralSuccessDialog {
               ),
               const SizedBox(width: 12),
               const Text(
-                '紹介特典ゲット！',
+                AppLocalizations.of(context)!.general_85d1b5d2,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 24,
@@ -47,7 +47,7 @@ class ReferralSuccessDialog {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                '友達の紹介コードを使っていただき、ありがとうございます！',
+                AppLocalizations.of(context)!.general_31ec114c,
                 style: TextStyle(fontSize: 16),
               ),
               const SizedBox(height: 20),
@@ -72,16 +72,16 @@ class ReferralSuccessDialog {
                     const SizedBox(height: 12),
                     _buildBonusItem(
                       icon: Icons.smart_toy,
-                      title: 'AIコーチング',
+                      title: AppLocalizations.of(context)!.aiCoaching,
                       value: '×$aiBonus回',
-                      description: 'すぐに使えます！',
+                      description: AppLocalizations.of(context)!.general_ffe34333,
                     ),
                     const SizedBox(height: 8),
                     _buildBonusItem(
                       icon: Icons.workspace_premium,
-                      title: 'Premium無料体験',
+                      title: AppLocalizations.of(context)!.general_7db414f2,
                       value: '$premiumDays日間',
-                      description: '全機能が使い放題！',
+                      description: AppLocalizations.of(context)!.general_9b63b1e6,
                     ),
                   ],
                 ),
@@ -108,7 +108,7 @@ class ReferralSuccessDialog {
                 ),
               ),
               child: const Text(
-                'はじめる！',
+                AppLocalizations.of(context)!.general_81e13f3b,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -151,7 +151,7 @@ class ReferralSuccessDialog {
               ),
               const SizedBox(width: 12),
               const Text(
-                '紹介成功！',
+                AppLocalizations.of(context)!.general_99c96084,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 24,
@@ -189,16 +189,16 @@ class ReferralSuccessDialog {
                     const SizedBox(height: 12),
                     _buildBonusItem(
                       icon: Icons.smart_toy,
-                      title: 'AIコーチング',
+                      title: AppLocalizations.of(context)!.aiCoaching,
                       value: '×$aiBonus回',
-                      description: '¥900相当！',
+                      description: AppLocalizations.of(context)!.general_89a02b48,
                     ),
                     const SizedBox(height: 8),
                     _buildBonusItem(
                       icon: Icons.workspace_premium,
-                      title: 'Premium無料体験',
+                      title: AppLocalizations.of(context)!.general_7db414f2,
                       value: '$premiumDays日間',
-                      description: '全機能が使い放題！',
+                      description: AppLocalizations.of(context)!.general_9b63b1e6,
                     ),
                   ],
                 ),
@@ -216,7 +216,7 @@ class ReferralSuccessDialog {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('あとで'),
+              child: Text(AppLocalizations.of(context)!.general_26e67e1a),
             ),
             ElevatedButton(
               onPressed: () {
@@ -232,7 +232,7 @@ class ReferralSuccessDialog {
                 ),
               ),
               child: const Text(
-                'もっと招待する',
+                AppLocalizations.of(context)!.general_d3c89caa,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

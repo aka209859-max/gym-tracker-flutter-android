@@ -136,7 +136,7 @@ class _InstallPromptState extends State<InstallPrompt> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'FitSyncをインストール',
+                          AppLocalizations.of(context)!.general_b57ab79a,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -145,7 +145,7 @@ class _InstallPromptState extends State<InstallPrompt> {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          'ホーム画面から素早くアクセス',
+                          AppLocalizations.of(context)!.general_06bcf409,
                           style: TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
@@ -167,7 +167,7 @@ class _InstallPromptState extends State<InstallPrompt> {
                     child: OutlinedButton.icon(
                       onPressed: _dismissPrompt,
                       icon: const Icon(Icons.cancel_outlined),
-                      label: const Text('後で'),
+                      label: Text(AppLocalizations.of(context)!.later),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
                         side: const BorderSide(color: Colors.white70),
@@ -183,7 +183,7 @@ class _InstallPromptState extends State<InstallPrompt> {
                         _showInstallInstructions(context);
                       },
                       icon: const Icon(Icons.add_to_home_screen),
-                      label: const Text('インストール'),
+                      label: Text(AppLocalizations.of(context)!.general_0d8d60bb),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: const Color(0xFF1E88E5),
@@ -233,7 +233,7 @@ class _InstallPromptState extends State<InstallPrompt> {
                 const SizedBox(width: 16),
                 const Expanded(
                   child: Text(
-                    'ホーム画面に追加する方法',
+                    AppLocalizations.of(context)!.general_c8137971,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -249,20 +249,20 @@ class _InstallPromptState extends State<InstallPrompt> {
             const SizedBox(height: 24),
             _buildInstructionStep(
               1,
-              'ブラウザのメニューを開く',
-              'SafariやChromeの共有ボタン（📤）をタップ',
+              AppLocalizations.of(context)!.general_46f1d23e,
+              AppLocalizations.of(context)!.general_0c5f6229,
             ),
             const SizedBox(height: 16),
             _buildInstructionStep(
               2,
-              '「ホーム画面に追加」を選択',
-              'メニューから「ホーム画面に追加」をタップ',
+              AppLocalizations.of(context)!.general_7458083c,
+              AppLocalizations.of(context)!.general_a07846c5,
             ),
             const SizedBox(height: 16),
             _buildInstructionStep(
               3,
-              '完了！',
-              'ホーム画面にFitSyncアイコンが追加されます',
+              AppLocalizations.of(context)!.general_a42b1cc6,
+              AppLocalizations.of(context)!.general_c17d5af8,
             ),
             const SizedBox(height: 24),
             SizedBox(
@@ -280,7 +280,7 @@ class _InstallPromptState extends State<InstallPrompt> {
                   ),
                 ),
                 child: const Text(
-                  '理解しました',
+                  AppLocalizations.of(context)!.general_d2fff453,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

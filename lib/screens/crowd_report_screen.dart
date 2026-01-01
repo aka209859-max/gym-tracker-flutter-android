@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -61,7 +62,7 @@ class _CrowdReportScreenState extends State<CrowdReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('混雑度を報告'),
+        title: Text(AppLocalizations.of(context)!.reportCrowd),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -126,8 +127,8 @@ class _CrowdReportScreenState extends State<CrowdReportScreen> {
             ),
             const SizedBox(height: 24),
             // 混雑度選択
-            const Text(
-              '現在の混雑度を選択してください',
+            Text(
+                          AppLocalizations.of(context)!.selectExercise,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
@@ -135,14 +136,14 @@ class _CrowdReportScreenState extends State<CrowdReportScreen> {
             const SizedBox(height: 24),
             // コメント入力
             const Text(
-              'コメント（任意）',
+              AppLocalizations.of(context)!.general_58fd6db3,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _commentController,
               maxLines: 3,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: '例: 平日の夕方は結構混んでます',
                 border: OutlineInputBorder(),
               ),
@@ -155,7 +156,7 @@ class _CrowdReportScreenState extends State<CrowdReportScreen> {
               child: ElevatedButton(
                 onPressed: _submitReport,
                 child: const Text(
-                  '報告を送信',
+                  AppLocalizations.of(context)!.general_c989a28a,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -277,7 +278,7 @@ class _CrowdReportScreenState extends State<CrowdReportScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('エラーが発生しました: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context)!.errorGeneric),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
           ),
@@ -361,7 +362,7 @@ class _CrowdReportScreenState extends State<CrowdReportScreen> {
                 backgroundColor: Colors.orange,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               ),
-              child: const Text('ありがとう！'),
+              child: Text(AppLocalizations.of(context)!.general_6ff30ca2),
             ),
           ],
         ),
@@ -372,32 +373,32 @@ class _CrowdReportScreenState extends State<CrowdReportScreen> {
   String _getCrowdLevelText(int level) {
     switch (level) {
       case 1:
-        return '空いています';
+        return AppLocalizations.of(context)!.gym_e662330d;
       case 2:
-        return 'やや空き';
+        return AppLocalizations.of(context)!.moderatelyEmpty;
       case 3:
-        return '普通';
+        return AppLocalizations.of(context)!.crowdLevelNormal;
       case 4:
-        return 'やや混雑';
+        return AppLocalizations.of(context)!.moderatelyCrowded;
       case 5:
-        return '超混雑';
+        return AppLocalizations.of(context)!.gym_181af51b;
       default:
-        return '不明';
+        return AppLocalizations.of(context)!.unknown;
     }
   }
 
   String _getCrowdLevelDescription(int level) {
     switch (level) {
       case 1:
-        return 'ほとんど人がいません';
+        return AppLocalizations.of(context)!.general_32d99a79;
       case 2:
-        return '少し人がいますが、余裕があります';
+        return AppLocalizations.of(context)!.general_1c845e05;
       case 3:
-        return '適度に人がいます';
+        return AppLocalizations.of(context)!.general_5c408dba;
       case 4:
-        return 'かなり混んでいます';
+        return AppLocalizations.of(context)!.general_f1efa2a1;
       case 5:
-        return '非常に混雑しています';
+        return AppLocalizations.of(context)!.general_b37aab80;
       default:
         return '';
     }

@@ -31,7 +31,7 @@ class TrainingPartnerService {
   /// プロフィールを作成・更新
   Future<void> saveProfile(TrainingPartner partner) async {
     final userId = _auth.currentUser?.uid;
-    if (userId == null) throw Exception('ユーザーが認証されていません');
+    if (userId == null) throw Exception(AppLocalizations.of(context)!.userNotAuthenticated);
 
     await _firestore
         .collection('training_partners')
@@ -42,7 +42,7 @@ class TrainingPartnerService {
   /// プロフィール画像をアップロード
   Future<String> uploadProfileImage(Uint8List imageBytes) async {
     final userId = _auth.currentUser?.uid;
-    if (userId == null) throw Exception('ユーザーが認証されていません');
+    if (userId == null) throw Exception(AppLocalizations.of(context)!.userNotAuthenticated);
 
     final ref = _storage.ref().child('profile_images/$userId.jpg');
     
@@ -65,12 +65,12 @@ class TrainingPartnerService {
     Query query = _firestore.collection('training_partners');
 
     // 居住地フィルター
-    if (location != null && location != 'すべて') {
+    if (location != null && location != AppLocalizations.of(context)!.all) {
       query = query.where('location', isEqualTo: location);
     }
 
     // 経験レベルフィルター
-    if (experienceLevel != null && experienceLevel != 'すべて') {
+    if (experienceLevel != null && experienceLevel != AppLocalizations.of(context)!.all) {
       query = query.where('experience_level', isEqualTo: experienceLevel);
     }
 
@@ -80,7 +80,7 @@ class TrainingPartnerService {
           .toList();
 
       // 目標フィルター（メモリ内でフィルタリング）
-      if (goal != null && goal != 'すべて') {
+      if (goal != null && goal != AppLocalizations.of(context)!.all) {
         partners = partners.where((p) => p.goals.contains(goal)).toList();
       }
 
@@ -127,7 +127,7 @@ class TrainingPartnerService {
   /// ユーザーをブロック
   Future<void> blockUser(String targetUserId) async {
     final currentUserId = _auth.currentUser?.uid;
-    if (currentUserId == null) throw Exception('ユーザーが認証されていません');
+    if (currentUserId == null) throw Exception(AppLocalizations.of(context)!.userNotAuthenticated);
 
     // ブロック情報を保存
     await _firestore.collection('user_blocks').add({
@@ -163,7 +163,7 @@ class TrainingPartnerService {
     String? details,
   }) async {
     final currentUserId = _auth.currentUser?.uid;
-    if (currentUserId == null) throw Exception('ユーザーが認証されていません');
+    if (currentUserId == null) throw Exception(AppLocalizations.of(context)!.userNotAuthenticated);
 
     await _firestore.collection('user_reports').add({
       'reporter_id': currentUserId,

@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -70,7 +71,7 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
       if (!mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('✅ AI使用回数をリセットしました'),
           backgroundColor: Colors.green,
         ),
@@ -96,7 +97,7 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
       if (!mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('✅ オンボーディングをリセットしました\nアプリを再起動してください'),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 5),
@@ -135,7 +136,7 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
       if (!mounted) return;
       
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('✅ Phase 1機能をすべてリセットしました\nアプリを再起動してください'),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 5),
@@ -157,7 +158,7 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('開発者メニュー'),
+        title: Text(AppLocalizations.of(context)!.developerMenu),
         backgroundColor: Colors.deepPurple,
       ),
       body: _isLoading
@@ -194,7 +195,7 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           children: [
                             Icon(Icons.fingerprint, color: Colors.green),
                             SizedBox(width: 8),
@@ -231,7 +232,7 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
                                 IconButton(
                                   icon: const Icon(Icons.copy, color: Colors.green),
                                   onPressed: _copyUidToClipboard,
-                                  tooltip: 'コピー',
+                                  tooltip: AppLocalizations.of(context)!.copy,
                                 ),
                               ],
                             ),
@@ -246,8 +247,7 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
                             ),
                           ),
                         ] else
-                          const Text(
-                            'ログインが必要です',
+                          Text(AppLocalizations.of(context)!.signInRequired,
                             style: TextStyle(fontSize: 14, color: Colors.red),
                           ),
                       ],
@@ -265,21 +265,20 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          '現在のプラン',
+                        Text(AppLocalizations.of(context)!.currentPlan,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
                               _currentPlan != null
                                   ? _subscriptionService.getPlanName(_currentPlan!)
-                                  : '読み込み中...',
+                                  : AppLocalizations.of(context)!.loadingWorkouts,
                               style: const TextStyle(fontSize: 18),
                             ),
                             if (_currentPlan != null)
@@ -338,7 +337,7 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
                         Text(
                           'Apple審査対応のため、開発者メニューからのプラン変更機能は削除されました。\n\n'
                           'プラン変更はRevenueCat経由の正規課金のみ有効です。\n\n'
-                          'テストには「TestFlightサンドボックス課金」を使用してください。',
+                          AppLocalizations.of(context)!.general_2474b23c,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.black87,
@@ -360,12 +359,12 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           children: [
                             Icon(Icons.psychology, color: Colors.deepPurple),
                             SizedBox(width: 8),
                             Text(
-                              'AI使用状況',
+                              AppLocalizations.of(context)!.general_fad83375,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -390,7 +389,7 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
                 ElevatedButton.icon(
                   onPressed: _resetAIUsage,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('AI使用回数をリセット'),
+                  label: Text(AppLocalizations.of(context)!.general_072d6e04),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,
                     minimumSize: const Size.fromHeight(48),
@@ -403,7 +402,7 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
                 ElevatedButton.icon(
                   onPressed: _resetOnboarding,
                   icon: const Icon(Icons.school),
-                  label: const Text('オンボーディングをリセット'),
+                  label: Text(AppLocalizations.of(context)!.general_3d79955d),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.purple,
                     foregroundColor: Colors.white,
@@ -453,12 +452,12 @@ class _DeveloperMenuScreenState extends State<DeveloperMenuScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           children: [
                             Icon(Icons.info_outline, color: Colors.blue),
                             SizedBox(width: 8),
                             Text(
-                              '使い方',
+                              AppLocalizations.of(context)!.workout_9e8d8121,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

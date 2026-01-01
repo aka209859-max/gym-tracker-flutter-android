@@ -42,7 +42,7 @@ class WorkoutImportService {
           // 大きすぎる場合はエラーとする
           throw Exception(
             '画像サイズが大きすぎます (${(imageBytes.length / 1024 / 1024).toStringAsFixed(1)}MB)。\n'
-            '10MB以下の画像を使用してください。'
+            AppLocalizations.of(context)!.workout_dd8555d2
           );
         }
         
@@ -155,13 +155,13 @@ class WorkoutImportService {
         if (kDebugMode) {
           print('❌ API権限エラー (403): ${response.body}');
         }
-        throw Exception('画像解析APIの権限エラーです。しばらく待ってから再度お試しください。');
+        throw Exception(AppLocalizations.of(context)!.workout_7d512f87);
       } else if (response.statusCode == 400) {
         // 400 Bad Request（リクエスト形式エラー）
         if (kDebugMode) {
           print('❌ リクエストエラー (400): ${response.body}');
         }
-        throw Exception('画像形式が正しくありません。別の画像でお試しください。');
+        throw Exception(AppLocalizations.of(context)!.workout_ba59242e);
       } else {
         // その他のエラー
         if (kDebugMode) {
@@ -217,7 +217,7 @@ JSON形式例:
   "date": "2025-11-03",
   "exercises": [
     {
-      "name": "ベンチプレス",
+      "name": AppLocalizations.of(context)!.exerciseBenchPress,
       "sets": [
         {"set_number": 1, "weight_kg": 80.0, "reps": 10},
         {"set_number": 2, "weight_kg": 80.0, "reps": 10},
@@ -230,8 +230,8 @@ JSON形式例:
 重要:
 - 日付は必ず YYYY-MM-DD 形式で返してください
 - 自重トレーニング（懸垂、チンニング等）の重量は0としてください
-- kg表記は数値のみ抽出してください（"kg"は除く）
-- 回数表記から数値のみ抽出してください（"reps"、"回"は除く）
+- kg表記は数値のみ抽出してください（AppLocalizations.of(context)!.kgは除く）
+- 回数表記から数値のみ抽出してください（"reps"、AppLocalizations.of(context)!.workoutRepsLabelは除く）
 - すべての種目とセットを正確に抽出してください
 - JSON以外の説明文は不要です
 
@@ -244,7 +244,7 @@ JSON形式例:
   /// マッピング辞書にない場合はデフォルトで「胸」を返す
   static String estimateBodyPart(String exerciseName) {
     final mapping = _exerciseToBodyPartMapping();
-    return mapping[exerciseName] ?? '胸'; // デフォルト: 胸
+    return mapping[exerciseName] ?? AppLocalizations.of(context)!.bodyPartChest; // デフォルト: 胸
   }
 
   /// CSVファイルからトレーニングデータを抽出
@@ -272,7 +272,7 @@ JSON形式例:
       );
 
       if (csvRows.isEmpty) {
-        throw Exception('CSVファイルが空です。データが含まれているか確認してください。');
+        throw Exception(AppLocalizations.of(context)!.workout_53bd5cb4);
       }
 
       if (kDebugMode) {
@@ -350,7 +350,7 @@ JSON形式例:
       }
 
       if (exercisesByDate.isEmpty) {
-        throw Exception('有効なトレーニングデータが見つかりませんでした。CSVフォーマットを確認してください。');
+        throw Exception(AppLocalizations.of(context)!.workout_8682e261);
       }
 
       // 最初の日付のデータを返す（複数日ある場合は最新日）
@@ -382,7 +382,7 @@ JSON形式例:
     if (row.isEmpty) return false;
     
     // 日本語ヘッダー
-    final japaneseHeaders = ['日付', '種目', 'セット', '重量', '回数', 'メニュー', '部位'];
+    final japaneseHeaders = [AppLocalizations.of(context)!.date, AppLocalizations.of(context)!.exercise, AppLocalizations.of(context)!.workoutSetsLabel, AppLocalizations.of(context)!.workoutWeightLabel, AppLocalizations.of(context)!.repsCount, AppLocalizations.of(context)!.workout_2c76b53f, AppLocalizations.of(context)!.bodyPart];
     // 英語ヘッダー
     final englishHeaders = ['date', 'exercise', 'set', 'weight', 'reps', 'menu', 'bodypart'];
     
@@ -509,72 +509,72 @@ JSON形式例:
   static Map<String, String> _exerciseToBodyPartMapping() {
     return {
       // 胸
-      'ベンチプレス': '胸',
-      'ダンベルプレス': '胸',
-      'ダンベルベンチプレス': '胸',
-      'インクラインプレス': '胸',
-      'インクラインベンチプレス': '胸',
-      'ケーブルフライ': '胸',
-      'ディップス': '胸',
-      'チェストプレス': '胸',
-      'ペックフライ': '胸',
+      AppLocalizations.of(context)!.exerciseBenchPress: AppLocalizations.of(context)!.bodyPartChest,
+      AppLocalizations.of(context)!.exerciseDumbbellPress: AppLocalizations.of(context)!.bodyPartChest,
+      AppLocalizations.of(context)!.exercise_4cb61d65: AppLocalizations.of(context)!.bodyPartChest,
+      AppLocalizations.of(context)!.exerciseInclinePress: AppLocalizations.of(context)!.bodyPartChest,
+      AppLocalizations.of(context)!.exercise_fbfc037a: AppLocalizations.of(context)!.bodyPartChest,
+      AppLocalizations.of(context)!.exerciseCableFly: AppLocalizations.of(context)!.bodyPartChest,
+      AppLocalizations.of(context)!.exerciseDips: AppLocalizations.of(context)!.bodyPartChest,
+      AppLocalizations.of(context)!.exercise_cfc4f367: AppLocalizations.of(context)!.bodyPartChest,
+      AppLocalizations.of(context)!.workout_fb73b843: AppLocalizations.of(context)!.bodyPartChest,
       
       // 背中
-      'ラットプルダウン': '背中',
-      'チンニング': '背中',
-      'チンニング（懸垂）': '背中',
-      '懸垂': '背中',
-      'ベントオーバーローイング': '背中',
-      'ベントオーバーロー': '背中',
-      'デッドリフト': '背中',
-      'シーテッドロウ': '背中',
-      'ワンハンドロウ': '背中',
-      'Tバーロウ': '背中',
-      'ケーブルロウ': '背中',
+      AppLocalizations.of(context)!.exerciseLatPulldown: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.exerciseChinUp: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.workout_4f6cd3a6: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.exercisePullUp: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.workout_e6ae79d7: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.workout_02d51e36: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.exerciseDeadlift: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.exerciseSeatedRow: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.workout_1db606e0: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.workout_78f50d3b: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.workout_f8d1b968: AppLocalizations.of(context)!.bodyPartBack,
       
       // 脚
-      'スクワット': '脚',
-      'レッグプレス': '脚',
-      'レッグエクステンション': '脚',
-      'レッグカール': '脚',
-      'ランジ': '脚',
-      'ブルガリアンスクワット': '脚',
-      'カーフレイズ': '脚',
-      'レッグレイズ': '脚',
+      AppLocalizations.of(context)!.exerciseSquat: AppLocalizations.of(context)!.bodyPartLegs,
+      AppLocalizations.of(context)!.exerciseLegPress: AppLocalizations.of(context)!.bodyPartLegs,
+      AppLocalizations.of(context)!.exerciseLegExtension: AppLocalizations.of(context)!.bodyPartLegs,
+      AppLocalizations.of(context)!.exerciseLegCurl: AppLocalizations.of(context)!.bodyPartLegs,
+      AppLocalizations.of(context)!.workout_a19f4e60: AppLocalizations.of(context)!.bodyPartLegs,
+      AppLocalizations.of(context)!.exercise_1602d233: AppLocalizations.of(context)!.bodyPartLegs,
+      AppLocalizations.of(context)!.exerciseCalfRaise: AppLocalizations.of(context)!.bodyPartLegs,
+      AppLocalizations.of(context)!.legRaise: AppLocalizations.of(context)!.bodyPartLegs,
       
       // 肩
-      'ショルダープレス': '肩',
-      'サイドレイズ': '肩',
-      'フロントレイズ': '肩',
-      'リアレイズ': '肩',
-      'アップライトロウ': '肩',
-      'ダンベルショルダープレス': '肩',
+      AppLocalizations.of(context)!.exerciseShoulderPress: AppLocalizations.of(context)!.bodyPartShoulders,
+      AppLocalizations.of(context)!.exerciseSideRaise: AppLocalizations.of(context)!.bodyPartShoulders,
+      AppLocalizations.of(context)!.exerciseFrontRaise: AppLocalizations.of(context)!.bodyPartShoulders,
+      AppLocalizations.of(context)!.workout_61db805d: AppLocalizations.of(context)!.bodyPartShoulders,
+      AppLocalizations.of(context)!.exerciseUprightRow: AppLocalizations.of(context)!.bodyPartShoulders,
+      AppLocalizations.of(context)!.exercise_b9e82d29: AppLocalizations.of(context)!.bodyPartShoulders,
       
       // 二頭
-      'バーベルカール': '二頭',
-      'ダンベルカール': '二頭',
-      'ハンマーカール': '二頭',
-      'プリーチャーカール': '二頭',
-      'コンセントレーションカール': '二頭',
-      'インクラインカール': '二頭',
+      AppLocalizations.of(context)!.exerciseBarbellCurl: AppLocalizations.of(context)!.bodyPartBiceps,
+      AppLocalizations.of(context)!.exerciseDumbbellCurl: AppLocalizations.of(context)!.bodyPartBiceps,
+      AppLocalizations.of(context)!.exerciseHammerCurl: AppLocalizations.of(context)!.bodyPartBiceps,
+      AppLocalizations.of(context)!.workout_d7e8733c: AppLocalizations.of(context)!.bodyPartBiceps,
+      AppLocalizations.of(context)!.workout_6a8e2907: AppLocalizations.of(context)!.bodyPartBiceps,
+      AppLocalizations.of(context)!.workout_2de38ba1: AppLocalizations.of(context)!.bodyPartBiceps,
       
       // 三頭
-      'トライセプスダウン': '三頭',
-      'トライセプスプレスダウン': '三頭',
-      'トライセプスエクステンション': '三頭',
-      'ライイングトライセプスエクステンション': '三頭',
-      'フレンチプレス': '三頭',
-      'キックバック': '三頭',
-      'クローズグリップベンチプレス': '三頭',
+      AppLocalizations.of(context)!.workout_f2a8fd43: AppLocalizations.of(context)!.bodyPartTriceps,
+      AppLocalizations.of(context)!.exercise_636fb74f: AppLocalizations.of(context)!.bodyPartTriceps,
+      AppLocalizations.of(context)!.exerciseTricepsExtension: AppLocalizations.of(context)!.bodyPartTriceps,
+      AppLocalizations.of(context)!.workout_41ae2e59: AppLocalizations.of(context)!.bodyPartTriceps,
+      AppLocalizations.of(context)!.exercise_f6d35c01: AppLocalizations.of(context)!.bodyPartTriceps,
+      AppLocalizations.of(context)!.exerciseKickback: AppLocalizations.of(context)!.bodyPartTriceps,
+      AppLocalizations.of(context)!.exercise_a60f616c: AppLocalizations.of(context)!.bodyPartTriceps,
       
       // 有酸素
-      'ランニング': '有酸素',
-      'ウォーキング': '有酸素',
-      'バイク': '有酸素',
-      'エアロバイク': '有酸素',
-      'トレッドミル': '有酸素',
-      'エリプティカル': '有酸素',
-      'ローイングマシン': '有酸素',
+      AppLocalizations.of(context)!.exerciseRunning: AppLocalizations.of(context)!.exerciseCardio,
+      AppLocalizations.of(context)!.workout_e23f084e: AppLocalizations.of(context)!.exerciseCardio,
+      AppLocalizations.of(context)!.workout_57bd7c71: AppLocalizations.of(context)!.exerciseCardio,
+      AppLocalizations.of(context)!.exerciseAerobicBike: AppLocalizations.of(context)!.exerciseCardio,
+      AppLocalizations.of(context)!.workout_8308db37: AppLocalizations.of(context)!.exerciseCardio,
+      AppLocalizations.of(context)!.workout_a19d7669: AppLocalizations.of(context)!.exerciseCardio,
+      AppLocalizations.of(context)!.workout_4c6d7db7: AppLocalizations.of(context)!.exerciseCardio,
     };
   }
 }

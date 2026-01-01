@@ -133,7 +133,7 @@ class _ScientificBasisSectionState extends State<ScientificBasisSection> {
               color: Colors.blue.shade700,
             ),
             title: const Text(
-              '科学的根拠',
+              AppLocalizations.of(context)!.scientificBasis,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -196,15 +196,15 @@ class ConfidenceIndicator extends StatelessWidget {
     IconData icon;
 
     if (paperCount >= 5) {
-      level = '高信頼性';
+      level = AppLocalizations.of(context)!.general_23ce592c;
       color = Colors.green;
       icon = Icons.verified;
     } else if (paperCount >= 3) {
-      level = '中信頼性';
+      level = AppLocalizations.of(context)!.general_9afb9ad5;
       color = Colors.orange;
       icon = Icons.check_circle;
     } else {
-      level = '参考値';
+      level = AppLocalizations.of(context)!.general_310ee291;
       color = Colors.grey;
       icon = Icons.info;
     }

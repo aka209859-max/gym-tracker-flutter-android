@@ -35,7 +35,7 @@ class AuthProvider with ChangeNotifier {
     if (_user?.displayName != null && _user!.displayName!.isNotEmpty) {
       return _user!.displayName!;
     }
-    return _user?.email?.split('@').first ?? 'ゲスト';
+    return _user?.email?.split('@').first ?? AppLocalizations.of(context)!.general_0cfd9ec5;
   }
 
   /// 現在のユーザーメールアドレスを取得

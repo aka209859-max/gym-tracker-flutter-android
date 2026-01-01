@@ -80,7 +80,7 @@ class GooglePlacesService {
           }
         }
         
-        if (data['status'] == 'OK') {
+        if (data['status'] == AppLocalizations.of(context)!.ok) {
           final results = data['results'] as List<dynamic>;
           if (kDebugMode) {
             print('   ✅ Found ${results.length} places');
@@ -125,33 +125,33 @@ class GooglePlacesService {
   List<GooglePlace> _filterNonGymFacilities(List<GooglePlace> places) {
     // 除外キーワードリスト（施設名に含まれていたら除外）
     const excludeKeywords = [
-      '体育館',
-      '公園',
-      '直売所',
-      '市民センター',
-      '公民館',
-      '図書館',
-      '役所',
-      '学校',
-      '武道館',
-      '陸上競技場',
-      '野球場',
-      'テニスコート',
-      '市役所',
-      '町役場',
-      '村役場',
-      '区役所',
-      '保健所',
-      '病院',
-      'クリニック',
-      '歯科',
-      'ホテル',
-      '旅館',
-      '温泉',
-      '銭湯',
-      'マッサージ',
-      '整体',
-      '接骨院',
+      AppLocalizations.of(context)!.general_3b55a7d0,
+      AppLocalizations.of(context)!.general_48a8a611,
+      AppLocalizations.of(context)!.general_6b9cb4c6,
+      AppLocalizations.of(context)!.general_2d0e8920,
+      AppLocalizations.of(context)!.general_882737a5,
+      AppLocalizations.of(context)!.general_d0f4f4d4,
+      AppLocalizations.of(context)!.general_d93877f1,
+      AppLocalizations.of(context)!.general_e7cd7823,
+      AppLocalizations.of(context)!.general_54f5e1c6,
+      AppLocalizations.of(context)!.general_1802e11f,
+      AppLocalizations.of(context)!.general_3a087c8f,
+      AppLocalizations.of(context)!.gym_dcf4ca1a,
+      AppLocalizations.of(context)!.general_c5dba1e4,
+      AppLocalizations.of(context)!.general_0d197c3d,
+      AppLocalizations.of(context)!.general_ff2f16ae,
+      AppLocalizations.of(context)!.general_e93e2341,
+      AppLocalizations.of(context)!.general_fbc72a92,
+      AppLocalizations.of(context)!.general_b8b93fa6,
+      AppLocalizations.of(context)!.general_0c2a7e83,
+      AppLocalizations.of(context)!.general_07a89d29,
+      AppLocalizations.of(context)!.general_ac507aa1,
+      AppLocalizations.of(context)!.general_1508cdb1,
+      AppLocalizations.of(context)!.general_f02c20e2,
+      AppLocalizations.of(context)!.general_a1de7ecf,
+      AppLocalizations.of(context)!.general_63e0b89e,
+      AppLocalizations.of(context)!.general_c133a12e,
+      AppLocalizations.of(context)!.general_1b40e42d,
     ];
     
     return places.where((place) {
@@ -220,7 +220,7 @@ class GooglePlacesService {
           }
         }
         
-        if (data['status'] == 'OK' || data['status'] == 'ZERO_RESULTS') {
+        if (data['status'] == AppLocalizations.of(context)!.ok || data['status'] == 'ZERO_RESULTS') {
           final results = data['results'] as List<dynamic>? ?? [];
           if (kDebugMode) {
             print('   ✅ Found ${results.length} places');
@@ -312,7 +312,7 @@ class GooglePlacesService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         
-        if (data['status'] == 'OK') {
+        if (data['status'] == AppLocalizations.of(context)!.ok) {
           final result = data['result'] as Map<String, dynamic>;
           
           // 🎯 Hiveにキャッシュ（30日TTL - Google規約準拠）

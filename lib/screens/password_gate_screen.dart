@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -62,7 +63,7 @@ class _PasswordGateScreenState extends State<PasswordGateScreen> {
 
     if (password.isEmpty) {
       setState(() {
-        _errorMessage = 'パスワードを入力してください';
+        _errorMessage = AppLocalizations.of(context)!.passwordRequired;
       });
       return;
     }
@@ -79,12 +80,12 @@ class _PasswordGateScreenState extends State<PasswordGateScreen> {
         });
       } catch (e) {
         setState(() {
-          _errorMessage = '認証情報の保存に失敗しました';
+          _errorMessage = AppLocalizations.of(context)!.save;
         });
       }
     } else {
       setState(() {
-        _errorMessage = 'パスワードが正しくありません';
+        _errorMessage = AppLocalizations.of(context)!.incorrectPassword;
       });
     }
   }
@@ -157,7 +158,7 @@ class _PasswordGateScreenState extends State<PasswordGateScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    'β版テスト運用中',
+                    AppLocalizations.of(context)!.general_f62ab22a,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -171,8 +172,8 @@ class _PasswordGateScreenState extends State<PasswordGateScreen> {
                 TextField(
                   controller: _passwordController,
                   decoration: InputDecoration(
-                    labelText: 'パスワード',
-                    hintText: 'テスト用パスワードを入力',
+                    labelText: AppLocalizations.of(context)!.password,
+                    hintText: AppLocalizations.of(context)!.password,
                     prefixIcon: const Icon(Icons.vpn_key),
                     border: const OutlineInputBorder(),
                     errorText: _errorMessage,
@@ -192,8 +193,7 @@ class _PasswordGateScreenState extends State<PasswordGateScreen> {
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text(
-                      'アクセス',
+                    child: Text(AppLocalizations.of(context)!.gymAccess,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -220,7 +220,7 @@ class _PasswordGateScreenState extends State<PasswordGateScreen> {
                               size: 20, color: Colors.blue[700]),
                           const SizedBox(width: 8),
                           Text(
-                            'β版テスト運用について',
+                            AppLocalizations.of(context)!.general_4f700ca2,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.blue[900],
@@ -228,9 +228,9 @@ class _PasswordGateScreenState extends State<PasswordGateScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Text(
-                        '現在β版のテスト運用中です。パスワードはNexaJP関係者のみに配布されています。',
+                        AppLocalizations.of(context)!.password,
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.blue[900],

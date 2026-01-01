@@ -334,12 +334,12 @@ class FirestoreService {
   /// 種目名から部位を推定（簡易版）
   String _inferBodyPart(String exerciseName) {
     final name = exerciseName.toLowerCase();
-    if (name.contains('胸') || name.contains('ベンチ') || name.contains('chest')) return '胸';
-    if (name.contains('背') || name.contains('ラット') || name.contains('デッド') || name.contains('back')) return '背中';
-    if (name.contains('脚') || name.contains('スクワット') || name.contains('leg')) return '脚';
-    if (name.contains('肩') || name.contains('ショルダー') || name.contains('shoulder')) return '肩';
-    if (name.contains('腕') || name.contains('カール') || name.contains('arm')) return '腕';
-    return 'その他';
+    if (name.contains(AppLocalizations.of(context)!.bodyPartChest) || name.contains(AppLocalizations.of(context)!.general_c757af1f) || name.contains('chest')) return AppLocalizations.of(context)!.bodyPartChest;
+    if (name.contains(AppLocalizations.of(context)!.general_cea4cba5) || name.contains(AppLocalizations.of(context)!.general_0bb30234) || name.contains(AppLocalizations.of(context)!.general_39629cf6) || name.contains('back')) return AppLocalizations.of(context)!.bodyPartBack;
+    if (name.contains(AppLocalizations.of(context)!.bodyPartLegs) || name.contains(AppLocalizations.of(context)!.exerciseSquat) || name.contains('leg')) return AppLocalizations.of(context)!.bodyPartLegs;
+    if (name.contains(AppLocalizations.of(context)!.bodyPartShoulders) || name.contains(AppLocalizations.of(context)!.general_dd6fcfba) || name.contains('shoulder')) return AppLocalizations.of(context)!.bodyPartShoulders;
+    if (name.contains(AppLocalizations.of(context)!.bodyPartArms) || name.contains(AppLocalizations.of(context)!.general_368577a9) || name.contains('arm')) return AppLocalizations.of(context)!.bodyPartArms;
+    return AppLocalizations.of(context)!.bodyPartOther;
   }
 
   /// 🆕 v1.0.229: ワークアウトログを保存 + 集計データ自動更新

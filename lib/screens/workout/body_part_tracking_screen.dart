@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,14 +21,14 @@ class BodyPartTrackingScreen extends StatefulWidget {
 class _BodyPartTrackingScreenState extends State<BodyPartTrackingScreen> {
   int _periodDays = 30; // 集計期間（日数）
 
-  // 部位の日本語名マッピング
-  static const Map<String, String> bodyPartNames = {
-    'chest': '胸',
-    'back': '背中',
-    'legs': '脚',
-    'shoulders': '肩',
-    'arms': '腕',
-    'core': '体幹',
+  // 部位の日本語名マッピング（contextが必要なのでgetterとして実装）
+  Map<String, String> get bodyPartNames => {
+    'chest': AppLocalizations.of(context)!.bodyPartChest,
+    'back': AppLocalizations.of(context)!.bodyPartBack,
+    'legs': AppLocalizations.of(context)!.bodyPartLegs,
+    'shoulders': AppLocalizations.of(context)!.bodyPartShoulders,
+    'arms': AppLocalizations.of(context)!.bodyPartArms,
+    'core': AppLocalizations.of(context)!.bodyPartCore,
   };
 
   @override
@@ -55,7 +56,7 @@ class _BodyPartTrackingScreenState extends State<BodyPartTrackingScreen> {
       builder: (context, authSnapshot) {
         if (authSnapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            appBar: AppBar(title: const Text('部位別トラッキング')),
+            appBar: AppBar(title: Text(AppLocalizations.of(context)!.bodyPartTracking)),
             body: const Center(
               child: CircularProgressIndicator(),
             ),
@@ -65,16 +66,16 @@ class _BodyPartTrackingScreenState extends State<BodyPartTrackingScreen> {
         final user = authSnapshot.data;
         if (user == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('部位別トラッキング')),
+            appBar: AppBar(title: Text(AppLocalizations.of(context)!.bodyPartTracking)),
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('ログインに失敗しました'),
-                  const SizedBox(height: 16),
+                  Text(AppLocalizations.of(context)!.loginError),
+                  SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: _autoLoginIfNeeded,
-                    child: const Text('再試行'),
+                    child: Text(AppLocalizations.of(context)!.tryAgain),
                   ),
                 ],
               ),
@@ -90,7 +91,7 @@ class _BodyPartTrackingScreenState extends State<BodyPartTrackingScreen> {
   Widget _buildMainContent(User user) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('部位別トラッキング'),
+        title: Text(AppLocalizations.of(context)!.bodyPartTracking),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _getWorkoutsStream(user.uid),
@@ -101,7 +102,7 @@ class _BodyPartTrackingScreenState extends State<BodyPartTrackingScreen> {
 
           if (snapshot.hasError) {
             return Center(
-              child: Text('エラーが発生しました: ${snapshot.error}'),
+              child: Text(AppLocalizations.of(context)!.errorGeneric),
             );
           }
 
@@ -144,7 +145,7 @@ class _BodyPartTrackingScreenState extends State<BodyPartTrackingScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                '集計期間',
+                AppLocalizations.of(context)!.workout_36413c90,
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
               ),
               const SizedBox(height: 8),
@@ -152,9 +153,9 @@ class _BodyPartTrackingScreenState extends State<BodyPartTrackingScreen> {
                 width: double.infinity,
                 child: SegmentedButton<int>(
                   segments: const [
-                    ButtonSegment(value: 7, label: Text('7日')),
-                    ButtonSegment(value: 30, label: Text('30日')),
-                    ButtonSegment(value: 90, label: Text('90日')),
+                    ButtonSegment(value: 7, label: Text(AppLocalizations.of(context)!.workout_7097f864)),
+                    ButtonSegment(value: 30, label: Text(AppLocalizations.of(context)!.workout_593f53b5)),
+                    ButtonSegment(value: 90, label: Text(AppLocalizations.of(context)!.workout_e80812be)),
                   ],
                   selected: {_periodDays},
                   onSelectionChanged: (Set<int> selected) {
@@ -203,7 +204,7 @@ class _BodyPartTrackingScreenState extends State<BodyPartTrackingScreen> {
               const Icon(Icons.analytics_outlined, size: 20, color: Colors.blue),
               const SizedBox(width: 8),
               Text(
-                '過去${_periodDays}日間のバランス',
+                AppLocalizations.of(context)!.bodyPartBalanceDays(_periodDays),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -322,7 +323,7 @@ class _BodyPartTrackingScreenState extends State<BodyPartTrackingScreen> {
                    size: 24),
               const SizedBox(width: 12),
               Text(
-                '不足部位',
+                AppLocalizations.of(context)!.workout_e03f69fa,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -356,7 +357,7 @@ class _BodyPartTrackingScreenState extends State<BodyPartTrackingScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'これらの部位を次回のトレーニングで強化しましょう',
+            AppLocalizations.of(context)!.workout_2f9761ff,
             style: TextStyle(
               fontSize: 13,
               color: Colors.grey.shade700,
@@ -391,9 +392,9 @@ class _BodyPartTrackingScreenState extends State<BodyPartTrackingScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.show_chart, size: 80, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
-              'トレーニング記録がありません',
+              AppLocalizations.of(context)!.noWorkouts,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -402,7 +403,7 @@ class _BodyPartTrackingScreenState extends State<BodyPartTrackingScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'ワークアウトを記録すると、部位別の統計が表示されます',
+              AppLocalizations.of(context)!.workout_b3e9f505,
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey.shade600),
             ),

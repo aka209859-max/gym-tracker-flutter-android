@@ -27,7 +27,7 @@ class ShareService {
       );
 
       if (imageBytes == null) {
-        throw Exception('画像の生成に失敗しました');
+        throw Exception(AppLocalizations.of(context)!.error_db6a9a11);
       }
 
       // Web版ではメモリから直接XFileを作成
@@ -67,7 +67,7 @@ class ShareService {
           await image.toByteData(format: ui.ImageByteFormat.png);
 
       if (byteData == null) {
-        throw Exception('画像の生成に失敗しました');
+        throw Exception(AppLocalizations.of(context)!.error_db6a9a11);
       }
 
       final Uint8List pngBytes = byteData.buffer.asUint8List();

@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../../services/partner_service.dart';
 
@@ -20,13 +21,13 @@ class _PartnerProfileEditScreenState extends State<PartnerProfileEditScreen> {
   bool _isLoading = false;
 
   final List<String> _availableExercises = [
-    'ベンチプレス', 'スクワット', 'デッドリフト', '懸垂',
-    'ショルダープレス', 'バーベルロー', 'レッグプレス', '有酸素運動',
+    AppLocalizations.of(context)!.exerciseBenchPress, AppLocalizations.of(context)!.exerciseSquat, AppLocalizations.of(context)!.exerciseDeadlift, AppLocalizations.of(context)!.exercisePullUp,
+    AppLocalizations.of(context)!.exerciseShoulderPress, AppLocalizations.of(context)!.profile_f95990eb, AppLocalizations.of(context)!.exerciseLegPress, AppLocalizations.of(context)!.cardio,
   ];
 
   final List<String> _availableGoals = [
-    '筋力アップ', '筋肥大', 'ダイエット', '体力向上',
-    'ボディメイク', 'コンテスト出場', '健康維持',
+    AppLocalizations.of(context)!.profile_6c3c4ee6, AppLocalizations.of(context)!.goalMuscleGain, AppLocalizations.of(context)!.goalDiet, AppLocalizations.of(context)!.profile_64b9cf75,
+    AppLocalizations.of(context)!.profile_f415da04, AppLocalizations.of(context)!.profile_9c79b1fe, AppLocalizations.of(context)!.healthMaintenance,
   ];
 
   @override
@@ -51,8 +52,8 @@ class _PartnerProfileEditScreenState extends State<PartnerProfileEditScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('プロフィールを更新しました'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.updateProfileSuccess),
             backgroundColor: Colors.green,
           ),
         );
@@ -62,7 +63,7 @@ class _PartnerProfileEditScreenState extends State<PartnerProfileEditScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('エラー: $e'),
+            content: Text(AppLocalizations.of(context)!.error),
             backgroundColor: Colors.red,
           ),
         );
@@ -78,8 +79,7 @@ class _PartnerProfileEditScreenState extends State<PartnerProfileEditScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'プロフィール編集',
+        title: Text(AppLocalizations.of(context)!.editProfile,
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -93,15 +93,15 @@ class _PartnerProfileEditScreenState extends State<PartnerProfileEditScreen> {
             // 自己紹介
             TextFormField(
               controller: _bioController,
-              decoration: const InputDecoration(
-                labelText: '自己紹介',
-                hintText: 'トレーニングについて自由に書いてください',
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.bio,
+                hintText: AppLocalizations.of(context)!.profile_8e9e3b47,
                 border: OutlineInputBorder(),
               ),
               maxLines: 4,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return '自己紹介を入力してください';
+                  return AppLocalizations.of(context)!.profile_f93815e7;
                 }
                 return null;
               },
@@ -109,15 +109,15 @@ class _PartnerProfileEditScreenState extends State<PartnerProfileEditScreen> {
             const SizedBox(height: 24),
 
             // 経験レベル
-            const Text('経験レベル', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+            Text(AppLocalizations.of(context)!.experienceLevel, style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
             DropdownButtonFormField<String>(
               value: _experienceLevel,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
-              items: const [
-                DropdownMenuItem(value: 'beginner', child: Text('初心者')),
-                DropdownMenuItem(value: 'intermediate', child: Text('中級者')),
-                DropdownMenuItem(value: 'advanced', child: Text('上級者')),
+              decoration: InputDecoration(border: OutlineInputBorder()),
+              items: [
+                DropdownMenuItem(value: 'beginner', child: Text(AppLocalizations.of(context)!.beginner)),
+                DropdownMenuItem(value: 'intermediate', child: Text(AppLocalizations.of(context)!.levelIntermediate)),
+                DropdownMenuItem(value: 'advanced', child: Text(AppLocalizations.of(context)!.advanced)),
               ],
               onChanged: (value) {
                 setState(() => _experienceLevel = value!);
@@ -126,7 +126,7 @@ class _PartnerProfileEditScreenState extends State<PartnerProfileEditScreen> {
             const SizedBox(height: 24),
 
             // 好きな種目
-            const Text('好きな種目', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(AppLocalizations.of(context)!.profile_539d673a, style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -151,7 +151,7 @@ class _PartnerProfileEditScreenState extends State<PartnerProfileEditScreen> {
             const SizedBox(height: 24),
 
             // 目標
-            const Text('目標', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(AppLocalizations.of(context)!.goal, style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -183,8 +183,8 @@ class _PartnerProfileEditScreenState extends State<PartnerProfileEditScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
               child: _isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('保存', style: TextStyle(fontSize: 16)),
+                  ? CircularProgressIndicator(color: Colors.white)
+                  : Text(AppLocalizations.of(context)!.save, style: TextStyle(fontSize: 16)),
             ),
           ],
         ),

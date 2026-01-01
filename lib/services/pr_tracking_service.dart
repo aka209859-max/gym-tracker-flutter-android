@@ -190,43 +190,43 @@ class PRTrackingService {
   String _getBodyPartFromExercise(String exerciseName) {
     final Map<String, String> exerciseBodyParts = {
       // 胸
-      'ベンチプレス': '胸',
-      'インクラインプレス': '胸',
-      'ダンベルフライ': '胸',
-      'ケーブルフライ': '胸',
-      'ディップス': '胸',
-      'プッシュアップ': '胸',
+      AppLocalizations.of(context)!.exerciseBenchPress: AppLocalizations.of(context)!.bodyPartChest,
+      AppLocalizations.of(context)!.exerciseInclinePress: AppLocalizations.of(context)!.bodyPartChest,
+      AppLocalizations.of(context)!.workout_e85fb0a4: AppLocalizations.of(context)!.bodyPartChest,
+      AppLocalizations.of(context)!.exerciseCableFly: AppLocalizations.of(context)!.bodyPartChest,
+      AppLocalizations.of(context)!.exerciseDips: AppLocalizations.of(context)!.bodyPartChest,
+      AppLocalizations.of(context)!.general_36594338: AppLocalizations.of(context)!.bodyPartChest,
       
       // 背中
-      'デッドリフト': '背中',
-      'バーベルロウ': '背中',
-      'ダンベルロウ': '背中',
-      'ラットプルダウン': '背中',
-      'プルアップ': '背中',
-      'シーテッドロウ': '背中',
+      AppLocalizations.of(context)!.exerciseDeadlift: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.general_f9e3856d: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.general_9ba1c450: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.exerciseLatPulldown: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.workout_e3dc6687: AppLocalizations.of(context)!.bodyPartBack,
+      AppLocalizations.of(context)!.exerciseSeatedRow: AppLocalizations.of(context)!.bodyPartBack,
       
       // 脚
-      'スクワット': '脚',
-      'レッグプレス': '脚',
-      'レッグエクステンション': '脚',
-      'レッグカール': '脚',
-      'カーフレイズ': '脚',
+      AppLocalizations.of(context)!.exerciseSquat: AppLocalizations.of(context)!.bodyPartLegs,
+      AppLocalizations.of(context)!.exerciseLegPress: AppLocalizations.of(context)!.bodyPartLegs,
+      AppLocalizations.of(context)!.exerciseLegExtension: AppLocalizations.of(context)!.bodyPartLegs,
+      AppLocalizations.of(context)!.exerciseLegCurl: AppLocalizations.of(context)!.bodyPartLegs,
+      AppLocalizations.of(context)!.exerciseCalfRaise: AppLocalizations.of(context)!.bodyPartLegs,
       
       // 肩
-      'ショルダープレス': '肩',
-      'ダンベルプレス': '肩',
-      'サイドレイズ': '肩',
-      'フロントレイズ': '肩',
-      'リアレイズ': '肩',
+      AppLocalizations.of(context)!.exerciseShoulderPress: AppLocalizations.of(context)!.bodyPartShoulders,
+      AppLocalizations.of(context)!.exerciseDumbbellPress: AppLocalizations.of(context)!.bodyPartShoulders,
+      AppLocalizations.of(context)!.exerciseSideRaise: AppLocalizations.of(context)!.bodyPartShoulders,
+      AppLocalizations.of(context)!.exerciseFrontRaise: AppLocalizations.of(context)!.bodyPartShoulders,
+      AppLocalizations.of(context)!.workout_61db805d: AppLocalizations.of(context)!.bodyPartShoulders,
       
       // 腕
-      'バーベルカール': '腕',
-      'ダンベルカール': '腕',
-      'トライセプスエクステンション': '腕',
-      'スカルクラッシャー': '腕',
+      AppLocalizations.of(context)!.exerciseBarbellCurl: AppLocalizations.of(context)!.bodyPartArms,
+      AppLocalizations.of(context)!.exerciseDumbbellCurl: AppLocalizations.of(context)!.bodyPartArms,
+      AppLocalizations.of(context)!.exerciseTricepsExtension: AppLocalizations.of(context)!.bodyPartArms,
+      AppLocalizations.of(context)!.exerciseSkullCrusher: AppLocalizations.of(context)!.bodyPartArms,
     };
 
-    return exerciseBodyParts[exerciseName] ?? 'その他';
+    return exerciseBodyParts[exerciseName] ?? AppLocalizations.of(context)!.bodyPartOther;
   }
 
   /// 種目別のPR履歴を取得（グラフ表示用）

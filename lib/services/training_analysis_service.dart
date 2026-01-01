@@ -135,7 +135,7 @@ class TrainingAnalysisService {
     } else if (currentSets <= maxSets) {
       status = 'optimal'; // 最適
       suggestedChange = 0;
-      advice = '現在のボリュームは最適範囲内です';
+      advice = AppLocalizations.of(context)!.general_e2dab825;
     } else {
       status = 'excessive'; // 過剰
       suggestedChange = maxSets - currentSets;
@@ -166,10 +166,10 @@ class TrainingAnalysisService {
       advice = '週+${recommendedFrequency - currentFrequency}回でボリューム増加可能（Grgic 2018）';
     } else if (currentFrequency == recommendedFrequency) {
       status = 'optimal';
-      advice = '現在の頻度は最適です';
+      advice = AppLocalizations.of(context)!.general_1cb6010c;
     } else {
       status = 'high';
-      advice = '高頻度：回復時間に注意。ボリューム統制すれば問題なし';
+      advice = AppLocalizations.of(context)!.general_dd3d4747;
     }
 
     return {
@@ -187,7 +187,7 @@ class TrainingAnalysisService {
     if (history.length < 2) {
       return {
         'trend': 'insufficient_data',
-        'message': 'データ不足：2週間以上の履歴が必要',
+        'message': AppLocalizations.of(context)!.general_d1c587d7,
       };
     }
 
@@ -212,7 +212,7 @@ class TrainingAnalysisService {
       message = '週+${weeklyGrowth.toStringAsFixed(1)}%：成長ペースが遅め';
     } else {
       trend = 'plateau'; // 停滞
-      message = '成長停滞：プログラム変更を推奨';
+      message = AppLocalizations.of(context)!.general_c13355bf;
     }
 
     return {
@@ -238,7 +238,7 @@ class TrainingAnalysisService {
     if (volumeAnalysis['status'] != 'optimal') {
       recommendations.add({
         'priority': 'high',
-        'category': 'ボリューム',
+        'category': AppLocalizations.of(context)!.general_9ee757d0,
         'action': volumeAnalysis['advice'],
         'basis': 'Schoenfeld et al. 2017',
       });
@@ -248,7 +248,7 @@ class TrainingAnalysisService {
     if (frequencyAnalysis['status'] != 'optimal') {
       recommendations.add({
         'priority': 'medium',
-        'category': '頻度',
+        'category': AppLocalizations.of(context)!.general_c46defd1,
         'action': frequencyAnalysis['advice'],
         'basis': 'Grgic et al. 2018',
       });
@@ -260,7 +260,7 @@ class TrainingAnalysisService {
       for (final solution in solutions) {
         recommendations.add({
           'priority': 'high',
-          'category': 'プラトー対策',
+          'category': AppLocalizations.of(context)!.general_028acae4,
           'action': solution,
           'basis': 'Kraemer & Ratamess 2004',
         });
@@ -271,7 +271,7 @@ class TrainingAnalysisService {
     final restDays = ScientificDatabase.getRecommendedRestDays(level, bodyPart);
     recommendations.add({
       'priority': 'medium',
-      'category': '回復',
+      'category': AppLocalizations.of(context)!.recovery,
       'action': '同一部位は${restDays}日空ける（MPS上昇期間：48時間）',
       'basis': 'Davies et al. 2024',
     });
@@ -414,9 +414,9 @@ ${ScientificDatabase.getSystemPrompt()}
     
     buffer.writeln('## トレーニング効果の評価');
     if (volumeAnalysis['status'] == 'optimal' && frequencyAnalysis['status'] == 'optimal') {
-      buffer.writeln('現在のプログラムは科学的に最適な範囲内です。このまま継続することで効果的な成長が期待できます。');
+      buffer.writeln(AppLocalizations.of(context)!.general_b2d3af2b);
     } else {
-      buffer.writeln('改善の余地があります。以下の推奨事項に従うことで、より効果的なトレーニングが可能です。');
+      buffer.writeln(AppLocalizations.of(context)!.general_5be1d3e2);
     }
     
     buffer.writeln('\n## 最優先改善ポイント');
@@ -425,7 +425,7 @@ ${ScientificDatabase.getSystemPrompt()}
     } else if (volumeAnalysis['status'] == 'excessive') {
       buffer.writeln('現在のボリュームは過剰です。週${-volumeAnalysis['suggestedChange']}セット削減で回復時間を確保しましょう。');
     } else if (plateauDetected) {
-      buffer.writeln('プラトー期を検出しました。プログラム変更（種目変更、強度変更）を推奨します。');
+      buffer.writeln(AppLocalizations.of(context)!.general_e72d4ca1);
     } else {
       buffer.writeln('${volumeAnalysis['advice']}');
     }
@@ -448,17 +448,17 @@ ${ScientificDatabase.getSystemPrompt()}
       },
       {
         'citation': 'Grgic et al. 2018',
-        'finding': 'ボリュームが王様、頻度は手段',
+        'finding': AppLocalizations.of(context)!.general_52c6bae7,
         'effectSize': 'ES=0.88-1.08',
       },
       {
         'citation': 'Davies et al. 2024',
-        'finding': 'MPS上昇期間：48時間',
+        'finding': AppLocalizations.of(context)!.general_351acace,
         'effectSize': 'N/A',
       },
       {
         'citation': 'Baz-Valle et al. 2022',
-        'finding': 'レベル別最適ボリューム',
+        'finding': AppLocalizations.of(context)!.general_6677a2f7,
         'effectSize': 'N/A',
       },
     ];

@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -37,7 +38,7 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
     await Clipboard.setData(ClipboardData(text: _template));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('✅ テンプレートをコピーしました！'),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 2),
@@ -56,7 +57,7 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('シェアエラー: $e'),
+            content: Text(AppLocalizations.of(context)!.error),
             backgroundColor: Colors.red,
           ),
         );
@@ -87,7 +88,7 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('エラー: $e'),
+            content: Text(AppLocalizations.of(context)!.error),
             backgroundColor: Colors.red,
           ),
         );
@@ -104,26 +105,26 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.check_circle, color: Colors.green, size: 32),
             SizedBox(width: 12),
-            Text('投稿を受付ました！'),
+            Text(AppLocalizations.of(context)!.postSubmitted),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            const Text(
-              '自動確認システムが投稿を検証中...',
+            SizedBox(height: 16),
+            Text(
+                          AppLocalizations.of(context)!.confirm,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 8),
             Text(
-              '数分以内に結果をお知らせします',
+              AppLocalizations.of(context)!.general_4dbf836e,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
@@ -135,7 +136,7 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
               Navigator.of(context).pop(); // ダイアログ閉じる
               Navigator.of(context).pop(); // この画面も閉じる
             },
-            child: const Text('閉じる'),
+            child: Text(AppLocalizations.of(context)!.close),
           ),
         ],
       ),
@@ -144,7 +145,7 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final benefit = widget.application.planType == 'premium' ? '2ヶ月無料' : '初月無料';
+    final benefit = widget.application.planType == 'premium' ? AppLocalizations.of(context)!.general_9aff674f : AppLocalizations.of(context)!.general_6fd93ccd;
 
     return Scaffold(
       appBar: AppBar(
@@ -176,7 +177,7 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
               ElevatedButton.icon(
                 onPressed: _copyToClipboard,
                 icon: const Icon(Icons.copy),
-                label: const Text('テンプレートをコピー'),
+                label: Text(AppLocalizations.of(context)!.general_a1817327),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(16),
                   backgroundColor: Colors.blue[700],
@@ -187,7 +188,7 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
               ElevatedButton.icon(
                 onPressed: _shareToSns,
                 icon: const Icon(Icons.share),
-                label: const Text('SNSアプリで投稿'),
+                label: Text(AppLocalizations.of(context)!.general_b5b7e374),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(16),
                   backgroundColor: Colors.green[700],
@@ -196,9 +197,9 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
               ),
               const SizedBox(height: 24),
               const Divider(),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               Text(
-                '投稿完了後、下のボタンをタップ',
+                AppLocalizations.of(context)!.purchaseCompleted(AppLocalizations.of(context)!.general_140fbc0e),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -246,17 +247,17 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
                       color: Colors.green[700],
                       size: 48,
                     ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      '投稿を受付ました！',
+                    SizedBox(height: 12),
+                    Text(
+                          AppLocalizations.of(context)!.postSubmitted,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(
-                      '自動確認システムが検証中です',
+                      AppLocalizations.of(context)!.confirm,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[700],
@@ -331,7 +332,7 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
                 Icon(Icons.vpn_key, color: Colors.amber[700], size: 28),
                 const SizedBox(width: 8),
                 const Text(
-                  'あなたの認証コード',
+                  AppLocalizations.of(context)!.general_c8bef2a9,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -381,12 +382,12 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
                 Icon(Icons.article, color: Colors.blue),
                 SizedBox(width: 8),
                 Text(
-                  '投稿テンプレート',
+                  AppLocalizations.of(context)!.general_5aab3d07,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -428,12 +429,12 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
                 Icon(Icons.checklist, color: Colors.blue),
                 SizedBox(width: 8),
                 Text(
-                  '投稿手順',
+                  AppLocalizations.of(context)!.general_4b8a8d52,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -442,11 +443,11 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            _buildInstructionStep('1', '「テンプレートをコピー」をタップ'),
-            _buildInstructionStep('2', 'X（旧Twitter）またはInstagramアプリを開く'),
-            _buildInstructionStep('3', 'コピーしたテンプレートを貼り付けて投稿'),
-            _buildInstructionStep('4', 'このアプリに戻って「投稿しました」をタップ'),
-            const SizedBox(height: 12),
+            _buildInstructionStep('1', AppLocalizations.of(context)!.general_3ad25210),
+            _buildInstructionStep('2', AppLocalizations.of(context)!.general_e8477f45),
+            _buildInstructionStep('3', AppLocalizations.of(context)!.general_d9c86932),
+            _buildInstructionStep('4', AppLocalizations.of(context)!.general_4da5e52b),
+            SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -456,10 +457,10 @@ class _CampaignSnsShareScreenState extends State<CampaignSnsShareScreen> {
               child: Row(
                 children: [
                   Icon(Icons.auto_awesome, color: Colors.green[700], size: 20),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '自動確認システムが数分以内に投稿を検証します',
+                      AppLocalizations.of(context)!.confirm,
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[800],

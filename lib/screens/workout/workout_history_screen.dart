@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import 'body_part_tracking_screen.dart';
 import 'personal_records_screen.dart';
 import 'workout_memo_list_screen.dart';
@@ -17,15 +18,16 @@ class WorkoutHistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     
     return DefaultTabController(
       length: 4,
       child: Scaffold(
         appBar: AppBar(
           centerTitle: true,
-          title: const Text(
-            'トレーニング履歴',
-            style: TextStyle(
+          title: Text(
+            l10n.workoutHistory,
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 20,
             ),
@@ -37,22 +39,22 @@ class WorkoutHistoryScreen extends StatelessWidget {
             unselectedLabelColor: Colors.white70,
             indicatorColor: Colors.white,
             indicatorWeight: 3,
-            tabs: const [
+            tabs: [
               Tab(
-                icon: Icon(Icons.accessibility_new),
-                text: '部位別',
+                icon: const Icon(Icons.accessibility_new),
+                text: l10n.byBodyPart,
               ),
               Tab(
-                icon: Icon(Icons.trending_up),
-                text: 'PR記録',
+                icon: const Icon(Icons.trending_up),
+                text: l10n.personalRecords,
               ),
               Tab(
-                icon: Icon(Icons.note_add),
-                text: 'メモ',
+                icon: const Icon(Icons.note_add),
+                text: l10n.memo,
               ),
               Tab(
-                icon: Icon(Icons.bar_chart),
-                text: '週次',
+                icon: const Icon(Icons.bar_chart),
+                text: l10n.weeklyReport,
               ),
             ],
           ),

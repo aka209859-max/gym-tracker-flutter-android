@@ -187,7 +187,7 @@ class PartnerMergeService {
     int matchCount = 0;
     for (final kw1 in keywords1) {
       for (final kw2 in keywords2) {
-        // キーワードの部分一致を許容（例: "royal" と "ロイヤル"）
+        // キーワードの部分一致を許容（例: "royal" と AppLocalizations.of(context)!.general_d696cff8）
         if (kw1.contains(kw2) || kw2.contains(kw1)) {
           matchCount++;
           break;
@@ -223,10 +223,10 @@ class PartnerMergeService {
   bool _isKanaEnglishMatch(String kw1, String kw2) {
     // よくある対応パターン
     final Map<String, String> kanaEnglishMap = {
-      'royal': 'ロイヤル',
-      'fitness': 'フィットネス',
-      'cafe': 'カフェ',
-      'wash': 'ウォッシュ',
+      'royal': AppLocalizations.of(context)!.general_d696cff8,
+      'fitness': AppLocalizations.of(context)!.general_c758fe69,
+      'cafe': AppLocalizations.of(context)!.gym_71edef7e,
+      'wash': AppLocalizations.of(context)!.general_40a6b7e6,
     };
     
     for (final entry in kanaEnglishMap.entries) {
@@ -254,13 +254,13 @@ class PartnerMergeService {
     }
     
     // 都道府県・市区町村の一致チェック
-    final prefectures = ['北海道', '青森', '岩手', '宮城', '秋田', '山形', '福島',
-                         '茨城', '栃木', '群馬', '埼玉', '千葉', '東京', '神奈川',
-                         '新潟', '富山', '石川', '福井', '山梨', '長野', '岐阜',
-                         '静岡', '愛知', '三重', '滋賀', '京都', '大阪', '兵庫',
-                         '奈良', '和歌山', '鳥取', '島根', '岡山', '広島', '山口',
-                         '徳島', '香川', '愛媛', '高知', '福岡', '佐賀', '長崎',
-                         '熊本', '大分', '宮崎', '鹿児島', '沖縄'];
+    final prefectures = [AppLocalizations.of(context)!.profile_afa342b7, AppLocalizations.of(context)!.general_d837067a, AppLocalizations.of(context)!.general_d2e3ea81, AppLocalizations.of(context)!.general_2b180dc8, AppLocalizations.of(context)!.general_4f199796, AppLocalizations.of(context)!.general_1947f6db, AppLocalizations.of(context)!.general_30216a10,
+                         AppLocalizations.of(context)!.general_078bb920, AppLocalizations.of(context)!.general_2d9eaae3, AppLocalizations.of(context)!.general_2af324df, AppLocalizations.of(context)!.general_07cf822c, AppLocalizations.of(context)!.general_c335de5c, AppLocalizations.of(context)!.general_6fa43203, AppLocalizations.of(context)!.general_eef6da2f,
+                         AppLocalizations.of(context)!.general_215695a6, AppLocalizations.of(context)!.general_3913724a, AppLocalizations.of(context)!.general_e1637371, AppLocalizations.of(context)!.general_47547464, AppLocalizations.of(context)!.general_4ecfe176, AppLocalizations.of(context)!.general_b468fb56, AppLocalizations.of(context)!.general_5f93c0f9,
+                         AppLocalizations.of(context)!.general_3ef233eb, AppLocalizations.of(context)!.general_ae4a6f15, AppLocalizations.of(context)!.general_6bd46be4, AppLocalizations.of(context)!.general_a27d2589, AppLocalizations.of(context)!.general_923b46f2, AppLocalizations.of(context)!.general_013f31f7, AppLocalizations.of(context)!.general_35247177,
+                         AppLocalizations.of(context)!.general_a248c80f, AppLocalizations.of(context)!.general_b85dfa67, AppLocalizations.of(context)!.general_9138605b, AppLocalizations.of(context)!.general_03801a58, AppLocalizations.of(context)!.general_76683668, AppLocalizations.of(context)!.general_fc9c3580, AppLocalizations.of(context)!.general_84ec0ce8,
+                         AppLocalizations.of(context)!.general_fe4dc268, AppLocalizations.of(context)!.general_fcfd4cb4, AppLocalizations.of(context)!.general_e01c5655, AppLocalizations.of(context)!.general_6ef4203d, AppLocalizations.of(context)!.general_87dc5e14, AppLocalizations.of(context)!.general_5a0ca2e2, AppLocalizations.of(context)!.general_2dbcf5d1,
+                         AppLocalizations.of(context)!.general_21caf754, AppLocalizations.of(context)!.general_0f944350, AppLocalizations.of(context)!.general_3edec490, AppLocalizations.of(context)!.general_8e53814f, AppLocalizations.of(context)!.general_7c2594ee];
     
     String? prefecture1;
     String? prefecture2;
@@ -279,7 +279,7 @@ class PartnerMergeService {
     double score = (prefecture1 != null && prefecture2 != null && prefecture1 == prefecture2) ? 0.3 : 0.0;
     
     // 主要都市名の一致チェック（佐賀市、久留米市、鳥栖市など）
-    final cities = ['佐賀市', '久留米市', '鳥栖市', '福岡市', '大和町', '津福', '西新町', '鍋島', '緑小路'];
+    final cities = [AppLocalizations.of(context)!.general_3046b259, AppLocalizations.of(context)!.general_dc2264c5, AppLocalizations.of(context)!.general_47cc8127, AppLocalizations.of(context)!.general_6aa81375, AppLocalizations.of(context)!.general_f75d35c8, AppLocalizations.of(context)!.general_4bf41b7e, AppLocalizations.of(context)!.general_d7334355, AppLocalizations.of(context)!.general_cfd154a5, AppLocalizations.of(context)!.general_f6090f96];
     for (final city in cities) {
       final cityNorm = _normalizeString(city);
       if (normalized1.contains(cityNorm) && normalized2.contains(cityNorm)) {
@@ -311,7 +311,7 @@ class PartnerMergeService {
     return str
         .toLowerCase()
         .replaceAll(RegExp(r'[\s\-_&・]'), '')
-        .replaceAll('ー', '')
+        .replaceAll(AppLocalizations.of(context)!.general_2bc17100, '')
         .replaceAll('－', '');
   }
 
@@ -397,7 +397,7 @@ class PartnerMergeService {
       facilities: partnerData?['facilities'] != null 
           ? List<String>.from(partnerData!['facilities'] as List)
           : [],
-      openingHours: place.openNow == true ? '営業中' : place.openNow == false ? '営業時間外' : '営業時間不明',
+      openingHours: place.openNow == true ? AppLocalizations.of(context)!.open : place.openNow == false ? AppLocalizations.of(context)!.general_a2082b23 : AppLocalizations.of(context)!.general_88133d74,
       monthlyFee: (partnerData?['monthlyFee'] as num?)?.toDouble() ?? 0.0,
       rating: place.rating ?? 0.0,
       reviewCount: place.userRatingsTotal ?? 0,

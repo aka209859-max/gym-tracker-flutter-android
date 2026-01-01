@@ -72,7 +72,7 @@ class PaywallDialog extends StatelessWidget {
             
             // タイトル
             const Text(
-              '今月のAI分析は残り0回です',
+              AppLocalizations.of(context)!.general_7a4837ed,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white,
@@ -84,7 +84,7 @@ class PaywallDialog extends StatelessWidget {
             
             // 説明
             Text(
-              'あなたの成長予測を見逃さないために',
+              AppLocalizations.of(context)!.general_453f0a92,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.7),
@@ -100,9 +100,9 @@ class PaywallDialog extends StatelessWidget {
             // オプション1: AI追加パック（お得！）
             _buildOptionCard(
               context,
-              title: 'AI追加パック',
-              subtitle: '¥300で5回分追加',
-              badge: 'お得！',
+              title: AppLocalizations.of(context)!.aiAddonPack,
+              subtitle: AppLocalizations.of(context)!.general_a974dc84,
+              badge: AppLocalizations.of(context)!.general_b08e3e55,
               badgeColor: Colors.green,
               icon: Icons.add_shopping_cart,
               onTap: () {
@@ -120,8 +120,8 @@ class PaywallDialog extends StatelessWidget {
             _buildOptionCard(
               context,
               title: 'Premium Plan',
-              subtitle: '¥500/月で毎月10回',
-              badge: '初月無料',
+              subtitle: AppLocalizations.of(context)!.general_ddc75fbc,
+              badge: AppLocalizations.of(context)!.general_6fd93ccd,
               badgeColor: Colors.purple,
               icon: Icons.star,
               onTap: () {
@@ -139,8 +139,8 @@ class PaywallDialog extends StatelessWidget {
             _buildOptionCard(
               context,
               title: 'Pro Plan',
-              subtitle: '¥980/月で毎月30回',
-              badge: '14日間無料',
+              subtitle: AppLocalizations.of(context)!.general_a5612ca8,
+              badge: AppLocalizations.of(context)!.general_85dbd0fe,
               badgeColor: Colors.amber,
               icon: Icons.emoji_events,
               onTap: () {
@@ -158,7 +158,7 @@ class PaywallDialog extends StatelessWidget {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                '後で',
+                AppLocalizations.of(context)!.later,
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.5),
                 ),
@@ -209,7 +209,7 @@ class PaywallDialog extends StatelessWidget {
             
             // タイトル
             const Text(
-              '7日間連続達成！🎉',
+              AppLocalizations.of(context)!.general_0b2c2440,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white,
@@ -253,7 +253,7 @@ class PaywallDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    '¥500/月',
+                    AppLocalizations.of(context)!.subscription_c71bb2e2,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 32,
@@ -262,8 +262,8 @@ class PaywallDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   _buildFeatureRow(Icons.psychology, 'AI分析 10回/月'),
-                  _buildFeatureRow(Icons.block, '広告なし'),
-                  _buildFeatureRow(Icons.show_chart, '詳細な成長グラフ'),
+                  _buildFeatureRow(Icons.block, AppLocalizations.of(context)!.noAds),
+                  _buildFeatureRow(Icons.show_chart, AppLocalizations.of(context)!.general_c75214b2),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -275,7 +275,7 @@ class PaywallDialog extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Text(
-                      '初月無料🎁',
+                      AppLocalizations.of(context)!.general_05848a73,
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 16,
@@ -309,7 +309,7 @@ class PaywallDialog extends StatelessWidget {
                   ),
                 ),
                 child: const Text(
-                  '今すぐアップグレード',
+                  AppLocalizations.of(context)!.general_9811cf34,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -323,7 +323,7 @@ class PaywallDialog extends StatelessWidget {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text(
-                '後で',
+                AppLocalizations.of(context)!.later,
                 style: TextStyle(
                   color: Colors.white,
                 ),
@@ -429,7 +429,7 @@ class PaywallDialog extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    '¥980/月',
+                    AppLocalizations.of(context)!.subscription_275ce1f5,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 32,
@@ -440,7 +440,7 @@ class PaywallDialog extends StatelessWidget {
                   _buildFeatureRow(Icons.people, 'パートナー検索 🆕'),
                   _buildFeatureRow(Icons.chat, 'メッセージング機能 🆕'),
                   _buildFeatureRow(Icons.psychology, 'AI分析 30回/月'),
-                  _buildFeatureRow(Icons.block, '広告なし'),
+                  _buildFeatureRow(Icons.block, AppLocalizations.of(context)!.noAds),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -452,7 +452,7 @@ class PaywallDialog extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Text(
-                      '14日間無料🎁',
+                      AppLocalizations.of(context)!.general_d89e38c4,
                       style: TextStyle(
                         color: Colors.amber,
                         fontSize: 16,
@@ -500,7 +500,7 @@ class PaywallDialog extends StatelessWidget {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text(
-                '後で',
+                AppLocalizations.of(context)!.later,
                 style: TextStyle(
                   color: Colors.white,
                 ),
@@ -543,9 +543,9 @@ class PaywallDialog extends StatelessWidget {
     
     return _buildOptionCard(
       context,
-      title: '動画を見て1回分ゲット',
-      subtitle: '30秒の動画視聴でAI機能1回追加',
-      badge: '無料!',
+      title: AppLocalizations.of(context)!.general_77908ac6,
+      subtitle: AppLocalizations.of(context)!.general_f4c2543c,
+      badge: AppLocalizations.of(context)!.general_72978833,
       badgeColor: Colors.blue,
       icon: Icons.play_circle_fill,
       onTap: () async {
@@ -587,7 +587,7 @@ class PaywallDialog extends StatelessWidget {
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('広告の表示に失敗しました。もう一度お試しください。'),
+              content: Text(AppLocalizations.of(context)!.error_97a53f5f),
               duration: Duration(seconds: 2),
             ),
           );

@@ -44,18 +44,18 @@ class ChatService {
     required String text,
   }) async {
     final currentUser = _auth.currentUser;
-    if (currentUser == null) throw Exception('ログインが必要です');
+    if (currentUser == null) throw Exception(AppLocalizations.of(context)!.loginRequired);
 
     final conversationRef = _firestore.collection('conversations').doc(conversationId);
     final conversationDoc = await conversationRef.get();
 
     if (!conversationDoc.exists) {
-      throw Exception('会話が見つかりません');
+      throw Exception(AppLocalizations.of(context)!.general_705052a5);
     }
 
     final conversationData = conversationDoc.data();
     if (conversationData == null) {
-      throw Exception('会話データの取得に失敗しました');
+      throw Exception(AppLocalizations.of(context)!.error_8f013312);
     }
     
     final participants = List<String>.from(conversationData['participants'] as List? ?? []);
@@ -98,12 +98,12 @@ class ChatService {
   /// チャットルーム作成（パートナー機能用）
   Future<String> createChatRoom(String partnerId) async {
     final currentUser = _auth.currentUser;
-    if (currentUser == null) throw Exception('ログインが必要です');
+    if (currentUser == null) throw Exception(AppLocalizations.of(context)!.loginRequired);
 
     // 🔒 友達チェック
     final isFriend = await _friendRequestService.areFriends(currentUser.uid, partnerId);
     if (!isFriend) {
-      throw Exception('友達になってからメッセージを送信できます');
+      throw Exception(AppLocalizations.of(context)!.general_3165d4b1);
     }
 
     // 既存のチャットルームを検索
@@ -142,7 +142,7 @@ class ChatService {
     required String otherUserPhotoUrl,
   }) async {
     final currentUser = _auth.currentUser;
-    if (currentUser == null) throw Exception('ログインが必要です');
+    if (currentUser == null) throw Exception(AppLocalizations.of(context)!.loginRequired);
 
     // 既存の会話を検索
     final existingConversations = await _firestore

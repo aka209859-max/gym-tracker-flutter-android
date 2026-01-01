@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../../config/crowd_data_config.dart';
 
@@ -12,7 +13,7 @@ class PhaseMigrationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('データ戦略フェーズ管理'),
+        title: Text(AppLocalizations.of(context)!.general_e7a900f9),
         backgroundColor: Colors.deepPurple,
       ),
       body: SingleChildScrollView(
@@ -31,7 +32,7 @@ class PhaseMigrationScreen extends StatelessWidget {
               revenue: '0 - 100万円/月',
               cost: '\$0/月',
               accuracy: '70-90%',
-              description: '統計推定とユーザー報告でコストゼロ運用',
+              description: AppLocalizations.of(context)!.general_b6c03396,
               features: [
                 '✅ 完全無料（API費用なし）',
                 '✅ ユーザーエンゲージメント向上',
@@ -49,7 +50,7 @@ class PhaseMigrationScreen extends StatelessWidget {
               revenue: '100 - 300万円/月',
               cost: '\$170/月',
               accuracy: '85-95%',
-              description: '人気ジムのみAPI使用で品質向上',
+              description: AppLocalizations.of(context)!.general_4dd675e7,
               features: [
                 '✅ 人気ジムの精度大幅向上',
                 '✅ コスト効率的（費用率0.17%）',
@@ -64,10 +65,10 @@ class PhaseMigrationScreen extends StatelessWidget {
             _buildPhaseCard(
               phase: CrowdDataPhase.phase3,
               title: 'フェーズ3: フルAPI',
-              revenue: '300万円/月以上',
+              revenue: AppLocalizations.of(context)!.general_90d5357d,
               cost: '\$850/月',
               accuracy: '90-95%',
-              description: '全ジムでリアルタイムデータ提供',
+              description: AppLocalizations.of(context)!.general_a12528f0,
               features: [
                 '✅ 業界最高レベルの精度',
                 '✅ 全ジムでリアルタイム更新',
@@ -104,7 +105,7 @@ class PhaseMigrationScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 const Text(
-                  '現在のフェーズ',
+                  AppLocalizations.of(context)!.general_ecd7fa0b,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -145,13 +146,13 @@ class PhaseMigrationScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Row(
                     children: [
                       Icon(Icons.api, size: 20, color: Colors.blue),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
                       Text(
-                        'Google API: ${CrowdDataConfig.enableGooglePlacesAPI ? "有効" : "無効"}',
+                        'Google API: ${CrowdDataConfig.enableGooglePlacesAPI ? AppLocalizations.of(context)!.valid : AppLocalizations.of(context)!.invalid}',
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey[700],
@@ -229,12 +230,12 @@ class PhaseMigrationScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _buildInfoRow('対象収益', revenue, Icons.trending_up),
-            _buildInfoRow('月額コスト', cost, Icons.attach_money),
-            _buildInfoRow('データ精度', accuracy, Icons.speed),
+            _buildInfoRow(AppLocalizations.of(context)!.general_713ba0e2, revenue, Icons.trending_up),
+            _buildInfoRow(AppLocalizations.of(context)!.general_036e50bf, cost, Icons.attach_money),
+            _buildInfoRow(AppLocalizations.of(context)!.general_ee0515ff, accuracy, Icons.speed),
             const SizedBox(height: 12),
             const Text(
-              '特徴:',
+              AppLocalizations.of(context)!.general_d8d1ba3a,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -297,7 +298,7 @@ class PhaseMigrationScreen extends StatelessWidget {
                 Icon(Icons.lightbulb, color: Colors.amber.shade700, size: 28),
                 const SizedBox(width: 8),
                 const Text(
-                  '移行ガイドライン',
+                  AppLocalizations.of(context)!.general_1aeb1c97,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -308,11 +309,11 @@ class PhaseMigrationScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _buildGuideItem(
               '1. フェーズ1 → フェーズ2',
-              '月間収益が3ヶ月連続で100万円以上達成時',
+              AppLocalizations.of(context)!.general_2e4b390b,
             ),
             _buildGuideItem(
               '2. フェーズ2 → フェーズ3',
-              '月間収益が3ヶ月連続で300万円以上達成時',
+              AppLocalizations.of(context)!.general_f5e6812d,
             ),
             const SizedBox(height: 12),
             Container(

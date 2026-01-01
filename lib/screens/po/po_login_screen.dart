@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,45 +10,7 @@ import 'po_dashboard_screen.dart';
 /// 機能:
 /// 1. メールアドレス + パスワード認証
 /// 2. アクセスコード認証（例: RF-AKA-2024）
-/// 3. Firestoreでrole="po"検証
-class POLoginScreen extends StatefulWidget {
-  const POLoginScreen({super.key});
-
-  @override
-  State<POLoginScreen> createState() => _POLoginScreenState();
-}
-
-class _POLoginScreenState extends State<POLoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _accessCodeController = TextEditingController();
-  
-  bool _isLoading = false;
-  String? _errorMessage;
-  bool _obscurePassword = true;
-  int _loginMode = 0; // 0: Email, 1: Access Code
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _accessCodeController.dispose();
-    super.dispose();
-  }
-
-  /// メールアドレス + パスワード認証
-  Future<void> _loginWithEmail() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      if (kDebugMode) {
-        debugPrint('📧 PO Email認証開始...');
+/// 3. Firestoreでrole="poAppLocalizations.of(context)!.password📧 PO Email認証開始...');
         debugPrint('   Email: ${_emailController.text}');
       }
 
@@ -59,7 +22,7 @@ class _POLoginScreenState extends State<POLoginScreen> {
 
       final userId = userCredential.user?.uid;
       if (userId == null) {
-        throw Exception('認証に失敗しました');
+        throw Exception(AppLocalizations.of(context)!.error_31d6c265);
       }
 
       if (kDebugMode) {
@@ -75,18 +38,18 @@ class _POLoginScreenState extends State<POLoginScreen> {
       if (!poDoc.exists) {
         // PO登録がない場合
         await FirebaseAuth.instance.signOut();
-        throw Exception('このアカウントはPO管理者として登録されていません');
+        throw Exception(AppLocalizations.of(context)!.emailNotRegistered);
       }
 
       final data = poDoc.data();
       if (data == null) {
         await FirebaseAuth.instance.signOut();
-        throw Exception('管理者データの取得に失敗しました');
+        throw Exception(AppLocalizations.of(context)!.error_5f7080fe);
       }
       
       if (data['role'] != 'po') {
         await FirebaseAuth.instance.signOut();
-        throw Exception('PO管理者権限がありません');
+        throw Exception(AppLocalizations.of(context)!.general_82f22f64);
       }
 
       if (kDebugMode) {
@@ -110,19 +73,19 @@ class _POLoginScreenState extends State<POLoginScreen> {
       String errorMsg;
       switch (e.code) {
         case 'user-not-found':
-          errorMsg = 'このメールアドレスは登録されていません';
+          errorMsg = AppLocalizations.of(context)!.emailNotRegistered;
           break;
         case 'wrong-password':
-          errorMsg = 'パスワードが間違っています';
+          errorMsg = AppLocalizations.of(context)!.general_cca4bb63;
           break;
         case 'invalid-email':
-          errorMsg = 'メールアドレスの形式が正しくありません';
+          errorMsg = AppLocalizations.of(context)!.invalidEmailFormat;
           break;
         case 'user-disabled':
-          errorMsg = 'このアカウントは無効化されています';
+          errorMsg = AppLocalizations.of(context)!.general_a62dd99d;
           break;
         default:
-          errorMsg = '認証エラー: ${e.message}';
+          errorMsg = AppLocalizations.of(context)!.error;
       }
 
       setState(() {
@@ -166,7 +129,7 @@ class _POLoginScreenState extends State<POLoginScreen> {
           .get();
 
       if (querySnapshot.docs.isEmpty) {
-        throw Exception('無効なアクセスコードです');
+        throw Exception(AppLocalizations.of(context)!.general_5e23a0da);
       }
 
       final poDoc = querySnapshot.docs.first;
@@ -248,7 +211,7 @@ class _POLoginScreenState extends State<POLoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'PO管理ページ',
+                  AppLocalizations.of(context)!.general_5de90c88,
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.grey.shade600,
@@ -274,7 +237,7 @@ class _POLoginScreenState extends State<POLoginScreen> {
                     children: [
                       Expanded(
                         child: _buildTabButton(
-                          label: 'メールアドレス',
+                          label: AppLocalizations.of(context)!.email,
                           icon: Icons.email_outlined,
                           isSelected: _loginMode == 0,
                           onTap: () => setState(() => _loginMode = 0),
@@ -282,7 +245,7 @@ class _POLoginScreenState extends State<POLoginScreen> {
                       ),
                       Expanded(
                         child: _buildTabButton(
-                          label: 'アクセスコード',
+                          label: AppLocalizations.of(context)!.accessCode,
                           icon: Icons.key_outlined,
                           isSelected: _loginMode == 1,
                           onTap: () => setState(() => _loginMode = 1),
@@ -421,7 +384,7 @@ class _POLoginScreenState extends State<POLoginScreen> {
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
           decoration: InputDecoration(
-            labelText: 'メールアドレス',
+            labelText: AppLocalizations.of(context)!.email,
             prefixIcon: const Icon(Icons.email_outlined),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -431,10 +394,10 @@ class _POLoginScreenState extends State<POLoginScreen> {
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'メールアドレスを入力してください';
+              return AppLocalizations.of(context)!.emailRequired;
             }
             if (!value.contains('@')) {
-              return '正しいメールアドレスを入力してください';
+              return AppLocalizations.of(context)!.enterValidEmailAddress;
             }
             return null;
           },
@@ -446,7 +409,7 @@ class _POLoginScreenState extends State<POLoginScreen> {
           controller: _passwordController,
           obscureText: _obscurePassword,
           decoration: InputDecoration(
-            labelText: 'パスワード',
+            labelText: AppLocalizations.of(context)!.password,
             prefixIcon: const Icon(Icons.lock_outline),
             suffixIcon: IconButton(
               icon: Icon(
@@ -466,10 +429,10 @@ class _POLoginScreenState extends State<POLoginScreen> {
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'パスワードを入力してください';
+              return AppLocalizations.of(context)!.passwordRequired;
             }
             if (value.length < 6) {
-              return 'パスワードは6文字以上で入力してください';
+              return AppLocalizations.of(context)!.passwordMin6;
             }
             return null;
           },
@@ -497,8 +460,7 @@ class _POLoginScreenState extends State<POLoginScreen> {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-              : const Text(
-                  'ログイン',
+              : Text(AppLocalizations.of(context)!.login,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -518,7 +480,7 @@ class _POLoginScreenState extends State<POLoginScreen> {
         TextFormField(
           controller: _accessCodeController,
           decoration: InputDecoration(
-            labelText: 'アクセスコード',
+            labelText: AppLocalizations.of(context)!.accessCode,
             hintText: '例: RF-AKA-2024',
             prefixIcon: const Icon(Icons.key_outlined),
             border: OutlineInputBorder(
@@ -530,10 +492,10 @@ class _POLoginScreenState extends State<POLoginScreen> {
           textCapitalization: TextCapitalization.characters,
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'アクセスコードを入力してください';
+              return AppLocalizations.of(context)!.general_5fdcaed2;
             }
             if (value.length < 8) {
-              return 'アクセスコードは8文字以上です';
+              return AppLocalizations.of(context)!.general_f3d35372;
             }
             return null;
           },
@@ -553,7 +515,7 @@ class _POLoginScreenState extends State<POLoginScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'アクセスコードは担当者から発行されたコードです',
+                  AppLocalizations.of(context)!.general_c932d178,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.blue.shade700,
@@ -586,8 +548,7 @@ class _POLoginScreenState extends State<POLoginScreen> {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-              : const Text(
-                  'コードでログイン',
+              : Text(AppLocalizations.of(context)!.login,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

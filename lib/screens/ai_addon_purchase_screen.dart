@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../services/subscription_service.dart';
 import '../services/revenue_cat_service.dart';
@@ -48,16 +49,16 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('AI追加パックを購入しますか？'),
-        content: const Text(
+        title: Text(AppLocalizations.of(context)!.general_a03febb3),
+        content: Text(
           'AI追加パック（5回分）\n'
           '料金: ¥300\n\n'
-          '今月のAI機能使用回数を5回追加します。',
+          '${AppLocalizations.of(context)!.addWorkout}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('キャンセル'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -65,7 +66,7 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
             ),
-            child: const Text('購入する'),
+            child: Text(AppLocalizations.of(context)!.general_c71038e7),
           ),
         ],
       ),
@@ -90,16 +91,16 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Row(
+            title: Row(
               children: [
                 Icon(Icons.check_circle, color: Colors.green, size: 32),
                 SizedBox(width: 12),
-                Text('購入完了'),
+                Text(AppLocalizations.of(context)!.purchaseCompleted(AppLocalizations.of(context)!.aiAddonPack)),
               ],
             ),
             content: const Text(
               'AI追加パック（5回分）を購入しました！\n'
-              '今月のAI機能をさらに5回ご利用いただけます。',
+              AppLocalizations.of(context)!.general_6dc47887,
             ),
             actions: [
               TextButton(
@@ -107,7 +108,7 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
                   Navigator.pop(context); // ダイアログを閉じる
                   Navigator.pop(context, true); // 購入画面を閉じて成功を返す
                 },
-                child: const Text('閉じる'),
+                child: Text(AppLocalizations.of(context)!.close),
               ),
             ],
           ),
@@ -117,18 +118,18 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Row(
+            title: Row(
               children: [
                 Icon(Icons.error, color: Colors.red, size: 32),
                 SizedBox(width: 12),
-                Text('購入エラー'),
+                Text(AppLocalizations.of(context)!.error),
               ],
             ),
             content: const Text('購入処理に失敗しました。\nもう一度お試しください。'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('閉じる'),
+                child: Text(AppLocalizations.of(context)!.close),
               ),
             ],
           ),
@@ -138,32 +139,32 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
       print('❌ 購入処理エラー: $e');
       if (mounted) {
         // エラー内容を判定してユーザーフレンドリーなメッセージを表示
-        String errorMessage = '購入処理に失敗しました。';
+        String errorMessage = AppLocalizations.of(context)!.error_84228e89;
         
         if (e.toString().contains('product not found') || 
-            e.toString().contains('商品が見つかりません')) {
+            e.toString().contains(AppLocalizations.of(context)!.general_e322250e)) {
           errorMessage = 'この商品は現在利用できません。\n'
-                        '後ほど再度お試しください。';
+                        AppLocalizations.of(context)!.general_b316392b;
         } else if (e.toString().contains('cancelled') || 
-                   e.toString().contains('キャンセル')) {
-          errorMessage = '購入がキャンセルされました。';
+                   e.toString().contains(AppLocalizations.of(context)!.buttonCancel)) {
+          errorMessage = AppLocalizations.of(context)!.purchaseCancelled;
         }
         
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Row(
+            title: Row(
               children: [
                 Icon(Icons.warning, color: Colors.orange, size: 32),
                 SizedBox(width: 12),
-                Text('購入エラー'),
+                Text(AppLocalizations.of(context)!.error),
               ],
             ),
             content: Text(errorMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('閉じる'),
+                child: Text(AppLocalizations.of(context)!.close),
               ),
             ],
           ),
@@ -186,7 +187,7 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI追加購入'),
+        title: Text(AppLocalizations.of(context)!.purchaseAICredits),
         centerTitle: true,
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
@@ -204,12 +205,12 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
                         Icon(Icons.auto_awesome, color: Colors.blue, size: 28),
                         SizedBox(width: 12),
                         Text(
-                          '今月のAI使用状況',
+                          AppLocalizations.of(context)!.general_7a3b29c4,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -251,11 +252,11 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(
                       isProPlan 
                           ? 'プラン基本: 無制限 / 追加購入: $_addonLimit回'
-                          : 'プラン基本: $_baseLimit回 / 追加購入: $_addonLimit回',
+                          : AppLocalizations.of(context)!.addWorkout,
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -270,7 +271,7 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
             
             // 追加購入パッケージ
             const Text(
-              'AI追加パック',
+              AppLocalizations.of(context)!.aiAddonPack,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -281,8 +282,8 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
             // 5回パック
             _buildAddonPackageCard(
               icon: Icons.bolt,
-              title: 'AI追加パック',
-              subtitle: 'AI機能を5回追加',
+              title: AppLocalizations.of(context)!.aiAddonPack,
+              subtitle: AppLocalizations.of(context)!.general_5beac536,
               price: '¥300',
               aiCount: 5,
               color: Colors.blue,
@@ -304,7 +305,7 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
                         Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          'ご利用について',
+                          AppLocalizations.of(context)!.subscription_76b79b54,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -459,7 +460,7 @@ class _AIAddonPurchaseScreenState extends State<AIAddonPurchaseScreen> {
                           ),
                         )
                       : const Text(
-                          '購入する',
+                          AppLocalizations.of(context)!.general_c71038e7,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

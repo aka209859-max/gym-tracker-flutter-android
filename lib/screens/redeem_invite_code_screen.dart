@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/referral_service.dart';
@@ -28,7 +29,7 @@ class _RedeemInviteCodeScreenState extends State<RedeemInviteCodeScreen> {
     
     if (code.isEmpty) {
       setState(() {
-        _errorMessage = '招待コードを入力してください';
+        _errorMessage = AppLocalizations.of(context)!.general_9499a589;
       });
       return;
     }
@@ -37,7 +38,7 @@ class _RedeemInviteCodeScreenState extends State<RedeemInviteCodeScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       setState(() {
-        _errorMessage = 'ログインが必要です';
+        _errorMessage = AppLocalizations.of(context)!.signInRequired;
       });
       return;
     }
@@ -59,19 +60,19 @@ class _RedeemInviteCodeScreenState extends State<RedeemInviteCodeScreen> {
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            title: const Row(
+            title: Row(
               children: [
                 Icon(Icons.celebration, color: Colors.amber, size: 32),
                 SizedBox(width: 12),
                 Text('🎉 登録完了！'),
               ],
             ),
-            content: const Column(
+            content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '招待コードが正常に適用されました！',
+                  AppLocalizations.of(context)!.general_391d3e03,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 16),
@@ -80,7 +81,7 @@ class _RedeemInviteCodeScreenState extends State<RedeemInviteCodeScreen> {
                 Text('✅ 友達: AI使用回数 +3回'),
                 SizedBox(height: 16),
                 Text(
-                  '特典はすぐに反映されます！',
+                  AppLocalizations.of(context)!.general_edb53fa5,
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
@@ -91,7 +92,7 @@ class _RedeemInviteCodeScreenState extends State<RedeemInviteCodeScreen> {
                   Navigator.of(context).pop(); // Close dialog
                   Navigator.of(context).pop(true); // Close screen (notify success)
                 },
-                child: const Text('閉じる'),
+                child: Text(AppLocalizations.of(context)!.close),
               ),
             ],
           ),
@@ -99,7 +100,7 @@ class _RedeemInviteCodeScreenState extends State<RedeemInviteCodeScreen> {
       } else {
         setState(() {
           _isLoading = false;
-          _errorMessage = '招待コードの適用に失敗しました';
+          _errorMessage = AppLocalizations.of(context)!.error_21fdfdc1;
         });
       }
     } catch (e) {
@@ -114,7 +115,7 @@ class _RedeemInviteCodeScreenState extends State<RedeemInviteCodeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('招待コードを使用'),
+        title: Text(AppLocalizations.of(context)!.general_999dddff),
         backgroundColor: Colors.deepPurple,
       ),
       body: SingleChildScrollView(
@@ -130,7 +131,7 @@ class _RedeemInviteCodeScreenState extends State<RedeemInviteCodeScreen> {
             ),
             const SizedBox(height: 24),
             const Text(
-              '招待コードを入力',
+              AppLocalizations.of(context)!.general_51121e8d,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 24,
@@ -163,7 +164,7 @@ class _RedeemInviteCodeScreenState extends State<RedeemInviteCodeScreen> {
               ),
               textAlign: TextAlign.center,
               decoration: InputDecoration(
-                labelText: '招待コード',
+                labelText: AppLocalizations.of(context)!.inviteCode,
                 hintText: 'GYMXXXXX',
                 hintStyle: TextStyle(
                   color: Colors.grey.shade400,
@@ -245,7 +246,7 @@ class _RedeemInviteCodeScreenState extends State<RedeemInviteCodeScreen> {
                       ),
                     )
                   : const Text(
-                      '招待コードを使用',
+                      AppLocalizations.of(context)!.general_999dddff,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -268,12 +269,12 @@ class _RedeemInviteCodeScreenState extends State<RedeemInviteCodeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
                         Icon(Icons.stars, color: Colors.amber),
                         SizedBox(width: 8),
                         Text(
-                          '招待コードの特典',
+                          AppLocalizations.of(context)!.general_81e7b007,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

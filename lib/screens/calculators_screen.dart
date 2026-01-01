@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../utils/strength_calculators.dart';
 
@@ -13,11 +14,11 @@ class CalculatorsScreen extends StatelessWidget {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('計算ツール'),
-          bottom: const TabBar(
+          title: Text(AppLocalizations.of(context)!.workout_0052814d),
+          bottom: TabBar(
             tabs: [
-              Tab(icon: Icon(Icons.calculate), text: '1RM計算'),
-              Tab(icon: Icon(Icons.fitness_center), text: 'プレート計算'),
+              Tab(icon: Icon(Icons.calculate), text: AppLocalizations.of(context)!.rmCalculator),
+              Tab(icon: Icon(Icons.fitness_center), text: AppLocalizations.of(context)!.plateCalculator),
             ],
           ),
         ),
@@ -52,7 +53,7 @@ class _OneRMCalculatorTabState extends State<_OneRMCalculatorTab> {
 
     if (weight == null || reps == null || weight <= 0 || reps <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('有効な重量と回数を入力してください')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.general_483508ec)),
       );
       return;
     }
@@ -108,7 +109,7 @@ class _OneRMCalculatorTabState extends State<_OneRMCalculatorTab> {
                       Icon(Icons.info_outline, color: Colors.blue[700]),
                       const SizedBox(width: 8),
                       Text(
-                        '1RM計算機',
+                        AppLocalizations.of(context)!.general_a35f8c38,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -120,7 +121,7 @@ class _OneRMCalculatorTabState extends State<_OneRMCalculatorTab> {
                   const SizedBox(height: 8),
                   const Text(
                     '1RM (1 Rep Max) は、1回だけ持ち上げられる最大重量です。\n'
-                    'Epley式を使用して推定1RMを計算します。',
+                    AppLocalizations.of(context)!.general_f5fcce57,
                     style: TextStyle(fontSize: 14),
                   ),
                 ],
@@ -136,20 +137,20 @@ class _OneRMCalculatorTabState extends State<_OneRMCalculatorTab> {
                 child: TextField(
                   controller: _weightController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: '重量 (kg)',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.fitness_center),
                   ),
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               Expanded(
                 child: TextField(
                   controller: _repsController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: '回数',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.repsCount,
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.repeat),
                   ),
@@ -168,16 +169,16 @@ class _OneRMCalculatorTabState extends State<_OneRMCalculatorTab> {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text('計算', style: TextStyle(fontSize: 16)),
+                  child: Text(AppLocalizations.of(context)!.calculate, style: TextStyle(fontSize: 16)),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               OutlinedButton(
                 onPressed: _clear,
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                 ),
-                child: const Text('クリア'),
+                child: Text(AppLocalizations.of(context)!.clear),
               ),
             ],
           ),
@@ -193,8 +194,7 @@ class _OneRMCalculatorTabState extends State<_OneRMCalculatorTab> {
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    const Text(
-                      '推定1RM',
+                    Text(AppLocalizations.of(context)!.estimatedMax,
                       style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                     const SizedBox(height: 8),
@@ -222,12 +222,12 @@ class _OneRMCalculatorTabState extends State<_OneRMCalculatorTab> {
                       color: Colors.grey[100],
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
                         Icon(Icons.table_chart),
                         SizedBox(width: 8),
                         Text(
-                          'ターゲット回数別の推奨重量',
+                          AppLocalizations.of(context)!.general_1840ca14,
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -323,7 +323,7 @@ class _PlateCalculatorTabState extends State<_PlateCalculatorTab> {
                       Icon(Icons.info_outline, color: Colors.orange[700]),
                       const SizedBox(width: 8),
                       Text(
-                        'プレート計算機',
+                        AppLocalizations.of(context)!.workout_ae263865,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -335,7 +335,7 @@ class _PlateCalculatorTabState extends State<_PlateCalculatorTab> {
                   const SizedBox(height: 8),
                   const Text(
                     '目標重量を入力すると、バーベルの片側に必要なプレートの\n'
-                    '組み合わせを計算します。',
+                    AppLocalizations.of(context)!.general_9d700689,
                     style: TextStyle(fontSize: 14),
                   ),
                 ],
@@ -352,7 +352,7 @@ class _PlateCalculatorTabState extends State<_PlateCalculatorTab> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'バー重量',
+                    AppLocalizations.of(context)!.general_d1efcee6,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
@@ -399,16 +399,16 @@ class _PlateCalculatorTabState extends State<_PlateCalculatorTab> {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text('計算', style: TextStyle(fontSize: 16)),
+                  child: Text(AppLocalizations.of(context)!.calculate, style: TextStyle(fontSize: 16)),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               OutlinedButton(
                 onPressed: _clear,
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                 ),
-                child: const Text('クリア'),
+                child: Text(AppLocalizations.of(context)!.clear),
               ),
             ],
           ),
@@ -425,7 +425,7 @@ class _PlateCalculatorTabState extends State<_PlateCalculatorTab> {
                 child: Column(
                   children: [
                     const Text(
-                      '実際の総重量',
+                      AppLocalizations.of(context)!.general_c9083826,
                       style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                     const SizedBox(height: 8),
@@ -458,7 +458,7 @@ class _PlateCalculatorTabState extends State<_PlateCalculatorTab> {
                       color: Colors.grey[100],
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
                         Icon(Icons.fitness_center),
                         SizedBox(width: 8),

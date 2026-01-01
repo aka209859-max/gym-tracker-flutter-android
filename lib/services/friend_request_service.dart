@@ -18,10 +18,10 @@ class FriendRequestService {
   /// 友達申請を送信
   Future<void> sendFriendRequest(String targetId) async {
     final currentUserId = _auth.currentUser?.uid;
-    if (currentUserId == null) throw Exception('ユーザーが認証されていません');
+    if (currentUserId == null) throw Exception(AppLocalizations.of(context)!.userNotAuthenticated);
     
     if (currentUserId == targetId) {
-      throw Exception('自分に友達申請はできません');
+      throw Exception(AppLocalizations.of(context)!.general_82c35ddb);
     }
 
     // 既存の申請をチェック
@@ -33,7 +33,7 @@ class FriendRequestService {
         .get();
 
     if (existingRequest.docs.isNotEmpty) {
-      throw Exception('既に友達申請を送信しています');
+      throw Exception(AppLocalizations.of(context)!.general_036253ca);
     }
 
     // 逆方向の申請をチェック（相手が既に申請している場合）
@@ -63,7 +63,7 @@ class FriendRequestService {
   /// 友達申請を承認
   Future<void> approveFriendRequest(String requestId) async {
     final currentUserId = _auth.currentUser?.uid;
-    if (currentUserId == null) throw Exception('ユーザーが認証されていません');
+    if (currentUserId == null) throw Exception(AppLocalizations.of(context)!.userNotAuthenticated);
 
     // 申請情報を取得
     final requestDoc = await _firestore
@@ -72,19 +72,19 @@ class FriendRequestService {
         .get();
 
     if (!requestDoc.exists) {
-      throw Exception('友達申請が見つかりません');
+      throw Exception(AppLocalizations.of(context)!.general_6cbc10f0);
     }
 
     final requestData = requestDoc.data();
     if (requestData == null) {
-      throw Exception('データの取得に失敗しました');
+      throw Exception(AppLocalizations.of(context)!.gym_c7e47d32);
     }
     final requesterId = requestData['requester_id'] as String;
     final targetId = requestData['target_id'] as String;
 
     // 自分宛の申請かチェック
     if (targetId != currentUserId) {
-      throw Exception('この申請を承認する権限がありません');
+      throw Exception(AppLocalizations.of(context)!.general_0f541745);
     }
 
     // 申請を承認済みに更新
@@ -100,7 +100,7 @@ class FriendRequestService {
   /// 友達申請を拒否
   Future<void> rejectFriendRequest(String requestId) async {
     final currentUserId = _auth.currentUser?.uid;
-    if (currentUserId == null) throw Exception('ユーザーが認証されていません');
+    if (currentUserId == null) throw Exception(AppLocalizations.of(context)!.userNotAuthenticated);
 
     // 申請情報を取得
     final requestDoc = await _firestore
@@ -109,18 +109,18 @@ class FriendRequestService {
         .get();
 
     if (!requestDoc.exists) {
-      throw Exception('友達申請が見つかりません');
+      throw Exception(AppLocalizations.of(context)!.general_6cbc10f0);
     }
 
     final requestData = requestDoc.data();
     if (requestData == null) {
-      throw Exception('データの取得に失敗しました');
+      throw Exception(AppLocalizations.of(context)!.gym_c7e47d32);
     }
     final targetId = requestData['target_id'] as String;
 
     // 自分宛の申請かチェック
     if (targetId != currentUserId) {
-      throw Exception('この申請を拒否する権限がありません');
+      throw Exception(AppLocalizations.of(context)!.general_58b51061);
     }
 
     // 申請を拒否済みに更新
@@ -265,7 +265,7 @@ class FriendRequestService {
   /// 友達を削除
   Future<void> removeFriend(String friendId) async {
     final currentUserId = _auth.currentUser?.uid;
-    if (currentUserId == null) throw Exception('ユーザーが認証されていません');
+    if (currentUserId == null) throw Exception(AppLocalizations.of(context)!.userNotAuthenticated);
 
     final batch = _firestore.batch();
 

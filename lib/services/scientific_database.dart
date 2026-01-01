@@ -225,16 +225,16 @@ class ScientificDatabase {
   /// - Advanced: Weekly 0.15%-0.25% → Monthly ~0.8%
   static double getMonthlyGrowthRate(String level) {
     switch (level) {
-      case '初心者':
+      case AppLocalizations.of(context)!.levelBeginner:
         // 🔧 Conservative: 週1.5-2.5% → 月約5%（保守的推定）
         // (1.05)^4 = 1.215 ≈ +21.5% over 4 months
         // 根拠: レポートの週次下限値 + 安全マージン
         return 0.05; // 月+5%（旧: 7.5%）
-      case '中級者':
+      case AppLocalizations.of(context)!.levelIntermediate:
         // 🔧 Conservative: 週0.4-0.8% → 月約2%
         // (1.02)^4 = 1.082 ≈ +8.2% over 4 months
         return 0.02; // 月+2%（旧: 3.5%）
-      case '上級者':
+      case AppLocalizations.of(context)!.levelAdvanced:
         // 🔧 Conservative: 週0.15-0.25% → 月約0.8%
         // (1.008)^4 = 1.032 ≈ +3.2% over 4 months
         return 0.008; // 月+0.8%（旧: 1.2%）
@@ -250,13 +250,13 @@ class ScientificDatabase {
     // レポートベースの週次成長率（Table 3より）
     double baseWeeklyRate;
     switch (level) {
-      case '初心者':
-        baseWeeklyRate = gender == '女性' ? 0.020 : 0.015; // 2.0% vs 1.5%
+      case AppLocalizations.of(context)!.levelBeginner:
+        baseWeeklyRate = gender == AppLocalizations.of(context)!.genderFemale ? 0.020 : 0.015; // 2.0% vs 1.5%
         break;
-      case '中級者':
-        baseWeeklyRate = gender == '女性' ? 0.005 : 0.004; // 0.5% vs 0.4%
+      case AppLocalizations.of(context)!.levelIntermediate:
+        baseWeeklyRate = gender == AppLocalizations.of(context)!.genderFemale ? 0.005 : 0.004; // 0.5% vs 0.4%
         break;
-      case '上級者':
+      case AppLocalizations.of(context)!.levelAdvanced:
         baseWeeklyRate = 0.0015; // 0.15%（性差なし）
         break;
       default:
@@ -266,12 +266,12 @@ class ScientificDatabase {
     final monthlyRate = getMonthlyGrowthRate(level);
     
     // 上半身部位の判定（胸、腕、肩、三角筋）
-    final isUpperBody = bodyPart.contains('胸') || 
-                        bodyPart.contains('腕') || 
-                        bodyPart.contains('肩') || 
-                        bodyPart.contains('三角筋');
+    final isUpperBody = bodyPart.contains(AppLocalizations.of(context)!.bodyPartChest) || 
+                        bodyPart.contains(AppLocalizations.of(context)!.bodyPartArms) || 
+                        bodyPart.contains(AppLocalizations.of(context)!.bodyPartShoulders) || 
+                        bodyPart.contains(AppLocalizations.of(context)!.workout_da6d5d22);
     
-    if (gender == '女性' && isUpperBody && level == '初心者') {
+    if (gender == AppLocalizations.of(context)!.genderFemale && isUpperBody && level == AppLocalizations.of(context)!.levelBeginner) {
       // 🔧 v1.0.226+244: 女性の上半身初心者のみ1.2倍ボーナス（Roberts 2020）
       // レポート Section 3.2: 女性・初心者・上半身の特異的補正
       return baseWeeklyRate * 1.2;
@@ -284,11 +284,11 @@ class ScientificDatabase {
   /// 推奨トレーニングボリューム（週あたりセット数）
   static Map<String, int> getRecommendedVolume(String level) {
     switch (level) {
-      case '初心者':
+      case AppLocalizations.of(context)!.levelBeginner:
         return {'min': 10, 'max': 12, 'optimal': 11};
-      case '中級者':
+      case AppLocalizations.of(context)!.levelIntermediate:
         return {'min': 12, 'max': 16, 'optimal': 14};
-      case '上級者':
+      case AppLocalizations.of(context)!.levelAdvanced:
         return {'min': 16, 'max': 20, 'optimal': 18};
       default:
         return {'min': 10, 'max': 12, 'optimal': 11};
@@ -298,19 +298,19 @@ class ScientificDatabase {
   /// 推奨トレーニング頻度（週あたり回数）
   static Map<String, dynamic> getRecommendedFrequency(String level) {
     switch (level) {
-      case '初心者':
+      case AppLocalizations.of(context)!.levelBeginner:
         return {
           'frequency': 2,
           'effectSize': 0.88,
           'reason': '回復時間確保（Grgic 2018）'
         };
-      case '中級者':
+      case AppLocalizations.of(context)!.levelIntermediate:
         return {
           'frequency': 3,
           'effectSize': 1.03,
           'reason': 'ボリューム増加（Grgic 2018）'
         };
-      case '上級者':
+      case AppLocalizations.of(context)!.levelAdvanced:
         return {
           'frequency': 5,
           'effectSize': 1.08,
@@ -328,17 +328,17 @@ class ScientificDatabase {
   /// 推奨休息日数
   static int getRecommendedRestDays(String level, String bodyPart) {
     // 大筋群か小筋群かを判定
-    final isLargeMuscle = bodyPart.contains('胸') ||
-        bodyPart.contains('背中') ||
-        bodyPart.contains('脚') ||
-        bodyPart.contains('下半身');
+    final isLargeMuscle = bodyPart.contains(AppLocalizations.of(context)!.bodyPartChest) ||
+        bodyPart.contains(AppLocalizations.of(context)!.bodyPartBack) ||
+        bodyPart.contains(AppLocalizations.of(context)!.bodyPartLegs) ||
+        bodyPart.contains(AppLocalizations.of(context)!.workout_10073d2e);
 
     if (isLargeMuscle) {
       // 大筋群：48-72時間
-      return level == '初心者' ? 3 : 2;
+      return level == AppLocalizations.of(context)!.levelBeginner ? 3 : 2;
     } else {
       // 小筋群：24-48時間
-      return level == '初心者' ? 2 : 1;
+      return level == AppLocalizations.of(context)!.levelBeginner ? 2 : 1;
     }
   }
 
@@ -356,17 +356,17 @@ class ScientificDatabase {
 
   /// プラトー対策の提案
   static List<String> getPlateauSolutions(String level) {
-    if (level == '初心者' || level == '中級者') {
+    if (level == AppLocalizations.of(context)!.levelBeginner || level == AppLocalizations.of(context)!.levelIntermediate) {
       return [
         'ディロード週を実施（ボリューム30-50%削減、強度維持）',
-        '種目を変更（角度・器具を変える）',
+        AppLocalizations.of(context)!.general_ffd1690a,
         'トレーニング頻度を週+1回増やす',
       ];
     } else {
       // 上級者向け
       return [
         'ドロップセットを導入（Krzysztofik 2019, ES=0.69）',
-        'クラスターセットで力発揮維持',
+        AppLocalizations.of(context)!.general_e49688cb,
         'DUP（Daily Undulating Periodization）に変更（Williams 2017, ES=0.68）',
         'ディロード週を実施（ボリューム30-50%削減）',
       ];
@@ -382,11 +382,11 @@ class ScientificDatabase {
     // 保守的に±15%の信頼区間を設定
     double variability;
     switch (level) {
-      case '初心者':
+      case AppLocalizations.of(context)!.levelBeginner:
         variability = 0.15; // ±15%（大きい個人差）
-      case '中級者':
+      case AppLocalizations.of(context)!.levelIntermediate:
         variability = 0.10; // ±10%（中程度の個人差）
-      case '上級者':
+      case AppLocalizations.of(context)!.levelAdvanced:
         variability = 0.08; // ±8%（小さい個人差）
       default:
         variability = 0.15;
@@ -418,64 +418,64 @@ class ScientificDatabase {
     final weightRatio = oneRM / bodyWeight;
     
     // 種目を判定
-    final isBenchPress = exerciseName.contains('胸') || 
-                         exerciseName.contains('大胸筋') ||
-                         exerciseName.contains('上腕');
-    final isSquat = exerciseName.contains('脚') || 
-                    exerciseName.contains('大腿') ||
-                    exerciseName.contains('スクワット');
-    final isDeadlift = exerciseName.contains('背中') || 
-                       exerciseName.contains('広背筋') ||
-                       exerciseName.contains('デッドリフト');
+    final isBenchPress = exerciseName.contains(AppLocalizations.of(context)!.bodyPartChest) || 
+                         exerciseName.contains(AppLocalizations.of(context)!.musclePecs) ||
+                         exerciseName.contains(AppLocalizations.of(context)!.bodyPart_cc7dbde9);
+    final isSquat = exerciseName.contains(AppLocalizations.of(context)!.bodyPartLegs) || 
+                    exerciseName.contains(AppLocalizations.of(context)!.workout_0c28e8be) ||
+                    exerciseName.contains(AppLocalizations.of(context)!.exerciseSquat);
+    final isDeadlift = exerciseName.contains(AppLocalizations.of(context)!.bodyPartBack) || 
+                       exerciseName.contains(AppLocalizations.of(context)!.workout_0f45a131) ||
+                       exerciseName.contains(AppLocalizations.of(context)!.exerciseDeadlift);
     
     // レポート Table 1-3 の閾値に基づく判定
     if (isBenchPress || (!isSquat && !isDeadlift)) {
       // ベンチプレス基準（デフォルト）
-      if (gender == '男性') {
-        if (weightRatio >= 1.95) return 'エリート';
-        if (weightRatio >= 1.60) return '上級者';
-        if (weightRatio >= 1.20) return '中級者';
-        if (weightRatio >= 0.80) return '初心者';
-        return '未経験・初期';
+      if (gender == AppLocalizations.of(context)!.genderMale) {
+        if (weightRatio >= 1.95) return AppLocalizations.of(context)!.general_7db7cd79;
+        if (weightRatio >= 1.60) return AppLocalizations.of(context)!.levelAdvanced;
+        if (weightRatio >= 1.20) return AppLocalizations.of(context)!.levelIntermediate;
+        if (weightRatio >= 0.80) return AppLocalizations.of(context)!.levelBeginner;
+        return AppLocalizations.of(context)!.general_156f0a0c;
       } else {
-        if (weightRatio >= 1.35) return 'エリート';
-        if (weightRatio >= 1.00) return '上級者';
-        if (weightRatio >= 0.80) return '中級者';
-        if (weightRatio >= 0.50) return '初心者';
-        return '未経験・初期';
+        if (weightRatio >= 1.35) return AppLocalizations.of(context)!.general_7db7cd79;
+        if (weightRatio >= 1.00) return AppLocalizations.of(context)!.levelAdvanced;
+        if (weightRatio >= 0.80) return AppLocalizations.of(context)!.levelIntermediate;
+        if (weightRatio >= 0.50) return AppLocalizations.of(context)!.levelBeginner;
+        return AppLocalizations.of(context)!.general_156f0a0c;
       }
     } else if (isSquat) {
       // スクワット基準
-      if (gender == '男性') {
-        if (weightRatio >= 2.83) return 'エリート';
-        if (weightRatio >= 2.10) return '上級者';
-        if (weightRatio >= 1.50) return '中級者';
-        if (weightRatio >= 1.00) return '初心者';
-        return '未経験・初期';
+      if (gender == AppLocalizations.of(context)!.genderMale) {
+        if (weightRatio >= 2.83) return AppLocalizations.of(context)!.general_7db7cd79;
+        if (weightRatio >= 2.10) return AppLocalizations.of(context)!.levelAdvanced;
+        if (weightRatio >= 1.50) return AppLocalizations.of(context)!.levelIntermediate;
+        if (weightRatio >= 1.00) return AppLocalizations.of(context)!.levelBeginner;
+        return AppLocalizations.of(context)!.general_156f0a0c;
       } else {
-        if (weightRatio >= 2.26) return 'エリート';
-        if (weightRatio >= 1.50) return '上級者';
-        if (weightRatio >= 1.10) return '中級者';
-        if (weightRatio >= 0.70) return '初心者';
-        return '未経験・初期';
+        if (weightRatio >= 2.26) return AppLocalizations.of(context)!.general_7db7cd79;
+        if (weightRatio >= 1.50) return AppLocalizations.of(context)!.levelAdvanced;
+        if (weightRatio >= 1.10) return AppLocalizations.of(context)!.levelIntermediate;
+        if (weightRatio >= 0.70) return AppLocalizations.of(context)!.levelBeginner;
+        return AppLocalizations.of(context)!.general_156f0a0c;
       }
     } else if (isDeadlift) {
       // デッドリフト基準
-      if (gender == '男性') {
-        if (weightRatio >= 3.25) return 'エリート';
-        if (weightRatio >= 2.40) return '上級者';
-        if (weightRatio >= 1.80) return '中級者';
-        return '初心者';
+      if (gender == AppLocalizations.of(context)!.genderMale) {
+        if (weightRatio >= 3.25) return AppLocalizations.of(context)!.general_7db7cd79;
+        if (weightRatio >= 2.40) return AppLocalizations.of(context)!.levelAdvanced;
+        if (weightRatio >= 1.80) return AppLocalizations.of(context)!.levelIntermediate;
+        return AppLocalizations.of(context)!.levelBeginner;
       } else {
-        if (weightRatio >= 2.66) return 'エリート';
-        if (weightRatio >= 1.80) return '上級者';
-        if (weightRatio >= 1.30) return '中級者';
-        return '初心者';
+        if (weightRatio >= 2.66) return AppLocalizations.of(context)!.general_7db7cd79;
+        if (weightRatio >= 1.80) return AppLocalizations.of(context)!.levelAdvanced;
+        if (weightRatio >= 1.30) return AppLocalizations.of(context)!.levelIntermediate;
+        return AppLocalizations.of(context)!.levelBeginner;
       }
     }
     
     // フォールバック
-    return '初心者';
+    return AppLocalizations.of(context)!.levelBeginner;
   }
 
   /// 年齢補正係数

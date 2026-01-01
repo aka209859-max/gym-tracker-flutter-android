@@ -29,6 +29,9 @@ import 'providers/gym_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/navigation_provider.dart';
+import 'providers/locale_provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'gen/app_localizations.dart';
 import 'widgets/trial_welcome_dialog.dart';
 import 'widgets/admob_banner.dart';
 import 'services/subscription_service.dart';
@@ -70,16 +73,16 @@ void main() async {
   // 日本語ロケール初期化（日付フォーマット用）
   try {
     await initializeDateFormatting('ja_JP', null);
-    ConsoleLogger.info('日本語ロケール初期化成功', tag: 'INIT');
+    ConsoleLogger.info(AppLocalizations.of(context)!.general_0e024233, tag: 'INIT');
   } catch (e) {
-    ConsoleLogger.warn('日本語ロケール初期化失敗（継続可能）', tag: 'INIT');
+    ConsoleLogger.warn(AppLocalizations.of(context)!.error_2def7135, tag: 'INIT');
     // Web環境では失敗する可能性があるが、アプリ起動は継続
   }
   
   // Firebase初期化（エラー時はスキップしてデモモード）
   bool firebaseInitialized = false;
   try {
-    ConsoleLogger.info('Firebase初期化開始', tag: 'FIREBASE');
+    ConsoleLogger.info(AppLocalizations.of(context)!.general_890a33f3, tag: 'FIREBASE');
     
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -251,7 +254,7 @@ void main() async {
     });
   }
   
-  print('🚀 アプリ起動開始 (Firebase: ${firebaseInitialized ? "有効" : "無効"})');
+  print('🚀 アプリ起動開始 (Firebase: ${firebaseInitialized ? AppLocalizations.of(context)!.valid : AppLocalizations.of(context)!.invalid})');
   
   runApp(const GymMatchApp());
 }
@@ -267,13 +270,24 @@ class GymMatchApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
+        ChangeNotifierProvider(create: (_) => LocaleProvider()),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
+      child: Consumer2<ThemeProvider, LocaleProvider>(
+        builder: (context, themeProvider, localeProvider, child) {
           return MaterialApp(
             title: 'GYM MATCH - ジム検索アプリ',
             debugShowCheckedModeBanner: false,
             theme: themeProvider.currentTheme,
+            
+            // 🌐 多言語対応設定
+            locale: localeProvider.locale,
+            supportedLocales: LocaleProvider.supportedLocales.map((info) => info.locale).toList(),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
             
             // スプラッシュスクリーンを初期画面に設定
             home: const SplashScreen(),
@@ -330,6 +344,8 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    
     return Consumer<NavigationProvider>(
       builder: (context, navigationProvider, child) {
         return Scaffold(
@@ -347,39 +363,39 @@ class _MainScreenState extends State<MainScreen> {
                 onDestinationSelected: (index) {
                   navigationProvider.selectTab(index);
                 },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'ホーム',
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home),
+            label: l10n?.navHome ?? AppLocalizations.of(context)!.navHome,
           ),
           NavigationDestination(
-            icon: Icon(Icons.history),
-            selectedIcon: Icon(Icons.history),
-            label: '履歴',
+            icon: const Icon(Icons.history),
+            selectedIcon: const Icon(Icons.history),
+            label: l10n?.navWorkout ?? AppLocalizations.of(context)!.general_da63bff4,
           ),
           NavigationDestination(
-            icon: Badge(
-              label: Text('AI', style: TextStyle(fontSize: 8)),
+            icon: const Badge(
+              label: Text(AppLocalizations.of(context)!.navAI, style: TextStyle(fontSize: 8)),
               backgroundColor: Colors.deepPurple,
               child: Icon(Icons.psychology_outlined),
             ),
-            selectedIcon: Badge(
-              label: Text('AI', style: TextStyle(fontSize: 8)),
+            selectedIcon: const Badge(
+              label: Text(AppLocalizations.of(context)!.navAI, style: TextStyle(fontSize: 8)),
               backgroundColor: Colors.deepPurple,
               child: Icon(Icons.psychology),
             ),
-            label: 'AI機能',
+            label: l10n?.navAI ?? AppLocalizations.of(context)!.general_deb22de6,
           ),
           NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map),
-            label: 'ジム検索',
+            icon: const Icon(Icons.map_outlined),
+            selectedIcon: const Icon(Icons.map),
+            label: l10n?.navGym ?? AppLocalizations.of(context)!.gymSearch,
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'プロフィール',
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
+            label: l10n?.navProfile ?? AppLocalizations.of(context)!.profile,
           ),
         ],
               ),

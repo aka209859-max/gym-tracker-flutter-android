@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -65,11 +66,11 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        throw Exception('ログインが必要です');
+        throw Exception(AppLocalizations.of(context)!.loginRequired);
       }
 
       // ユーザー名を取得
-      String userName = 'ユーザー';
+      String userName = AppLocalizations.of(context)!.userReport;
       if (user.displayName != null && user.displayName!.isNotEmpty) {
         userName = user.displayName!;
       } else if (user.email != null) {
@@ -100,8 +101,8 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('レビューを投稿しました！'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.gym_07855ac3),
             backgroundColor: Colors.green,
           ),
         );
@@ -129,19 +130,19 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.workspace_premium, color: Colors.blue),
             SizedBox(width: 12),
-            Text('Premium機能'),
+            Text(AppLocalizations.of(context)!.gym_c28a37a1),
           ],
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'レビュー投稿はPremium/Proプラン限定機能です。',
+              AppLocalizations.of(context)!.gym_309f83b8,
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 16),
@@ -162,7 +163,7 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('閉じる'),
+            child: Text(AppLocalizations.of(context)!.close),
           ),
           ElevatedButton(
             onPressed: () {
@@ -173,7 +174,7 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
             ),
-            child: const Text('プランを見る'),
+            child: Text(AppLocalizations.of(context)!.workout_aa5018ba),
           ),
         ],
       ),
@@ -184,7 +185,7 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('レビューを投稿'),
+        title: Text(AppLocalizations.of(context)!.submitReview),
         centerTitle: true,
       ),
       body: _isSubmitting
@@ -234,7 +235,7 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
 
                     // 総合評価
                     _buildRatingSection(
-                      title: '総合評価',
+                      title: AppLocalizations.of(context)!.gym_9bbdadad,
                       rating: _overallRating,
                       icon: Icons.star,
                       color: Colors.amber,
@@ -248,7 +249,7 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
 
                     // 詳細評価
                     const Text(
-                      '詳細評価',
+                      AppLocalizations.of(context)!.gym_9ff748a0,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -257,7 +258,7 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
                     const SizedBox(height: 16),
 
                     _buildRatingSection(
-                      title: '混雑度の正確さ',
+                      title: AppLocalizations.of(context)!.gym_59aa0844,
                       rating: _crowdAccuracy,
                       icon: Icons.people,
                       color: Colors.blue,
@@ -270,7 +271,7 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
                     const SizedBox(height: 12),
 
                     _buildRatingSection(
-                      title: '清潔さ',
+                      title: AppLocalizations.of(context)!.gym_972e9a95,
                       rating: _cleanliness,
                       icon: Icons.cleaning_services,
                       color: Colors.green,
@@ -283,7 +284,7 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
                     const SizedBox(height: 12),
 
                     _buildRatingSection(
-                      title: 'スタッフの対応',
+                      title: AppLocalizations.of(context)!.gym_a649b7f0,
                       rating: _staffFriendliness,
                       icon: Icons.person,
                       color: Colors.orange,
@@ -296,7 +297,7 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
                     const SizedBox(height: 12),
 
                     _buildRatingSection(
-                      title: '初心者への優しさ',
+                      title: AppLocalizations.of(context)!.gym_e1e3e550,
                       rating: _beginnerFriendly,
                       icon: Icons.school,
                       color: Colors.purple,
@@ -309,8 +310,8 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
                     const SizedBox(height: 24),
 
                     // コメント入力
-                    const Text(
-                      'コメント',
+                    Text(
+                          AppLocalizations.of(context)!.comment,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -321,16 +322,16 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
                       controller: _commentController,
                       maxLines: 5,
                       maxLength: 500,
-                      decoration: const InputDecoration(
-                        hintText: 'このジムの良かった点や改善点を教えてください',
+                      decoration: InputDecoration(
+                        hintText: AppLocalizations.of(context)!.gym_0c16050e,
                         border: OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'コメントを入力してください';
+                          return AppLocalizations.of(context)!.gym_f68a6177;
                         }
                         if (value.trim().length < 10) {
-                          return '10文字以上入力してください';
+                          return AppLocalizations.of(context)!.gym_56366b67;
                         }
                         return null;
                       },
@@ -347,8 +348,8 @@ class _GymReviewScreenState extends State<GymReviewScreen> {
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
                         ),
-                        child: const Text(
-                          'レビューを投稿',
+                        child: Text(
+                          AppLocalizations.of(context)!.submitReview,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

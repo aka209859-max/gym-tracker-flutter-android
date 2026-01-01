@@ -50,7 +50,7 @@ class TrialService {
       
       final data = userDoc.data();
       if (data == null) {
-        throw Exception('データの取得に失敗しました');
+        throw Exception(AppLocalizations.of(context)!.gym_c7e47d32);
       }
       
       // 1. アカウント登録完了（ユーザードキュメント存在）
@@ -292,7 +292,7 @@ class TrialService {
     
     final isUsed = await isTrialUsed();
     if (isUsed) {
-      return '終了したトライアル期間';
+      return AppLocalizations.of(context)!.subscription_0da2e903;
     }
     
     final conditions = await checkTrialConditions(userId);

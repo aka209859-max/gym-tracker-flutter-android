@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// 利用規約画面
@@ -8,7 +9,7 @@ class TermsOfServiceScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('利用規約'),
+        title: Text(AppLocalizations.of(context)!.termsOfService),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
@@ -18,11 +19,11 @@ class TermsOfServiceScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSection(
-              '第1条（適用）',
+              AppLocalizations.of(context)!.profile_6a8629ce,
               'この利用規約（以下「本規約」）は、井上元（以下「開発者」）が提供するGYM MATCHアプリ（以下「本アプリ」）の利用条件を定めるものです。ユーザーは、本アプリを利用することにより、本規約に同意したものとみなされます。',
             ),
             _buildSection(
-              '第2条（サービス内容）',
+              AppLocalizations.of(context)!.profile_7a557256,
               '本アプリは、以下の機能を提供します：\n\n'
               '• トレーニング記録の管理\n'
               '• ジム検索・位置情報表示\n'
@@ -31,7 +32,7 @@ class TermsOfServiceScreen extends StatelessWidget {
               '• 有料サブスクリプションプラン（Premium、Pro）',
             ),
             _buildSection(
-              '第3条（禁止事項）',
+              AppLocalizations.of(context)!.profile_94636bb4,
               'ユーザーは、本アプリの利用にあたり、以下の行為をしてはなりません：\n\n'
               '• 法令または公序良俗に違反する行為\n'
               '• 本アプリのサーバーまたはネットワークの機能を破壊したり、妨害したりする行為\n'
@@ -41,12 +42,12 @@ class TermsOfServiceScreen extends StatelessWidget {
             ),
             _buildSubscriptionSection(),
             _buildSection(
-              '第5条（免責事項）',
+              AppLocalizations.of(context)!.profile_2324b2ad,
               '• 開発者は、本アプリに起因してユーザーに生じたあらゆる損害について、一切の責任を負いません。\n'
               '• 本アプリのトレーニング提案は参考情報であり、医学的アドバイスではありません。運動を始める前に医師に相談してください。',
             ),
             _buildSection(
-              '第6条（準拠法・裁判管轄）',
+              AppLocalizations.of(context)!.profile_177dff1d,
               '• 本規約の解釈にあたっては、日本法を準拠法とします。\n'
               '• 本アプリに関して紛争が生じた場合には、開発者の所在地を管轄する裁判所を専属的合意管轄とします。',
             ),
@@ -94,7 +95,7 @@ class TermsOfServiceScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '第4条（サブスクリプション）',
+            AppLocalizations.of(context)!.profile_4f41f161,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -113,7 +114,7 @@ class TermsOfServiceScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'プラン内容',
+                  AppLocalizations.of(context)!.profile_147e8136,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -121,14 +122,14 @@ class TermsOfServiceScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildPlanItem('Freeプラン', '基本機能（広告表示あり、AI機能は広告視聴で月3回まで）', Colors.grey),
+                _buildPlanItem(AppLocalizations.of(context)!.profile_fd09fa4b, AppLocalizations.of(context)!.profile_68b026c0, Colors.grey),
                 const SizedBox(height: 4),
-                _buildPlanItem('Premiumプラン', '¥500/月（広告なし、AI機能月10回）', Colors.green),
+                _buildPlanItem(AppLocalizations.of(context)!.premiumPlan, AppLocalizations.of(context)!.profile_c29470ee, Colors.green),
                 const SizedBox(height: 4),
-                _buildPlanItem('Proプラン', '¥980/月（広告なし、AI機能月30回）', Colors.purple),
+                _buildPlanItem(AppLocalizations.of(context)!.proPlan, AppLocalizations.of(context)!.profile_bf865e58, Colors.purple),
                 const Divider(height: 24),
                 const Text(
-                  '支払方法',
+                  AppLocalizations.of(context)!.profile_86ba31c5,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -141,7 +142,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  '自動更新',
+                  AppLocalizations.of(context)!.profile_fbe7f25b,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -149,12 +150,12 @@ class TermsOfServiceScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'サブスクリプションは自動更新されます。解約しない限り、毎月自動的に課金されます。',
+                  AppLocalizations.of(context)!.profile_4347a89b,
                   style: TextStyle(fontSize: 13),
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  '解約方法',
+                  AppLocalizations.of(context)!.profile_867becd2,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -167,7 +168,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  '返金ポリシー',
+                  AppLocalizations.of(context)!.profile_d875e5b0,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -226,10 +227,10 @@ class TermsOfServiceScreen extends StatelessWidget {
           Row(
             children: [
               Icon(Icons.contact_mail, color: Colors.blue.shade700),
-              const SizedBox(width: 8),
-              const Text(
-                'お問い合わせ',
-                style: TextStyle(
+              SizedBox(width: 8),
+              Text(
+                AppLocalizations.of(context)!.contactUs,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.blue,
@@ -239,7 +240,7 @@ class TermsOfServiceScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           const Text(
-            '本規約に関するお問い合わせは、以下の連絡先までお願いいたします。',
+            AppLocalizations.of(context)!.profile_dc441f37,
             style: TextStyle(fontSize: 13),
           ),
           const SizedBox(height: 8),
@@ -250,10 +251,10 @@ class TermsOfServiceScreen extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 4),
-          const Text(
-            'メールアドレス: i.hajime1219@outlook.jp',
-            style: TextStyle(fontSize: 13),
+          SizedBox(height: 4),
+          Text(
+            AppLocalizations.of(context)!.email,
+            style: const TextStyle(fontSize: 13),
           ),
           const Text(
             '（対応時間: 平日 10:00-18:00）',
@@ -271,7 +272,7 @@ class TermsOfServiceScreen extends StatelessWidget {
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(

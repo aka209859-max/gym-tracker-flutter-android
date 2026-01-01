@@ -33,7 +33,7 @@ class PartnerService {
     bool isAvailable = true,
   }) async {
     final currentUser = _auth.currentUser;
-    if (currentUser == null) throw Exception('ログインが必要です');
+    if (currentUser == null) throw Exception(AppLocalizations.of(context)!.loginRequired);
 
     await _firestore.collection('training_partners').doc(currentUser.uid).set({
       'name': currentUser.displayName ?? 'Unknown',

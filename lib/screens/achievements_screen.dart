@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../models/achievement.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../services/achievement_service.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:intl/intl.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 
 /// 達成バッジ画面
 class AchievementsScreen extends StatefulWidget {
@@ -91,16 +96,16 @@ class _AchievementsScreenState extends State<AchievementsScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('達成バッジ'),
+        title: Text(AppLocalizations.of(context)!.general_472edfec),
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           indicatorColor: Colors.white,
-          tabs: const [
-            Tab(text: 'すべて'),
-            Tab(text: '継続'),
-            Tab(text: '総重量'),
+          tabs: [
+            Tab(text: AppLocalizations.of(context)!.all),
+            Tab(text: AppLocalizations.of(context)!.general_3fa16d02),
+            Tab(text: AppLocalizations.of(context)!.totalWeight),
             Tab(text: 'PR'),
           ],
         ),
@@ -152,19 +157,19 @@ class _AchievementsScreenState extends State<AchievementsScreen>
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildStatItem(
-                '解除済み',
+                AppLocalizations.of(context)!.general_68f06584,
                 '${_stats['unlocked']}',
                 Icons.emoji_events,
                 Colors.white,
               ),
               _buildStatItem(
-                '未解除',
+                AppLocalizations.of(context)!.general_e05cb021,
                 '${_stats['locked']}',
                 Icons.lock_outline,
                 Colors.white70,
               ),
               _buildStatItem(
-                '達成率',
+                AppLocalizations.of(context)!.general_7810caaf,
                 '$unlockedPercent%',
                 Icons.insights,
                 Colors.white,
@@ -221,7 +226,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
   Widget _buildBadgeList(List<Achievement> badges, ThemeData theme) {
     if (badges.isEmpty) {
       return const Center(
-        child: Text('バッジがありません'),
+        child: Text(AppLocalizations.of(context)!.general_398db801),
       );
     }
 
@@ -412,9 +417,9 @@ class _AchievementsScreenState extends State<AchievementsScreen>
   String _getCategoryLabel(BadgeCategory category) {
     switch (category) {
       case BadgeCategory.streak:
-        return '継続';
+        return AppLocalizations.of(context)!.general_3fa16d02;
       case BadgeCategory.totalWeight:
-        return '累計';
+        return AppLocalizations.of(context)!.general_dc78fd37;
       case BadgeCategory.prCount:
         return 'PR';
     }
@@ -424,11 +429,11 @@ class _AchievementsScreenState extends State<AchievementsScreen>
   String _getCategoryUnit(BadgeCategory category) {
     switch (category) {
       case BadgeCategory.streak:
-        return '日';
+        return AppLocalizations.of(context)!.sun;
       case BadgeCategory.totalWeight:
-        return 'kg';
+        return AppLocalizations.of(context)!.kg;
       case BadgeCategory.prCount:
-        return '回';
+        return AppLocalizations.of(context)!.reps;
     }
   }
 }

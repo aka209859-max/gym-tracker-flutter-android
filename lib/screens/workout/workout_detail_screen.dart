@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:gym_match/gen/app_localizations.dart';
 import '../../models/workout_log.dart';
 import '../../models/workout_note.dart';
 import '../../services/workout_note_service.dart';
@@ -51,48 +52,49 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   // ✅ v1.0.168: 腹筋系種目かどうかを判定
   bool _isAbsExercise(String exerciseName) {
     const absExercises = [
-      'クランチ',
-      'レッグレイズ',
-      'プランク',
-      'アブローラー',
-      'ハンギングレッグレイズ',
-      'サイドプランク',
-      'バイシクルクランチ',
-      'ケーブルクランチ',
+      AppLocalizations.of(context)!.crunch,
+      AppLocalizations.of(context)!.legRaise,
+      AppLocalizations.of(context)!.plank,
+      AppLocalizations.of(context)!.abRoller,
+      AppLocalizations.of(context)!.hangingLegRaise,
+      AppLocalizations.of(context)!.sidePlank,
+      AppLocalizations.of(context)!.bicycleCrunch,
+      AppLocalizations.of(context)!.cableCrunch,
     ];
     return absExercises.contains(exerciseName);
   }
 
   // メモ追加・編集ダイアログを表示
   Future<void> _showNoteDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController(text: _workoutNote?.content ?? '');
     
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(_workoutNote == null ? 'メモを追加' : 'メモを編集'),
+        title: Text(_workoutNote == null ? l10n.addNote : l10n.editNote),
         content: TextField(
           controller: controller,
           maxLines: 8,
-          decoration: const InputDecoration(
-            hintText: 'トレーニングの感想や気づきを記録...',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: l10n.noteHint,
+            border: const OutlineInputBorder(),
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: Text(l10n.cancel),
           ),
           if (_workoutNote != null)
             TextButton(
               onPressed: () => Navigator.pop(context, '__DELETE__'),
-              child: const Text('削除', style: TextStyle(color: Colors.red)),
+              child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
             ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('保存'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -112,6 +114,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
 
   // メモを保存
   Future<void> _saveNote(String content) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       if (_workoutNote == null) {
         // 新規作成
@@ -125,7 +128,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('メモを保存しました'), backgroundColor: Colors.green),
+            SnackBar(content: Text(l10n.noteSaved), backgroundColor: Colors.green),
           );
         }
       } else {
@@ -136,14 +139,14 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('メモを更新しました'), backgroundColor: Colors.green),
+            SnackBar(content: Text(l10n.noteUpdated), backgroundColor: Colors.green),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('メモの保存に失敗しました: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(l10n.noteSaveFailed(e.toString())), backgroundColor: Colors.red),
         );
       }
     }
@@ -151,6 +154,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
 
   // メモを削除
   Future<void> _deleteNote() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       if (_workoutNote != null) {
         await _noteService.deleteNote(_workoutNote!.id);
@@ -159,14 +163,14 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('メモを削除しました')),
+            SnackBar(content: Text(l10n.noteDeleted)),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('メモの削除に失敗しました: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(l10n.noteDeleteFailed(e.toString())), backgroundColor: Colors.red),
         );
       }
     }
@@ -174,6 +178,8 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (kDebugMode) {
       debugPrint('🏗️ Building WorkoutDetailScreen');
       debugPrint('  Workout ID: ${widget.workout.id}');
@@ -183,7 +189,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('トレーニング詳細'),
+        title: Text(l10n.workoutDetail),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
@@ -292,7 +298,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                         const SizedBox(
                           width: 40,
                           child: Text(
-                            'セット',
+                            AppLocalizations.of(context)!.workoutSetsLabel,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -302,7 +308,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                         ),
                         const Expanded(
                           child: Text(
-                            '重さ',
+                            AppLocalizations.of(context)!.workout_2579352f,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -313,7 +319,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                         SizedBox(
                           width: 60,
                           child: Text(
-                            _isAbsExercise(exercise.name) ? '秒数' : '回数',
+                            _isAbsExercise(exercise.name) ? AppLocalizations.of(context)!.workout_34d70475 : AppLocalizations.of(context)!.repsCount,
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -335,7 +341,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                         const SizedBox(
                           width: 40,
                           child: Text(
-                            '補助',
+                            AppLocalizations.of(context)!.workout_c6b41e99,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -435,7 +441,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                         const Icon(Icons.note, size: 20),
                         const SizedBox(width: 8),
                         const Text(
-                          '記録時のメモ',
+                          AppLocalizations.of(context)!.workout_e5798fef,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -481,7 +487,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                   ),
                   const SizedBox(width: 8),
                   const Text(
-                    'トレーニングメモ',
+                    AppLocalizations.of(context)!.trainingMemo,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -522,7 +528,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                 ),
               ] else ...[
                 Text(
-                  'タップしてトレーニングの感想や気づきを記録',
+                  AppLocalizations.of(context)!.workout_e5b3b7b2,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -566,7 +572,7 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
       case SetType.failure:
         icon = Icons.local_fire_department;
         color = Colors.red;
-        label = '限界';
+        label = AppLocalizations.of(context)!.limit;
         break;
       default:
         return const SizedBox.shrink();

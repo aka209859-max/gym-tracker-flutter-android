@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
@@ -30,18 +31,18 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   bool _isLoading = false;
   bool _isPickingImage = false; // 画像選択中フラグ
 
-  // 都道府県リスト
+  // 都道府県リスト（ハードコード - ローカライズは表示時に対応）
   static const List<String> _prefectures = [
-    '北海道',
-    '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
-    '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
-    '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県',
-    '岐阜県', '静岡県', '愛知県', '三重県',
-    '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県',
-    '鳥取県', '島根県', '岡山県', '広島県', '山口県',
-    '徳島県', '香川県', '愛媛県', '高知県',
-    '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県',
-    '沖縄県',
+    AppLocalizations.of(context)!.profile_afa342b7,
+    AppLocalizations.of(context)!.prefectureAomori, AppLocalizations.of(context)!.prefectureIwate, AppLocalizations.of(context)!.prefectureMiyagi, AppLocalizations.of(context)!.prefectureAkita, AppLocalizations.of(context)!.prefectureYamagata, AppLocalizations.of(context)!.prefectureFukushima,
+    AppLocalizations.of(context)!.prefectureIbaraki, AppLocalizations.of(context)!.prefectureTochigi, AppLocalizations.of(context)!.prefectureGunma, AppLocalizations.of(context)!.prefectureSaitama, AppLocalizations.of(context)!.prefectureChiba, AppLocalizations.of(context)!.prefectureTokyo, AppLocalizations.of(context)!.prefectureKanagawa,
+    AppLocalizations.of(context)!.prefectureNiigata, AppLocalizations.of(context)!.prefectureToyama, AppLocalizations.of(context)!.prefectureIshikawa, AppLocalizations.of(context)!.prefectureFukui, AppLocalizations.of(context)!.prefectureYamanashi, AppLocalizations.of(context)!.prefectureNagano,
+    AppLocalizations.of(context)!.prefectureGifu, AppLocalizations.of(context)!.prefectureShizuoka, AppLocalizations.of(context)!.prefectureAichi, AppLocalizations.of(context)!.prefectureMie,
+    AppLocalizations.of(context)!.prefectureShiga, AppLocalizations.of(context)!.prefectureKyoto, AppLocalizations.of(context)!.prefectureOsaka, AppLocalizations.of(context)!.prefectureHyogo, AppLocalizations.of(context)!.prefectureNara, AppLocalizations.of(context)!.prefectureWakayama,
+    AppLocalizations.of(context)!.prefectureTottori, AppLocalizations.of(context)!.prefectureShimane, AppLocalizations.of(context)!.prefectureOkayama, AppLocalizations.of(context)!.prefectureHiroshima, AppLocalizations.of(context)!.prefectureYamaguchi,
+    AppLocalizations.of(context)!.prefectureTokushima, AppLocalizations.of(context)!.prefectureKagawa, AppLocalizations.of(context)!.prefectureEhime, AppLocalizations.of(context)!.prefectureKochi,
+    AppLocalizations.of(context)!.prefectureFukuoka, AppLocalizations.of(context)!.prefectureSaga, AppLocalizations.of(context)!.prefectureNagasaki, AppLocalizations.of(context)!.prefectureKumamoto, AppLocalizations.of(context)!.prefectureOita, AppLocalizations.of(context)!.prefectureMiyazaki, AppLocalizations.of(context)!.prefectureKagoshima,
+    AppLocalizations.of(context)!.prefectureOkinawa,
   ];
 
   @override
@@ -127,10 +128,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         
         // 成功フィードバック
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('画像を選択しました'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.selectExercise),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       } else {
@@ -150,9 +151,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           SnackBar(
             content: Text('画像の読み込みに失敗しました\n$e'),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
+            duration: Duration(seconds: 5),
             action: SnackBarAction(
-              label: '再試行',
+              label: AppLocalizations.of(context)!.tryAgain,
               textColor: Colors.white,
               onPressed: _pickImage,
             ),
@@ -211,14 +212,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       if (mounted) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('プロフィールを保存しました')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.save)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('エラーが発生しました: $e'),
+            content: Text(AppLocalizations.of(context)!.errorGeneric),
             backgroundColor: Colors.red,
           ),
         );
@@ -237,28 +238,27 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.diamond, color: Colors.amber),
             SizedBox(width: 8),
-            Text('Proプラン限定機能'),
+            Text(AppLocalizations.of(context)!.profile_f99be914),
           ],
         ),
         content: const Text(
-          'プロフィール編集機能はProプラン限定です。\n'
-          'Proプランにアップグレードしてご利用ください。',
+          AppLocalizations.of(context)!.profile_8c9edfc3,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               // サブスクリプション画面へ遷移（実装済みと仮定）
             },
-            child: const Text('Proプランを見る'),
+            child: Text(AppLocalizations.of(context)!.viewProPlan),
           ),
         ],
       ),
@@ -269,12 +269,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('プロフィール編集'),
+        title: Text(AppLocalizations.of(context)!.profileEdit),
         actions: [
           if (!_isLoading)
             TextButton(
               onPressed: _saveProfile,
-              child: const Text('完了', style: TextStyle(color: Colors.white)),
+              child: Text(AppLocalizations.of(context)!.complete, style: TextStyle(color: Colors.white)),
             ),
         ],
       ),
@@ -342,7 +342,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'タップして画像を変更',
+                      AppLocalizations.of(context)!.profile_d22ba9a1,
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 24),
@@ -350,14 +350,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     // アカウント名
                     TextFormField(
                       controller: _displayNameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'アカウント名 *',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.person),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'アカウント名を入力してください';
+                          return AppLocalizations.of(context)!.profile_4b13496c;
                         }
                         return null;
                       },
@@ -367,8 +367,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     // 居住地
                     DropdownButtonFormField<String>(
                       value: _selectedLocation,
-                      decoration: const InputDecoration(
-                        labelText: '居住地',
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.residence,
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.location_on),
                       ),
@@ -390,7 +390,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     TextFormField(
                       controller: _bioController,
                       decoration: InputDecoration(
-                        labelText: '自己紹介（150文字以内）',
+                        labelText: AppLocalizations.of(context)!.profile_bac23994,
                         border: const OutlineInputBorder(),
                         prefixIcon: const Icon(Icons.edit),
                         helperText: '残り${150 - _bioController.text.length}文字',
@@ -409,13 +409,13 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: Colors.blue.shade200),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
                           Icon(Icons.info, color: Colors.blue, size: 20),
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'プロフィール情報は他のユーザーに公開されます',
+                              AppLocalizations.of(context)!.navProfile,
                               style: TextStyle(fontSize: 12),
                             ),
                           ),

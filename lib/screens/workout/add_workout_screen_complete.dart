@@ -73,13 +73,13 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
   final TextEditingController _memoController = TextEditingController();
   
   final Map<String, List<String>> _muscleGroupExercises = {
-    '胸': ['ベンチプレス', 'ダンベルプレス', 'インクラインプレス', 'ケーブルフライ', 'ディップス'],
-    '脚': ['スクワット', 'レッグプレス', 'レッグエクステンション', 'レッグカール', 'カーフレイズ'],
-    '背中': ['デッドリフト', 'ラットプルダウン', 'ベントオーバーロウ', 'シーテッドロウ', '懸垂'],
-    '肩': ['ショルダープレス', 'サイドレイズ', 'フロントレイズ', 'リアデルトフライ', 'アップライトロウ'],
-    '二頭': ['バーベルカール', 'ダンベルカール', 'ハンマーカール', 'プリチャーカール', 'ケーブルカール'],
-    '三頭': ['トライセプスエクステンション', 'スカルクラッシャー', 'ケーブルプッシュダウン', 'ディップス', 'キックバック'],
-    '有酸素': ['ランニング', 'サイクリング', 'エアロバイク', 'ステッパー', '水泳', 'インターバルラン', 'ウォーキング', 'クロストレーナー'],
+    AppLocalizations.of(context)!.bodyPartChest: [AppLocalizations.of(context)!.exerciseBenchPress, AppLocalizations.of(context)!.exerciseDumbbellPress, AppLocalizations.of(context)!.exerciseInclinePress, AppLocalizations.of(context)!.exerciseCableFly, AppLocalizations.of(context)!.exerciseDips],
+    AppLocalizations.of(context)!.bodyPartLegs: [AppLocalizations.of(context)!.exerciseSquat, AppLocalizations.of(context)!.exerciseLegPress, AppLocalizations.of(context)!.exerciseLegExtension, AppLocalizations.of(context)!.exerciseLegCurl, AppLocalizations.of(context)!.exerciseCalfRaise],
+    AppLocalizations.of(context)!.bodyPartBack: [AppLocalizations.of(context)!.exerciseDeadlift, AppLocalizations.of(context)!.exerciseLatPulldown, AppLocalizations.of(context)!.exerciseBentOverRow, AppLocalizations.of(context)!.exerciseSeatedRow, AppLocalizations.of(context)!.exercisePullUp],
+    AppLocalizations.of(context)!.bodyPartShoulders: [AppLocalizations.of(context)!.exerciseShoulderPress, AppLocalizations.of(context)!.exerciseSideRaise, AppLocalizations.of(context)!.exerciseFrontRaise, AppLocalizations.of(context)!.exerciseRearDeltFly, AppLocalizations.of(context)!.exerciseUprightRow],
+    AppLocalizations.of(context)!.bodyPartBiceps: [AppLocalizations.of(context)!.exerciseBarbellCurl, AppLocalizations.of(context)!.exerciseDumbbellCurl, AppLocalizations.of(context)!.exerciseHammerCurl, AppLocalizations.of(context)!.exercisePreacherCurl, AppLocalizations.of(context)!.exerciseCableCurl],
+    AppLocalizations.of(context)!.bodyPartTriceps: [AppLocalizations.of(context)!.exerciseTricepsExtension, AppLocalizations.of(context)!.exerciseSkullCrusher, AppLocalizations.of(context)!.workout_22752b72, AppLocalizations.of(context)!.exerciseDips, AppLocalizations.of(context)!.exerciseKickback],
+    AppLocalizations.of(context)!.exerciseCardio: [AppLocalizations.of(context)!.exerciseRunning, AppLocalizations.of(context)!.workout_cf6a6f5b, AppLocalizations.of(context)!.exerciseAerobicBike, AppLocalizations.of(context)!.workout_f4ecb3c9, AppLocalizations.of(context)!.workout_a90ed9c4, AppLocalizations.of(context)!.workout_aa4c3c64, AppLocalizations.of(context)!.workout_e23f084e, AppLocalizations.of(context)!.workout_ba2fef80],
   };
 
   @override
@@ -264,8 +264,8 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
       }
       
       // ✅ 修正: 部位が「有酸素」または種目リストに含まれるかで判定
-      bool isCardio = _selectedMuscleGroup == '有酸素' || 
-                      (_muscleGroupExercises['有酸素']?.contains(exerciseName) ?? false);
+      bool isCardio = _selectedMuscleGroup == AppLocalizations.of(context)!.exerciseCardio || 
+                      (_muscleGroupExercises[AppLocalizations.of(context)!.exerciseCardio]?.contains(exerciseName) ?? false);
 
       if (isCardio) {
         _sets.add(WorkoutSet(
@@ -318,7 +318,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('休憩時間を設定'),
+        title: Text(AppLocalizations.of(context)!.workout_b23db97f),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: _restDurations.map((duration) {
@@ -344,11 +344,11 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('カスタム種目を追加'),
+        title: Text(AppLocalizations.of(context)!.addCustomExercise),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            hintText: '種目名を入力',
+          decoration: InputDecoration(
+            hintText: AppLocalizations.of(context)!.workout_a3dbb30d,
             border: OutlineInputBorder(),
           ),
           autofocus: true,
@@ -356,11 +356,11 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('追加'),
+            child: Text(AppLocalizations.of(context)!.add),
           ),
         ],
       ),
@@ -401,7 +401,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
   Future<void> _saveWorkout() async {
     if (_sets.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('種目を追加してください')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.workout_d90b7b6b)),
       );
       return;
     }
@@ -428,7 +428,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
 
       final workoutDoc = await FirebaseFirestore.instance.collection('workout_logs').add({
         'user_id': user.uid,
-        'muscle_group': _selectedMuscleGroup ?? 'AIメニュー',
+        'muscle_group': _selectedMuscleGroup ?? AppLocalizations.of(context)!.workout_ed08832f,
         'date': Timestamp.fromDate(_selectedDate),
         'start_time': Timestamp.fromDate(startTime),
         'end_time': Timestamp.fromDate(endTime),
@@ -460,13 +460,13 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
       if (mounted) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('トレーニングを保存しました')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.workout_498b0ea4)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('保存エラー: $e')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.saveFailed)),
         );
       }
     }
@@ -478,7 +478,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('トレーニング記録'),
+        title: Text(AppLocalizations.of(context)!.trainingLog),
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
         actions: [
@@ -495,7 +495,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
           IconButton(
             icon: const Icon(Icons.timer),
             onPressed: _showRestTimerSettings,
-            tooltip: '休憩時間設定',
+            tooltip: AppLocalizations.of(context)!.workout_4a60472d,
           ),
         ],
       ),
@@ -549,7 +549,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                 final hasExercise = _sets.any((s) => s.exerciseName == exercise);
                 return ListTile(
                   leading: Icon(
-                    _selectedMuscleGroup == '有酸素' ? Icons.directions_run : Icons.fitness_center,
+                    _selectedMuscleGroup == AppLocalizations.of(context)!.exerciseCardio ? Icons.directions_run : Icons.fitness_center,
                     color: hasExercise ? theme.colorScheme.primary : Colors.grey,
                   ),
                   title: Text(exercise),
@@ -560,7 +560,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                         IconButton(
                           icon: const Icon(Icons.copy),
                           onPressed: () => _copyExerciseSets(exercise),
-                          tooltip: 'セットをコピー',
+                          tooltip: AppLocalizations.of(context)!.copySet,
                         ),
                       const Icon(Icons.chevron_right),
                     ],
@@ -575,7 +575,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                 child: OutlinedButton.icon(
                   onPressed: _showAddCustomExerciseDialog,
                   icon: const Icon(Icons.add),
-                  label: const Text('種目を追加（カスタム）'),
+                  label: Text(AppLocalizations.of(context)!.workout_268deae1),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   ),
@@ -585,11 +585,11 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
             
             // セット入力セクション
             if (_sets.isNotEmpty) ...[
-              const Divider(height: 32, thickness: 2),
+              Divider(height: 32, thickness: 2),
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  'セット',
+                  AppLocalizations.of(context)!.sets,
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -626,7 +626,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                       controller: _memoController,
                       maxLines: 5,
                       decoration: InputDecoration(
-                        hintText: '今日のトレーニングについてメモを残しましょう',
+                        hintText: AppLocalizations.of(context)!.workout_be150460,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -654,7 +654,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                       ),
                     ),
                     child: const Text(
-                      '記録を保存',
+                      AppLocalizations.of(context)!.workout_18f75a52,
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -693,15 +693,14 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 if (isCardio) ...[
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.orange.shade100,
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: const Text(
-                      '有酸素',
+                    child: Text(AppLocalizations.of(context)!.exerciseCardio,
                       style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -748,7 +747,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
             OutlinedButton.icon(
               onPressed: () => _addSet(exerciseName),
               icon: const Icon(Icons.add),
-              label: const Text('セットを追加'),
+              label: Text(AppLocalizations.of(context)!.workout_68d6a303),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 40),
               ),
@@ -792,7 +791,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                 // 距離入力
                 Expanded(
                   child: TextField(
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: '距離 (km)',
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -813,7 +812,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                 // 時間入力
                 Expanded(
                   child: TextField(
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: '時間 (分)',
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -834,7 +833,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                 // 重量入力
                 Expanded(
                   child: TextField(
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: '重量 (kg)',
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -855,8 +854,8 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                 // 回数入力
                 Expanded(
                   child: TextField(
-                    decoration: const InputDecoration(
-                      labelText: '回数',
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.repsCount,
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
@@ -905,7 +904,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                     set.hasAssist ? Icons.people : Icons.person,
                     size: 18,
                   ),
-                  label: Text(set.hasAssist ? '補助あり' : '補助なし'),
+                  label: Text(set.hasAssist ? AppLocalizations.of(context)!.workout_137b679e : AppLocalizations.of(context)!.workout_7b8e9d09),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: set.hasAssist ? Colors.orange : Colors.grey,
                     side: BorderSide(
@@ -931,7 +930,7 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
                     set.isCompleted ? Icons.check_circle : Icons.check_circle_outline,
                     size: 18,
                   ),
-                  label: const Text('完了'),
+                  label: Text(AppLocalizations.of(context)!.complete),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: set.isCompleted ? Colors.green : Colors.grey.shade300,
                     foregroundColor: set.isCompleted ? Colors.white : Colors.black,

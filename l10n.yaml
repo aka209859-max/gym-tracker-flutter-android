@@ -1,0 +1,36 @@
+# ✅ v1.0.256: Flutter多言語対応設定ファイル
+# GYM MATCH Global Localization Configuration
+
+# ARBファイルの配置ディレクトリ
+arb-dir: lib/l10n
+
+# テンプレートARBファイル（日本語がベース）
+template-arb-file: app_ja.arb
+
+# 出力先ディレクトリ（lib/gen/に生成 - GitHub Actions対応）
+output-dir: lib/gen
+
+# 出力ファイル名
+output-localization-file: app_localizations.dart
+
+# 生成されるクラス名
+output-class: AppLocalizations
+
+# 🔧 v1.0.299: Gemini推奨 - 物理ファイルとして生成（CI/IDE安定化）
+synthetic-package: false
+
+# nullableな型を使用
+nullable-getter: false
+
+# 合成メッセージを使用（パラメータ付きメッセージ）
+use-escaping: false
+
+# 対応言語（ISO 639-1コード）
+preferred-supported-locales:
+  - ja  # 日本語（ベース）
+  - en  # English (US)
+  - ko  # 한국어
+  - zh  # 中文（简体）
+  - zh_TW  # 中文（繁體）
+  - de  # Deutsch
+  - es  # Español

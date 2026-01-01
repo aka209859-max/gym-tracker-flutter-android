@@ -1,3 +1,4 @@
+import 'package:gym_match/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -107,7 +108,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
 
     } catch (e) {
       print('❌ 統計読み込みエラー: $e');
-      debugPrint('統計読み込みエラー: $e');
+      debugPrint(AppLocalizations.of(context)!.error);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -155,11 +156,11 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
       print('   セット数: ${sets.length}');
       totalSets += sets.length;
       
-      final muscleGroup = data['muscle_group'] as String? ?? '不明';
+      final muscleGroup = data['muscle_group'] as String? ?? AppLocalizations.of(context)!.unknown;
       print('   筋肉グループ: $muscleGroup');
       
       // 有酸素運動の時間のみを集計（筋トレは除外）
-      if (muscleGroup == '有酸素') {
+      if (muscleGroup == AppLocalizations.of(context)!.exerciseCardio) {
         // 有酸素運動の場合、weightフィールドが「時間（分）」を表す
         print('   🏃 有酸素運動データ');
         
@@ -227,7 +228,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
       final sets = data['sets'] as List<dynamic>? ?? [];
       totalSets += sets.length;
       
-      final muscleGroup = data['muscle_group'] as String? ?? '不明';
+      final muscleGroup = data['muscle_group'] as String? ?? AppLocalizations.of(context)!.unknown;
       
       // 総負荷量計算: 重量 × レップ数 × セット数
       for (final set in sets) {
@@ -236,7 +237,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
           final reps = (set['reps'] as num?)?.toInt() ?? 0;
           
           // 有酸素運動は除外（重量の意味が異なるため）
-          if (muscleGroup != '有酸素' && weight > 0 && reps > 0) {
+          if (muscleGroup != AppLocalizations.of(context)!.exerciseCardio && weight > 0 && reps > 0) {
             final volume = weight * reps; // 1セットの負荷量
             muscleGroupVolume[muscleGroup] = (muscleGroupVolume[muscleGroup] ?? 0.0) + volume;
             
@@ -318,7 +319,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('統計ダッシュボード'),
+          title: Text(AppLocalizations.of(context)!.workout_d558b4a3),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -326,12 +327,12 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('統計ダッシュボード'),
+        title: Text(AppLocalizations.of(context)!.workout_d558b4a3),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadStatistics,
-            tooltip: '更新',
+            tooltip: AppLocalizations.of(context)!.update,
           ),
         ],
       ),
@@ -378,18 +379,18 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
                 Icon(Icons.calendar_today, color: theme.colorScheme.primary, size: 24),
                 const SizedBox(width: 12),
                 const Text(
-                  '今週の概要',
+                  AppLocalizations.of(context)!.workout_35f61292,
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
                   child: _buildStatItem(
                     icon: Icons.fitness_center,
-                    label: 'トレーニング日数',
+                    label: AppLocalizations.of(context)!.trainingDays,
                     value: '$_weeklyWorkoutDays日',
                     color: Colors.blue,
                   ),
@@ -397,7 +398,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
                 Expanded(
                   child: _buildStatItem(
                     icon: Icons.list_alt,
-                    label: '総セット数',
+                    label: AppLocalizations.of(context)!.totalSets,
                     value: '$_weeklyTotalSetsセット',
                     color: Colors.green,
                   ),
@@ -410,7 +411,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
                 Expanded(
                   child: _buildStatItem(
                     icon: Icons.directions_run,
-                    label: '有酸素時間',
+                    label: AppLocalizations.of(context)!.workout_668f7523,
                     value: '$_weeklyTotalMinutes分',
                     color: Colors.orange,
                   ),
@@ -454,7 +455,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
             ),
             const SizedBox(height: 8),
             const Text(
-              '連続トレーニング記録',
+              AppLocalizations.of(context)!.workout_a826db5c,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.white70,
@@ -479,18 +480,18 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
                 Icon(Icons.date_range, color: theme.colorScheme.primary, size: 24),
                 const SizedBox(width: 12),
                 const Text(
-                  '今月の統計',
+                  AppLocalizations.of(context)!.workout_7643b53a,
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
                   child: _buildStatItem(
                     icon: Icons.event_available,
-                    label: 'トレーニング日数',
+                    label: AppLocalizations.of(context)!.trainingDays,
                     value: '$_monthlyWorkoutDays日',
                     color: Colors.purple,
                   ),
@@ -498,7 +499,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
                 Expanded(
                   child: _buildStatItem(
                     icon: Icons.bar_chart,
-                    label: '総セット数',
+                    label: AppLocalizations.of(context)!.totalSets,
                     value: '$_monthlyTotalSetsセット',
                     color: Colors.teal,
                   ),
@@ -522,7 +523,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
               Icon(Icons.bar_chart, size: 64, color: Colors.grey[400]),
               const SizedBox(height: 16),
               Text(
-                '部位別データがありません',
+                AppLocalizations.of(context)!.workout_ce2a2744,
                 style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               ),
             ],
@@ -546,7 +547,7 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
                 Icon(Icons.pie_chart, color: theme.colorScheme.primary, size: 24),
                 const SizedBox(width: 12),
                 const Text(
-                  '部位別トレーニング（今月）',
+                  AppLocalizations.of(context)!.workout_a826808f,
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -628,15 +629,15 @@ class _StatisticsDashboardScreenState extends State<StatisticsDashboardScreen> w
 
   Color _getColorForMuscleGroup(String muscleGroup) {
     final colors = {
-      '胸': Colors.red,
-      '背中': Colors.blue,
-      '脚': Colors.green,
-      '肩': Colors.orange,
-      '腕': Colors.purple,
-      '二頭': Colors.indigo,
-      '三頭': Colors.pink,
-      '体幹': Colors.teal,
-      '有酸素': Colors.amber,
+      AppLocalizations.of(context)!.bodyPartChest: Colors.red,
+      AppLocalizations.of(context)!.bodyPartBack: Colors.blue,
+      AppLocalizations.of(context)!.bodyPartLegs: Colors.green,
+      AppLocalizations.of(context)!.bodyPartShoulders: Colors.orange,
+      AppLocalizations.of(context)!.bodyPartArms: Colors.purple,
+      AppLocalizations.of(context)!.bodyPartBiceps: Colors.indigo,
+      AppLocalizations.of(context)!.bodyPartTriceps: Colors.pink,
+      AppLocalizations.of(context)!.bodyPartCore: Colors.teal,
+      AppLocalizations.of(context)!.exerciseCardio: Colors.amber,
     };
     return colors[muscleGroup] ?? Colors.grey;
   }

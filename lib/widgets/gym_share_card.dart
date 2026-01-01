@@ -85,7 +85,7 @@ class GymShareCard extends StatelessWidget {
                             Icon(Icons.star, color: Colors.white, size: 20),
                             SizedBox(width: 4),
                             Text(
-                              'パートナー店舗',
+                              AppLocalizations.of(context)!.gym_fd104921,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -194,7 +194,7 @@ class GymShareCard extends StatelessWidget {
                             Icon(Icons.local_offer, color: Colors.white, size: 24),
                             SizedBox(width: 8),
                             Text(
-                              '特別キャンペーン',
+                              AppLocalizations.of(context)!.gym_c310692c,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 20,

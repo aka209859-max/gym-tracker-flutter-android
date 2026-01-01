@@ -67,7 +67,7 @@ class WorkoutShareCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'トレーニング記録',
+                    AppLocalizations.of(context)!.trainingLog,
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.white70,
@@ -146,7 +146,7 @@ class WorkoutShareCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'セット詳細',
+                  AppLocalizations.of(context)!.workout_bd3212f5,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -228,7 +228,7 @@ class WorkoutShareCard extends StatelessWidget {
               children: [
                 _buildStatItem(
                   icon: Icons.list_alt,
-                  label: '総セット数',
+                  label: AppLocalizations.of(context)!.workoutTotalSets,
                   value: '$totalSets',
                   unit: 'sets',
                 ),
@@ -239,9 +239,9 @@ class WorkoutShareCard extends StatelessWidget {
                 ),
                 _buildStatItem(
                   icon: Icons.fitness_center,
-                  label: '総負荷量',
+                  label: AppLocalizations.of(context)!.workoutTotalVolume,
                   value: totalVolume.toString(),
-                  unit: 'kg',
+                  unit: AppLocalizations.of(context)!.kg,
                 ),
               ],
             ),

@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
+// import 'package:purchases_flutter/purchases_flutter.dart'; // ❌ Android版では使用しない
 
 /// プラン種類
 enum SubscriptionType {
@@ -327,9 +327,9 @@ class SubscriptionService {
   /// プラン名を取得
   String getPlanName(SubscriptionType plan) {
     return switch (plan) {
-      SubscriptionType.free => '無料プラン',
-      SubscriptionType.premium => 'プレミアムプラン',
-      SubscriptionType.pro => 'プロプラン',
+      SubscriptionType.free => AppLocalizations.of(context)!.freePlan,
+      SubscriptionType.premium => AppLocalizations.of(context)!.subscription_7669b5d8,
+      SubscriptionType.pro => AppLocalizations.of(context)!.subscription_bd2fedf3,
     };
   }
   
@@ -358,8 +358,8 @@ class SubscriptionService {
   String getPlanPrice(SubscriptionType plan) {
     return switch (plan) {
       SubscriptionType.free => '¥0',
-      SubscriptionType.premium => '¥500/月',
-      SubscriptionType.pro => '¥980/月',
+      SubscriptionType.premium => AppLocalizations.of(context)!.subscription_c71bb2e2,
+      SubscriptionType.pro => AppLocalizations.of(context)!.subscription_275ce1f5,
     };
   }
   
@@ -515,7 +515,7 @@ class SubscriptionService {
     final baseLimit = getAIUsageLimit(plan);
     
     if (baseLimit == 0) {
-      return 'AI機能は有料プランで利用可能です';
+      return AppLocalizations.of(context)!.subscription_34774657;
     }
     
     final currentUsage = await getCurrentMonthAIUsage();

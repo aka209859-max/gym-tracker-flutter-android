@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'ai_credit_service.dart';
@@ -11,13 +10,9 @@ class RewardAdService {
   
   final AICreditService _creditService = AICreditService();
   
-  // AdMob Unit IDs（iOS/Android対応）
-  // iOS本番広告ID使用中（収益化有効）
-  static const String _iosRewardAdUnitId = 'ca-app-pub-2887531479031819/6163055454'; // 本番用（iOS - AI使用回数+1）
-  
-  // Android AdMob広告ユニットID（テスト用）
-  // TODO: 実際のAndroid AdMob IDに置き換える
-  static const String _androidRewardAdUnitId = 'ca-app-pub-3940256099942544/5224354917'; // テスト用（Android - AI使用回数+1）
+  // AdMob Unit IDs（iOS本番設定完了✅）
+  // 本番広告ID使用中（収益化有効）
+  static const String _rewardAdUnitId = 'ca-app-pub-2887531479031819/6163055454'; // 本番用（iOS - AI使用回数+1）
   
   // テスト用広告ID（開発時のみ使用）
   // static const String _rewardAdUnitId = 'ca-app-pub-3940256099942544/5224354917'; // テスト用（iOS）
@@ -46,16 +41,6 @@ class RewardAdService {
     } catch (e) {
       debugPrint('❌ リワード広告初期化エラー: $e');
     }
-  }
-  
-  /// リワード動画広告ユニットIDを取得（iOS/Android対応）
-  String get _rewardAdUnitId {
-    if (Platform.isIOS) {
-      return _iosRewardAdUnitId;
-    } else if (Platform.isAndroid) {
-      return _androidRewardAdUnitId;
-    }
-    return _iosRewardAdUnitId; // デフォルト
   }
   
   /// リワード動画広告を読み込み

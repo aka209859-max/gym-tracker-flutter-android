@@ -131,7 +131,7 @@ class StrengthCalculators {
   /// 
   /// 返り値: "25kg×1, 2.5kg×1" のような文字列
   static String formatPlates(Map<double, int> plates) {
-    if (plates.isEmpty) return 'プレート不要';
+    if (plates.isEmpty) return AppLocalizations.of(context)!.general_b8085933;
 
     List<String> parts = [];
     plates.forEach((weight, count) {

@@ -13,11 +13,11 @@ class StrengthMatchingService {
   /// BIG3種目のキーワード（部分一致で検索）
   static const List<String> _big3Keywords = {
     // スクワット系
-    'スクワット', 'squat',
+    AppLocalizations.of(context)!.exerciseSquat, 'squat',
     // ベンチプレス系
-    'ベンチプレス', 'bench press', 'ベンチ',
+    AppLocalizations.of(context)!.exerciseBenchPress, 'bench press', AppLocalizations.of(context)!.general_c757af1f,
     // デッドリフト系
-    'デッドリフト', 'deadlift',
+    AppLocalizations.of(context)!.exerciseDeadlift, 'deadlift',
   };
 
   /// ユーザーの平均1RM（BIG3）を計算
@@ -46,9 +46,9 @@ class StrengthMatchingService {
       }
 
       // 各種目（スクワット、ベンチ、デッド）の最大1RMを取得
-      final squatPR = _getMaxPRByKeyword(big3PRs, ['スクワット', 'squat']);
-      final benchPR = _getMaxPRByKeyword(big3PRs, ['ベンチプレス', 'bench press', 'ベンチ']);
-      final deadliftPR = _getMaxPRByKeyword(big3PRs, ['デッドリフト', 'deadlift']);
+      final squatPR = _getMaxPRByKeyword(big3PRs, [AppLocalizations.of(context)!.exerciseSquat, 'squat']);
+      final benchPR = _getMaxPRByKeyword(big3PRs, [AppLocalizations.of(context)!.exerciseBenchPress, 'bench press', AppLocalizations.of(context)!.general_c757af1f]);
+      final deadliftPR = _getMaxPRByKeyword(big3PRs, [AppLocalizations.of(context)!.exerciseDeadlift, 'deadlift']);
 
       // 記録がある種目のみで平均を計算
       final values = <double>[];
