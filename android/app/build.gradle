@@ -45,8 +45,8 @@ android {
         applicationId = "com.gymmatch.app"
         minSdk = 24  // Android 7.0 (Nougat)
         targetSdk = 34  // Android 14
-        versionCode = 340
-        versionName = "1.0.318"
+        versionCode = 432
+        versionName = "1.0.432"
     }
 
     buildTypes {
