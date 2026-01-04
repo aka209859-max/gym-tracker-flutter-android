@@ -10,7 +10,7 @@ import '../services/revenue_cat_service.dart';
 import 'package:gym_match/gen/app_localizations.dart';
 import '../services/subscription_management_service.dart';
 import 'package:gym_match/gen/app_localizations.dart';
-// import 'package:purchases_flutter/purchases_flutter.dart';  // ❌ Android版では使用しない
+// import 'package:purchases_flutter/purchases_flutter.dart';  // Android: iOS-only package
 import 'package:gym_match/gen/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gym_match/gen/app_localizations.dart';

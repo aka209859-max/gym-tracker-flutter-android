@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-// import 'package:purchases_flutter/purchases_flutter.dart';  // ❌ Android版では使用しない
+// import 'package:purchases_flutter/purchases_flutter.dart';  // Android: iOS-only package
 import 'package:firebase_auth/firebase_auth.dart';
 import 'subscription_service.dart';
 
